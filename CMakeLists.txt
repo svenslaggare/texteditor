@@ -11,34 +11,34 @@ find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
 
 set(SOURCE_FILES
-    src/shadercompiler.cpp
-    src/shadercompiler.h
+    src/rendering/shadercompiler.cpp
+    src/rendering/shadercompiler.h
     src/helpers.cpp
     src/helpers.h
-    src/glhelpers.cpp
-    src/glhelpers.h
-    src/textrender.cpp
-    src/textrender.h
-    src/font.cpp
-    src/font.h
-    src/textformatter.cpp
-    src/textformatter.h
-    src/framebuffer.h
-    src/framebuffer.cpp
-    src/renderstyle.cpp
-    src/renderstyle.h
-    src/textview.cpp
-    src/textview.h
-    src/text.cpp
-    src/text.h
-    src/renderviewport.cpp
-    src/renderviewport.h
+    src/rendering/glhelpers.cpp
+    src/rendering/glhelpers.h
+    src/rendering/textrender.cpp
+    src/rendering/textrender.h
+    src/rendering/font.cpp
+    src/rendering/font.h
+    src/text/textformatter.cpp
+    src/text/textformatter.h
+    src/rendering/framebuffer.h
+    src/rendering/framebuffer.cpp
+    src/rendering/renderstyle.cpp
+    src/rendering/renderstyle.h
+    src/rendering/textview.cpp
+    src/rendering/textview.h
+    src/text/text.cpp
+    src/text/text.h
+    src/rendering/renderviewport.cpp
+    src/rendering/renderviewport.h
     src/inputmanager.cpp
     src/inputmanager.h
     src/windowstate.cpp
     src/windowstate.h
-    src/texturerender.cpp
-    src/texturerender.h)
+    src/rendering/texturerender.cpp
+    src/rendering/texturerender.h)
 
 #add_compile_options(-march=native -mtune=native)
 

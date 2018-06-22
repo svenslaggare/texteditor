@@ -2,24 +2,33 @@
 #include <chrono>
 #include "text.h"
 #include "textformatter.h"
+#include "../helpers.h"
 
 Text::Text(std::string text)
 	: mRaw(std::move(text)) {
+	for (auto c : mRaw) {
+		if (c == '\n') {
+			mNumLines++;
+		}
+	}
+}
 
+std::size_t Text::numLines() const {
+	return mNumLines;
 }
 
 const FormattedText& Text::getFormatted(const Font& font, FormatMode formatMode, const RenderStyle& renderStyle, const RenderViewPort& viewPort) const {
 	if (mLastViewPort.width != viewPort.width
 		|| mLastViewPort.height != viewPort.height
 		|| mLastViewPort.position != viewPort.position) {
-		mFormattedText.lines.clear();
+		mFormattedText = {};
 		mLastViewPort = viewPort;
 		TextFormatter textFormatter(formatMode);
-		auto t0 = std::chrono::system_clock::now();
+		auto t0 = Helpers::timeNow();
 		textFormatter.format(font, renderStyle, viewPort, mRaw, mFormattedText);
 		std::cout
-			<< "Formatted text in "
-	  		<< (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - t0).count() / 1E3) << " ms"
+			<< "Formatted text (lines = " << mFormattedText.lines.size() << ") in "
+	  		<< (Helpers::duration(Helpers::timeNow(), t0) / 1E3) << " ms"
 			<< std::endl;
 	}
 

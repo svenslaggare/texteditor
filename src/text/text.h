@@ -1,5 +1,5 @@
 #pragma once
-#include "renderviewport.h"
+#include "../rendering/renderviewport.h"
 
 #include <string>
 #include <vector>
@@ -40,6 +40,7 @@ enum class FormatMode : std::uint8_t;
 class Text {
 private:
 	std::string mRaw;
+	std::size_t mNumLines = 0;
 
 	mutable FormattedText mFormattedText;
 	mutable RenderViewPort mLastViewPort;
@@ -49,6 +50,11 @@ public:
 	 * @param text The raw text
 	 */
 	Text(std::string text);
+
+	/**
+	 * Returns the number of lines
+	 */
+	std::size_t numLines() const;
 
 	/**
 	 * Returns a formatted version of the current text

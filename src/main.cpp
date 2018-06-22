@@ -13,20 +13,20 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 
-#include "shadercompiler.h"
+#include "rendering/shadercompiler.h"
 #include "helpers.h"
-#include "glhelpers.h"
-#include "font.h"
-#include "renderstyle.h"
-#include "textrender.h"
-#include "framebuffer.h"
-#include "textview.h"
-#include "renderviewport.h"
-#include "text.h"
+#include "rendering/glhelpers.h"
+#include "rendering/font.h"
+#include "rendering/renderstyle.h"
+#include "rendering/textrender.h"
+#include "rendering/framebuffer.h"
+#include "rendering/textview.h"
+#include "rendering/renderviewport.h"
+#include "text/text.h"
 #include "windowstate.h"
 #include "inputmanager.h"
-#include "texturerender.h"
-#include "textformatter.h"
+#include "rendering/texturerender.h"
+#include "text/textformatter.h"
 
 static WindowState windowState;
 
@@ -79,9 +79,9 @@ int main(int argc, char* argv[]) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	auto wololo = "444\""; 5.0f;
+	auto wololo = "4	\t44\""; 5.0f;
 
-//	std::string text = "hello world\nmy friend";
+//  std::string text = "hello	world\nmy friend";
 //	std::string inlineText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse eu enim vitae erat viverra dignissim. Cras congue hendrerit eleifend. Curabitur augue mauris, rutrum laoreet mollis in, laoreet in lacus. Phasellus laoreet lectus quis magna convallis elementum. Donec tempus, nibh vitae ultricies molestie, ex enim porttitor dolor, vel dignissim mauris massa vitae leo.\n\nUt varius semper eros, et gravida nulla maximus sed. Phasellus viverra libero at dignissim mollis. Fusce consectetur porta volutpat. Pellentesque aliquam pharetra convallis. Nunc at elit quam. Proin urna lorem, bibendum vitae consectetur nec, rhoncus at magna. Interdum et malesuada fames ac ante ipsum primis in faucibus. Phasellus odio sapien, scelerisque quis facilisis quis, suscipit eget ligula. Morbi vitae elementum leo. Nullam mollis est quis consectetur finibus. Suspendisse vehicula purus vel libero auctor ultrices. Ut scelerisque quam ante, vitae tincidunt velit laoreet et. Quisque tellus urna, pellentesque nec tincidunt in, semper et nisl. Proin id euismod lorem. Nam nec lorem ornare, blandit arcu nec, pulvinar justo. Curabitur nec rutrum risus. Aenean maximus turpis sit amet risus blandit vehicula. Vestibulum tincidunt odio lectus, non viverra nibh mattis non. Mauris vitae ex posuere diam tincidunt accumsan.\n\nQuisque pretium tortor vitae diam suscipit pellentesque at ac erat. In hac habitasse platea dictumst. Proin sodales dapibus pretium. Duis id eros nulla. Ut hendrerit vehicula lobortis. Etiam sagittis porta dui, vel porttitor tellus scelerisque vel. Quisque cursus rhoncus velit, quis volutpat velit volutpat sit amet. Sed quis molestie libero, eu sollicitudin felis.\n\nNunc tempor eu leo non fermentum. Donec bibendum et lectus vel malesuada. Vivamus malesuada eros nibh, id faucibus eros elementum at. Integer ac sem lorem. Curabitur luctus feugiat justo. Nulla at tortor sit amet orci cursus ornare non id massa. Vivamus vel lacus feugiat, vehicula urna dignissim, blandit lectus. Morbi non urna dui. Morbi ac libero a ligula varius lobortis. Proin at purus eget velit mattis viverra vel sed quam. Duis sollicitudin massa magna, viverra fringilla arcu ultricies eget. Suspendisse potenti. Morbi turpis felis, pellentesque id pretium vel, euismod non eros. Nulla mauris ipsum, interdum at leo aliquam, porttitor condimentum nunc. Cras semper feugiat hendrerit.";
 
 //	Text text(Helpers::readFileAsText("data/lorem.txt"));
@@ -89,16 +89,6 @@ int main(int argc, char* argv[]) {
 //	Text text(Helpers::readFileAsText("data/test.cpp"));
 	Text text(Helpers::readFileAsText("src/main.cpp"));
 //	Text text(Helpers::readFileAsText("/home/antjans/curve.py"));
-
-	std::string lineNumbers = "";
-	int maxLineNumber = 189;
-	for (int i = 1; i <= maxLineNumber; i++) {
-		lineNumbers += std::to_string(i) + "\n";
-	}
-	Text lineNumbersTest(lineNumbers);
-
-	auto lineNumbersSpacing = 12.0f * std::to_string(maxLineNumber).size();
-//	lineNumbersSpacing = 0.0f;
 
 //	std::chrono::time_point<std::chrono::system_clock> startTime;
 	auto startTime = std::chrono::system_clock::now();
@@ -114,15 +104,14 @@ int main(int argc, char* argv[]) {
 	InputManager inputManager(window);
 
 	RenderStyle renderStyle;
-	RenderViewPort renderViewPort { glm::vec2(0, 0), windowState.width - lineNumbersSpacing, windowState.height };
+	RenderViewPort renderViewPort { glm::vec2(0, 0), windowState.width, windowState.height };
 
 	TextView codeTextView(font, FormatMode::Code, renderViewPort, renderStyle);
-	TextView lineNumberTextView(font, FormatMode::Text, renderViewPort, renderStyle);
 	TextureRender frameBufferRender(passthroughProgram);
 
 	while (!glfwWindowShouldClose(window)) {
 		if (windowState.changed) {
-			renderViewPort = RenderViewPort { glm::vec2(), windowState.width - lineNumbersSpacing, windowState.height };
+			renderViewPort = RenderViewPort { glm::vec2(), windowState.width, windowState.height };
 
 			projection = glm::ortho(0.0f, (float)windowState.width, -(float)windowState.height, 0.0f);
 			glUseProgram(textProgram);
@@ -142,8 +131,7 @@ int main(int argc, char* argv[]) {
 		glClearColor(renderStyle.backgroundColor.r, renderStyle.backgroundColor.g, renderStyle.backgroundColor.b, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		lineNumberTextView.render(textRender, lineNumbersTest, inputManager.cursorPosition());
-		codeTextView.render(textRender, text, inputManager.cursorPosition() + glm::vec2(lineNumbersSpacing, 0.0f));
+		codeTextView.render(textRender, text, inputManager.cursorPosition());
 
 		// Draw frame buffer to screen
 //		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -167,4 +155,3 @@ int main(int argc, char* argv[]) {
 
 	glfwTerminate();
 }
-

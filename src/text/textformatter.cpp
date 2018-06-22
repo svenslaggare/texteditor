@@ -1,10 +1,10 @@
 #include "textformatter.h"
-#include "font.h"
-#include "textrender.h"
-#include "renderstyle.h"
-#include "renderviewport.h"
+#include "../rendering/font.h"
+#include "../rendering/textrender.h"
+#include "../rendering/renderstyle.h"
+#include "../rendering/renderviewport.h"
 #include "text.h"
-#include "helpers.h"
+#include "../helpers.h"
 
 #include <iostream>
 #include <unordered_set>
@@ -62,6 +62,7 @@ namespace {
 
 	struct FormatterStateMachine {
 		FormatMode mode;
+		const Font& font;
 		const RenderStyle& renderStyle;
 		const RenderViewPort& viewPort;
 		FormattedText& formattedText;
@@ -76,8 +77,12 @@ namespace {
 
 		char prevChar = '\0';
 
-		FormatterStateMachine(FormatMode mode, const RenderStyle& renderStyle, const RenderViewPort& viewPort, FormattedText& formattedText)
-			: mode(mode), renderStyle(renderStyle), viewPort(viewPort), formattedText(formattedText) {
+		FormatterStateMachine(FormatMode mode,
+							  const Font& font,
+							  const RenderStyle& renderStyle,
+							  const RenderViewPort& viewPort,
+							  FormattedText& formattedText)
+			: mode(mode), font(font), renderStyle(renderStyle), viewPort(viewPort), formattedText(formattedText) {
 
 		}
 
@@ -88,24 +93,31 @@ namespace {
 		}
 
 		void createNewLine(bool resetState = true) {
-			tryMakeKeyword();
-			tokens.push_back(std::move(currentToken));
-			formattedText.lines.push_back(std::move(tokens));
+			if (mode == FormatMode::Code) {
+				tryMakeKeyword();
+				tokens.push_back(std::move(currentToken));
+				formattedText.lines.push_back(std::move(tokens));
+				tokens = {};
 
-			tokens = {};
+				if (resetState) {
+					currentToken = {};
+				} else {
+					currentToken.text = "";
+				}
 
-			if (resetState) {
-				currentToken = {};
+				currentWidth = 0.0f;
+
+				if (resetState) {
+					isWhitespace = false;
+					isEscaped = false;
+					state = State::Text;
+				}
 			} else {
-				currentToken.text = "";
-			}
-
-			currentWidth = 0.0f;
-
-			if (resetState) {
-				isWhitespace = false;
-				isEscaped = false;
-				state = State::Text;
+				tokens.push_back(std::move(currentToken));
+				formattedText.lines.push_back(std::move(tokens));
+				tokens = {};
+				currentToken = {};
+				currentWidth = 0.0f;
 			}
 		}
 
@@ -122,10 +134,22 @@ namespace {
 			isEscaped = false;
 		}
 
+		void handleTab() {
+			auto advanceX = font[' '].advanceX;
+			for (std::size_t i = 0; i < renderStyle.spacesPerTab; i++) {
+				addChar(' ', advanceX);
+			}
+		}
+
 		void handleText(char current, float advanceX) {
 			switch (current) {
 				case '\n':
 					createNewLine();
+					break;
+				case '\t':
+					newToken();
+					handleTab();
+					isWhitespace = true;
 					break;
 				case '"':
 					newToken(TokenType::String);
@@ -168,6 +192,9 @@ namespace {
 				case '\n':
 					createNewLine();
 					break;
+				case '\t':
+					handleTab();
+					break;
 				case '"':
 					if (!isEscaped) {
 						state = State::Text;
@@ -193,17 +220,12 @@ namespace {
 				case '\n':
 					createNewLine();
 					break;
+				case '\t':
+					handleTab();
+					break;
 				default:
 					addChar(current, advanceX);
 					break;
-			}
-		}
-
-		void handleTextMode(char current, float advanceX) {
-			if (current == '\n') {
-				createNewLine();
-			} else {
-				addChar(current, advanceX);
 			}
 		}
 
@@ -221,7 +243,19 @@ namespace {
 			}
 		}
 
-		void process(char current, float advanceX) {
+		void handleTextMode(char current, float advanceX) {
+			if (current == '\n') {
+				createNewLine();
+			} else if (current == '\t') {
+				handleTab();
+			} else {
+				addChar(current, advanceX);
+			}
+		}
+
+		void process(char current) {
+			auto advanceX = font[current].advanceX;
+
 			if (renderStyle.wordWrap) {
 				if (currentWidth + advanceX > viewPort.width) {
 					createNewLine(false);
@@ -252,13 +286,10 @@ void TextFormatter::format(const Font& font,
 						   const RenderViewPort& viewPort,
 						   const std::string& text,
 						   FormattedText& formattedText) {
-	auto processedText = text;
-	processedText = Helpers::replaceAll(processedText, "\t", std::string((std::size_t)renderStyle.spacesPerTab, ' '));
+	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedText);
 
-	FormatterStateMachine stateMachine(mMode, renderStyle, viewPort, formattedText);
-
-	for (auto& current : processedText) {
-		stateMachine.process(current, font[current].advanceX);
+	for (auto& current : text) {
+		stateMachine.process(current);
 	}
 
 	stateMachine.createNewLine();

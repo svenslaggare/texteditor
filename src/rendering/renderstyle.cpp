@@ -1,5 +1,5 @@
 #include "renderstyle.h"
-#include "text.h"
+#include "../text/text.h"
 
 glm::vec3 RenderStyle::getColor(const Token& token) const {
 	switch (token.type) {

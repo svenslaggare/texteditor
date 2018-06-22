@@ -30,3 +30,11 @@ std::string Helpers::replaceAll(const std::string& str, const std::string& from,
 
 	return result;
 }
+
+TimePoint Helpers::timeNow() {
+	return std::chrono::system_clock::now();
+}
+
+long Helpers::duration(TimePoint x, TimePoint y) {
+	return std::chrono::duration_cast<std::chrono::microseconds>(x - y).count();
+}

@@ -5,8 +5,6 @@
 #include <memory>
 #include <vector>
 
-class Image;
-
 struct GLUniform {
 	std::size_t index;
 	std::string name;
