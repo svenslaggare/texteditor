@@ -25,7 +25,7 @@ TextRender::TextRender(GLuint shaderProgram)
 	glBindBuffer(GL_ARRAY_BUFFER, mVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * FLOATS_PER_CHARACTER * MAX_CHARACTERS, nullptr, GL_DYNAMIC_DRAW);
 
-	auto vertexSize = (7) * sizeof(GLfloat);
+	auto vertexSize = (2 + 2 + 3) * sizeof(GLfloat);
 	auto posAttrib = glGetAttribLocation(shaderProgram, "vertexPosition");
 	glEnableVertexAttribArray(posAttrib);
 	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, vertexSize, nullptr);
@@ -84,7 +84,7 @@ void TextRender::setCharacterVertices(GLfloat* charactersVertices,
 	}
 }
 
-void TextRender::initializeRendering(const Font& font) {
+void TextRender::setupRendering(const Font& font) {
 	glBindVertexArray(mVAO);
 	glUseProgram(mShaderProgram);
 	glActiveTexture(GL_TEXTURE0);
@@ -93,26 +93,57 @@ void TextRender::initializeRendering(const Font& font) {
 	glBindBuffer(GL_ARRAY_BUFFER, mVBO);
 }
 
-void TextRender::renderCurrentView(const Font& font,
-								   std::size_t maxNumLines,
-								   const RenderViewPort& viewPort,
-								   glm::vec2 position,
-								   std::function<void (std::int64_t, float&, float&)> renderLine) {
+void TextRender::renderView(const Font& font,
+							std::size_t maxNumLines,
+							const RenderViewPort& viewPort,
+							glm::vec2 position,
+							RenderLine renderLine) {
+	setupRendering(font);
+
+	GLfloat charactersVertices[sizeof(GLfloat) * FLOATS_PER_CHARACTER * MAX_CHARACTERS];
+	std::size_t numCharactersDrawn = 0;
+	std::size_t charactersOffset = 0;
+
+	auto drawCharacters = [&]() {
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * FLOATS_PER_CHARACTER * numCharactersDrawn, charactersVertices);
+		glDrawArrays(GL_TRIANGLES, 0, NUM_TRIANGLES * numCharactersDrawn);
+		numCharactersDrawn = 0;
+		charactersOffset = 0;
+	};
+
+	auto drawCharacter = [&]() {
+		numCharactersDrawn++;
+		charactersOffset += FLOATS_PER_CHARACTER;
+		if (numCharactersDrawn >= MAX_CHARACTERS) {
+			drawCharacters();
+		}
+	};
+
 	auto cursorLineIndex = (std::int64_t)std::floor(-position.y / font.lineHeight());
 	for (std::int64_t lineIndex = cursorLineIndex; lineIndex < (std::int64_t)maxNumLines; lineIndex++) {
 		if (lineIndex >= 0) {
-			auto currentX = position.x;
-			auto currentY = position.y + (lineIndex + 1) * font.lineHeight();
+			glm::vec2 drawPosition(position.x, position.y + (lineIndex + 1) * font.lineHeight());
 
-			if (currentY >= viewPort.top()) {
-				renderLine(lineIndex, currentX, currentY);
+			if (drawPosition.y >= viewPort.top()) {
+				renderLine(
+					charactersVertices,
+					charactersOffset,
+					drawCharacter,
+					lineIndex,
+					drawPosition);
 			}
 
-			if (currentY > viewPort.bottom()) {
+			if (drawPosition.y > viewPort.bottom()) {
 				break;
 			}
 		}
 	}
+
+	if (numCharactersDrawn > 0) {
+		drawCharacters();
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void TextRender::render(const Font& font,
@@ -120,48 +151,31 @@ void TextRender::render(const Font& font,
 						const RenderViewPort& viewPort,
 						const FormattedText& text,
 						glm::vec2 position) {
-	initializeRendering(font);
-
-	GLfloat charactersVertices[sizeof(GLfloat) * FLOATS_PER_CHARACTER * MAX_CHARACTERS];
-	std::size_t numCharactersDrawn = 0;
-
-	auto drawCharacters = [&]() {
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * FLOATS_PER_CHARACTER * numCharactersDrawn, charactersVertices);
-		glDrawArrays(GL_TRIANGLES, 0, NUM_TRIANGLES * numCharactersDrawn);
-		numCharactersDrawn = 0;
-	};
-
-	renderCurrentView(font, text.lines.size(), viewPort, position, [&](std::int64_t lineIndex, float& currentX, float& currentY) {
-		for (auto& token : text.lines[lineIndex]) {
+	renderView(font, text.numLines(), viewPort, position, [&](GLfloat* vertices,
+															  std::size_t& offset,
+															  std::function<void()> drawCharacter,
+															  std::int64_t lineIndex,
+															  glm::vec2& drawPosition) {
+		for (auto& token : text.getLine((std::size_t)lineIndex)) {
 			auto color = renderStyle.getColor(token);
 
 			for (auto& character : token.text) {
 				auto& fontCharacter = font[character];
 
 				setCharacterVertices(
-					charactersVertices,
-					numCharactersDrawn * FLOATS_PER_CHARACTER,
+					vertices,
+					offset,
 					font,
 					character,
-					currentX,
-					currentY,
+					drawPosition.x,
+					drawPosition.y,
 					color);
 
-				currentX += fontCharacter.advanceX;
-
-				numCharactersDrawn++;
-				if (numCharactersDrawn >= MAX_CHARACTERS) {
-					drawCharacters();
-				}
+				drawPosition.x += fontCharacter.advanceX;
+				drawCharacter();
 			}
 		}
 	});
-
-	if (numCharactersDrawn > 0) {
-		drawCharacters();
-	}
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void TextRender::renderLineNumbers(const Font& font,
@@ -169,43 +183,26 @@ void TextRender::renderLineNumbers(const Font& font,
 								   const RenderViewPort& viewPort,
 								   std::size_t maxNumberLines,
 								   glm::vec2 position) {
-	initializeRendering(font);
-
-	GLfloat charactersVertices[sizeof(GLfloat) * FLOATS_PER_CHARACTER * MAX_CHARACTERS];
-	std::size_t numCharactersDrawn = 0;
-
-	auto drawCharacters = [&]() {
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * FLOATS_PER_CHARACTER * numCharactersDrawn, charactersVertices);
-		glDrawArrays(GL_TRIANGLES, 0, NUM_TRIANGLES * numCharactersDrawn);
-		numCharactersDrawn = 0;
-	};
-
-	renderCurrentView(font, maxNumberLines, viewPort, position, [&](std::int64_t lineIndex, float& currentX, float& currentY) {
+	renderView(font, maxNumberLines, viewPort, position, [&](GLfloat* vertices,
+															 std::size_t& offset,
+															 std::function<void()> drawCharacter,
+															 std::int64_t lineIndex,
+															 glm::vec2& drawPosition) {
 		auto lineNumber = std::to_string(lineIndex + 1);
 		for (auto& character : lineNumber) {
 			auto& fontCharacter = font[character];
 
 			setCharacterVertices(
-				charactersVertices,
-				numCharactersDrawn * FLOATS_PER_CHARACTER,
+				vertices,
+				offset,
 				font,
 				character,
-				currentX,
-				currentY,
+				drawPosition.x,
+				drawPosition.y,
 				renderStyle.lineNumberColor);
 
-			currentX += fontCharacter.advanceX;
-
-			numCharactersDrawn++;
-			if (numCharactersDrawn >= MAX_CHARACTERS) {
-				drawCharacters();
-			}
+			drawPosition.x += fontCharacter.advanceX;
+			drawCharacter();
 		}
 	});
-
-	if (numCharactersDrawn > 0) {
-		drawCharacters();
-	}
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

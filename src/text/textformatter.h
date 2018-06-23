@@ -2,11 +2,55 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 class Font;
 class RenderViewPort;
 class RenderStyle;
 class FormattedText;
+
+/**
+ * The type of a token
+ */
+enum class TokenType {
+	Text,
+	Keyword,
+	String,
+	Comment
+};
+
+/**
+ * Represents a token
+ */
+struct Token {
+	TokenType type = TokenType::Text;
+	std::string text;
+};
+
+/**
+ * Represents formatted text
+ */
+class FormattedText {
+private:
+	std::vector<std::vector<Token>> mLines;
+public:
+	/**
+	 * Returns the number of lines
+	 */
+	std::size_t numLines() const;
+
+	/**
+	 * Returns the tokens at the given line
+	 * @param index The index
+	 */
+	const std::vector<Token>& getLine(std::size_t index) const;
+
+	/**
+	 * Adds the given line
+	 * @param tokens The tokens on the line
+	 */
+	void addLine(std::vector<Token> tokens);
+};
 
 /**
  * The format mode

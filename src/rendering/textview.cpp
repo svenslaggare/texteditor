@@ -30,7 +30,7 @@ void TextView::render(TextRender& textRender, const Text& text, glm::vec2 positi
 		mFont,
 		mRenderStyle,
 		viewPort,
-		formattedText.lines.size(),
+		formattedText.numLines(),
 		drawPosition);
 
 	textRender.render(
@@ -39,6 +39,7 @@ void TextView::render(TextRender& textRender, const Text& text, glm::vec2 positi
 		viewPort,
 		formattedText,
 		drawPosition + glm::vec2(lineNumberSpacing, 0.0f));
+	
 //	std::cout
 //		<< "Render time: " << (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count() / 1E3)
 //		<< "ms"

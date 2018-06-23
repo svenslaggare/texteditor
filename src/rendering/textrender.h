@@ -47,13 +47,23 @@ private:
 	 * Initializes the rendering
 	 * @param font The font to render with
 	 */
-	void initializeRendering(const Font& font);
+	void setupRendering(const Font& font);
 
-	void renderCurrentView(const Font& font,
-						   std::size_t maxNumLines,
-						   const RenderViewPort& viewPort,
-						   glm::vec2 position,
-						   std::function<void (std::int64_t, float&, float&)> renderLine);
+	using RenderLine = std::function<void (GLfloat* vertices, std::size_t& offset, std::function<void()>, std::int64_t, glm::vec2&)>;
+
+	/**
+	 * Renders the current view
+	 * @param font The font to use
+	 * @param maxNumLines The maximum number of lines
+	 * @param viewPort The view port
+	 * @param position The position to render at
+	 * @param renderLine Renders each line in the view
+	 */
+	void renderView(const Font& font,
+					std::size_t maxNumLines,
+					const RenderViewPort& viewPort,
+					glm::vec2 position,
+					RenderLine renderLine);
 public:
 	/**
 	 * Creates a new text render

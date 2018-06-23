@@ -1,38 +1,12 @@
 #pragma once
 #include "../rendering/renderviewport.h"
+#include "textformatter.h"
 
 #include <string>
 #include <vector>
 
 class Font;
 class RenderStyle;
-
-/**
- * The type of a token
- */
-enum class TokenType {
-	Text,
-	Keyword,
-	String,
-	Comment
-};
-
-/**
- * Represents a token
- */
-struct Token {
-	TokenType type = TokenType::Text;
-	std::string text;
-};
-
-/**
- * Represents formatted text
- */
-struct FormattedText {
-	std::vector<std::vector<Token>> lines;
-};
-
-enum class FormatMode : std::uint8_t;
 
 /**
  * Represents text

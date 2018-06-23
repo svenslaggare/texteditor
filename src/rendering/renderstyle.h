@@ -10,7 +10,7 @@ struct RenderStyle {
 	float sideSpacing = 10.0f;
 	float topSpacing = 5.0f;
 	float bottomSpacing = 0.0f;
-	int spacesPerTab = 4;
+	std::size_t spacesPerTab = 4;
 
 	bool wordWrap = true;
 

@@ -23,11 +23,12 @@ const FormattedText& Text::getFormatted(const Font& font, FormatMode formatMode,
 		|| mLastViewPort.position != viewPort.position) {
 		mFormattedText = {};
 		mLastViewPort = viewPort;
+
 		TextFormatter textFormatter(formatMode);
 		auto t0 = Helpers::timeNow();
 		textFormatter.format(font, renderStyle, viewPort, mRaw, mFormattedText);
 		std::cout
-			<< "Formatted text (lines = " << mFormattedText.lines.size() << ") in "
+			<< "Formatted text (lines = " << mFormattedText.numLines() << ") in "
 	  		<< (Helpers::duration(Helpers::timeNow(), t0) / 1E3) << " ms"
 			<< std::endl;
 	}

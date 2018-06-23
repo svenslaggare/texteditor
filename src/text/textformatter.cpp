@@ -10,7 +10,28 @@
 #include <unordered_set>
 
 namespace {
-	const std::unordered_set<std::string> keywords = {
+	class KeywordList {
+	private:
+		std::unordered_set<std::string> mKeywords;
+		std::size_t mMaxLength = 0;
+	public:
+		explicit KeywordList(std::unordered_set<std::string> keywords)
+			: mKeywords(std::move(keywords)) {
+			for (auto& keyword : mKeywords) {
+				mMaxLength = std::max(mMaxLength, keyword.size());
+			}
+		}
+
+		inline bool isKeyword(const std::string& str) const {
+			if (str.size() <= mMaxLength) {
+				return mKeywords.count(str) > 0;
+			}
+
+			return false;
+		}
+	};
+
+	const KeywordList keywords { {
 		"if",
 		"else",
 		"while",
@@ -52,7 +73,7 @@ namespace {
 		"#ifdef",
 		"#endif",
 		"#else",
-	};
+	} };
 
 	enum class State {
 		Text,
@@ -82,12 +103,16 @@ namespace {
 							  const RenderStyle& renderStyle,
 							  const RenderViewPort& viewPort,
 							  FormattedText& formattedText)
-			: mode(mode), font(font), renderStyle(renderStyle), viewPort(viewPort), formattedText(formattedText) {
+			: mode(mode),
+			  font(font),
+			  renderStyle(renderStyle),
+			  viewPort(viewPort),
+			  formattedText(formattedText) {
 
 		}
 
 		void tryMakeKeyword() {
-			if (keywords.count(currentToken.text)) {
+			if (keywords.isKeyword(currentToken.text)) {
 				currentToken.type = TokenType::Keyword;
 			}
 		}
@@ -96,7 +121,7 @@ namespace {
 			if (mode == FormatMode::Code) {
 				tryMakeKeyword();
 				tokens.push_back(std::move(currentToken));
-				formattedText.lines.push_back(std::move(tokens));
+				formattedText.addLine(std::move(tokens));
 				tokens = {};
 
 				if (resetState) {
@@ -114,7 +139,7 @@ namespace {
 				}
 			} else {
 				tokens.push_back(std::move(currentToken));
-				formattedText.lines.push_back(std::move(tokens));
+				formattedText.addLine(std::move(tokens));
 				tokens = {};
 				currentToken = {};
 				currentWidth = 0.0f;
@@ -274,6 +299,18 @@ namespace {
 			prevChar = current;
 		}
 	};
+}
+
+std::size_t FormattedText::numLines() const {
+	return mLines.size();
+}
+
+const std::vector<Token>& FormattedText::getLine(std::size_t index) const {
+	return mLines[index];
+}
+
+void FormattedText::addLine(std::vector<Token> tokens) {
+	mLines.push_back(std::move(tokens));
 }
 
 TextFormatter::TextFormatter(FormatMode mode)

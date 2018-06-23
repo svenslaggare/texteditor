@@ -40,7 +40,7 @@ set(SOURCE_FILES
     src/rendering/texturerender.cpp
     src/rendering/texturerender.h)
 
-#add_compile_options(-march=native -mtune=native)
+#add_compile_options(-O3 -march=native -mtune=native)
 
 set(EXECUTABLE texteditor)
 add_executable(${EXECUTABLE} ${SOURCE_FILES} src/main.cpp)
