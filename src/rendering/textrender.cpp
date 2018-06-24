@@ -5,6 +5,7 @@
 #include "renderstyle.h"
 #include "renderviewport.h"
 #include "../text/text.h"
+#include "../inputmanager.h"
 
 #include <vector>
 #include <iostream>
@@ -205,4 +206,29 @@ void TextRender::renderLineNumbers(const Font& font,
 			drawCharacter();
 		}
 	});
+}
+
+void TextRender::renderCaret(const Font& font,
+							 const RenderStyle& renderStyle,
+							 const RenderViewPort& viewPort,
+							 glm::vec2 spacing,
+							 const InputState& inputState) {
+	setupRendering(font);
+	GLfloat charactersVertices[sizeof(GLfloat) * FLOATS_PER_CHARACTER];
+
+	auto& fontCharacter = font['|'];
+
+	setCharacterVertices(
+		charactersVertices,
+		0,
+		font,
+		'|',
+		inputState.viewPosition.x + spacing.x + (inputState.caretPositionX) * fontCharacter.advanceX - fontCharacter.size.x,
+		inputState.viewPosition.y + spacing.y + (inputState.caretPositionY + 1) * font.lineHeight(),
+		renderStyle.textColor);
+
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * FLOATS_PER_CHARACTER, charactersVertices);
+	glDrawArrays(GL_TRIANGLES, 0, NUM_TRIANGLES);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

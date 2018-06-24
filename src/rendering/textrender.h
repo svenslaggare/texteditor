@@ -13,6 +13,7 @@ class Font;
 class RenderStyle;
 class RenderViewPort;
 class FormattedText;
+class InputState;
 
 enum class FormatMode : std::uint8_t;
 
@@ -99,4 +100,18 @@ public:
 						   const RenderViewPort& viewPort,
 						   std::size_t maxNumberLines,
 						   glm::vec2 position);
+
+	/**
+	 * Renders the caret
+	 * @param font The font
+	 * @param renderStyle The render style
+	 * @param viewPort The view port to render to
+	 * @param spacing The spacing
+	 * @param inputState The input state
+	 */
+	void renderCaret(const Font& font,
+					 const RenderStyle& renderStyle,
+					 const RenderViewPort& viewPort,
+					 glm::vec2 spacing,
+					 const InputState& inputState);
 };

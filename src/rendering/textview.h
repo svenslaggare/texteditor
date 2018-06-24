@@ -8,6 +8,7 @@ class RenderViewPort;
 class RenderStyle;
 class TextRender;
 class Text;
+class InputState;
 
 enum class FormatMode : std::uint8_t;
 
@@ -34,7 +35,8 @@ public:
 	 * Renders the given text at the given position in the given view
 	 * @param textRender The text text render
 	 * @param text The text
-	 * @param position The position
+	 * @param inputState The input state
+	 * @param drawCaret Indicates if to draw the caret
 	 */
-	void render(TextRender& textRender, const Text& text, glm::vec2 position);
+	void render(TextRender& textRender, const Text& text, const InputState& inputState, bool drawCaret = true);
 };

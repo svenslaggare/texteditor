@@ -29,7 +29,14 @@ namespace Helpers {
 	/**
 	 * Returns the duration in microseconds between x and y
 	 * @param x The first point in time
-	 * @param y The second point time
+	 * @param y The second point in time
 	 */
 	long duration(TimePoint x, TimePoint y);
+
+	/**
+	 * Returns the duration in milliseconds between x and y
+	 * @param x The first point in time
+	 * @param y The second point in time
+	 */
+	double durationMS(TimePoint x, TimePoint y);
 }

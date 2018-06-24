@@ -38,3 +38,7 @@ TimePoint Helpers::timeNow() {
 long Helpers::duration(TimePoint x, TimePoint y) {
 	return std::chrono::duration_cast<std::chrono::microseconds>(x - y).count();
 }
+
+double Helpers::durationMS(TimePoint x, TimePoint y) {
+	return duration(x, y) / 1E3;
+}

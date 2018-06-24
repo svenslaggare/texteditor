@@ -146,8 +146,11 @@ namespace {
 			}
 		}
 
-		void newToken(TokenType type = TokenType::Text) {
-			tryMakeKeyword();
+		void newToken(TokenType type = TokenType::Text, bool makeKeyword = false) {
+			if (makeKeyword) {
+				tryMakeKeyword();
+			}
+
 			tokens.push_back(std::move(currentToken));
 			currentToken = {};
 			currentToken.type = type;
@@ -172,7 +175,7 @@ namespace {
 					createNewLine();
 					break;
 				case '\t':
-					newToken();
+					newToken(TokenType::Text, true);
 					handleTab();
 					isWhitespace = true;
 					break;
@@ -189,7 +192,7 @@ namespace {
 					}
 					break;
 				case ' ':
-					newToken();
+					newToken(TokenType::Text, true);
 					addChar(current, advanceX);
 					isWhitespace = true;
 					break;
@@ -197,9 +200,9 @@ namespace {
 				case '(':
 				case ')':
 				case '*':
-					newToken();
+					newToken(TokenType::Text, true);
 					addChar(current, advanceX);
-					newToken();
+					newToken(TokenType::Text, true);
 					break;
 				default:
 					if (isWhitespace) {
