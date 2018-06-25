@@ -32,7 +32,7 @@ namespace {
 			textFormatter.format(font, renderStyle, viewPort, text, formattedText);
 		}
 		std::cout
-			<< (Helpers::duration(Helpers::timeNow(), t0) / 1E3) / n << " ms"
+			<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) / n << " ms"
 			<< std::endl;
 	}
 }
@@ -51,7 +51,7 @@ const FormattedText& Text::getFormatted(const Font& font, FormatMode formatMode,
 		textFormatter.format(font, renderStyle, viewPort, mRaw, mFormattedText);
 		std::cout
 			<< "Formatted text (lines = " << mFormattedText.numLines() << ") in "
-	  		<< (Helpers::duration(Helpers::timeNow(), t0) / 1E3) << " ms"
+	  		<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) << " ms"
 			<< std::endl;
 	}
 

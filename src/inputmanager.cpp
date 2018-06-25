@@ -19,12 +19,8 @@ namespace {
 }
 
 InputManager::InputManager(GLFWwindow* window)
-	: mWindow(window), mViewPosition(0.0f, 0.0f) {
+	: mWindow(window) {
 
-}
-
-InputState InputManager::getInputState() const {
-	return { mViewPosition, mCaretPositionX, mCaretPositionY };
 }
 
 bool InputManager::isKeyPressed(int key) {
@@ -43,10 +39,10 @@ bool InputManager::isKeyPressed(int key) {
 
 	auto lastDownIterator = mLastDown.find(key);
 	if (currentPressed && lastDownIterator != mLastDown.end()) {
-		if (Helpers::durationMS(Helpers::timeNow(), lastDownIterator->second) >= 200) {
+		if (Helpers::durationMilliseconds(Helpers::timeNow(), lastDownIterator->second) >= 200) {
 			auto lastPressedIterator = mLastPressed.find(key);
 			if (lastPressedIterator != mLastPressed.end()) {
-				if (Helpers::durationMS(Helpers::timeNow(), lastPressedIterator->second) >= 30) {
+				if (Helpers::durationMilliseconds(Helpers::timeNow(), lastPressedIterator->second) >= 30) {
 					mLastPressed[key] = Helpers::timeNow();
 					return true;
 				}
@@ -60,84 +56,7 @@ bool InputManager::isKeyPressed(int key) {
 	return false;
 }
 
-void InputManager::update(WindowState& windowState, const Font& font, const RenderViewPort& viewPort) {
-	auto lineHeight = font.lineHeight();
-
-	const auto pageMoveSpeed = viewPort.height;
-	if (isKeyPressed(GLFW_KEY_PAGE_UP)) {
-		mViewPosition.y += pageMoveSpeed;
-	}
-
-	if (isKeyPressed(GLFW_KEY_PAGE_DOWN)) {
-		mViewPosition.y -= pageMoveSpeed;
-	}
-
-	int caretPositionDiffY = 0;
-
-	if (isKeyPressed(GLFW_KEY_UP)) {
-		caretPositionDiffY = -1;
-	}
-
-	if (isKeyPressed(GLFW_KEY_DOWN)) {
-		caretPositionDiffY = 1;
-	}
-
-	if (caretPositionDiffY != 0) {
-		mCaretPositionY += caretPositionDiffY;
-		mCaretPositionY = std::max(mCaretPositionY, 0L);
-
-		auto caretScreenPositionY = -std::max(mCaretPositionY + caretPositionDiffY, 0L) * lineHeight;
-		if (caretScreenPositionY < mViewPosition.y - viewPort.height) {
-			mViewPosition.y -= caretPositionDiffY * lineHeight;
-		}
-
-		if (caretScreenPositionY > mViewPosition.y) {
-			mViewPosition.y -= caretPositionDiffY * lineHeight;
-		}
-
-		if (!(-mViewPosition.y + viewPort.height >= -caretScreenPositionY && -mViewPosition.y <= -caretScreenPositionY)) {
-			mViewPosition.y = -mCaretPositionY * lineHeight + viewPort.height / 2.0f;
-		}
-
-		if (mViewPosition.y > 0) {
-			mViewPosition.y = 0;
-		}
-	}
-
-	int caretPositionDiffX = 0;
-	if (isKeyPressed(GLFW_KEY_LEFT)) {
-		caretPositionDiffX = -1;
-	}
-
-	if (isKeyPressed(GLFW_KEY_RIGHT)) {
-		caretPositionDiffX = 1;
-	}
-
-	if (caretPositionDiffX != 0) {
-		mCaretPositionX += caretPositionDiffX;
-		mCaretPositionX = std::max(mCaretPositionX, 0L);
-
-		auto lineWidth = font['A'].advanceX;
-
-		auto caretScreenPositionX = -std::max(mCaretPositionX + caretPositionDiffX, 0L) * lineWidth;
-		if (caretScreenPositionX < mViewPosition.x - (viewPort.width - 60)) {
-			mViewPosition.x -= caretPositionDiffX * lineWidth;
-		}
-
-		if (caretScreenPositionX > mViewPosition.x) {
-			mViewPosition.x -= caretPositionDiffX * lineWidth;
-		}
-	}
-
-	if (windowState.scrolled) {
-		mViewPosition.y += mScrollSpeed * lineHeight * windowState.scrollY;
-		windowState.scrolled = false;
-
-		if (mViewPosition.y > 0) {
-			mViewPosition.y = 0;
-		}
-	}
-
+void InputManager::postUpdate() {
 	for (auto& key : keys) {
 		mPreviousState[key] = glfwGetKey(mWindow, key);
 	}

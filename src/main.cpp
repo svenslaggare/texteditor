@@ -30,6 +30,16 @@
 
 static WindowState windowState;
 
+RenderViewPort getViewPort(const WindowState& windowState) {
+	return RenderViewPort { glm::vec2(0, 0), windowState.width(), windowState.height() };
+}
+
+void setProjection(GLuint shaderProgram, const WindowState& windowState) {
+	auto projection = glm::ortho(0.0f, (float)windowState.width(), -(float)windowState.height(), 0.0f);
+	glUseProgram(shaderProgram);
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, &projection[0][0]);
+}
+
 int main(int argc, char* argv[]) {
 	glfwInit();
 
@@ -40,22 +50,19 @@ int main(int argc, char* argv[]) {
 
 	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 
-	auto window = glfwCreateWindow(windowState.width, windowState.height, "TextEditor", nullptr, nullptr);
+	auto window = glfwCreateWindow(windowState.width(), windowState.height(), "TextEditor", nullptr, nullptr);
 	glfwMakeContextCurrent(window);
 
 	glewExperimental = GL_TRUE;
 	glewInit();
 
 	glfwSetWindowSizeCallback(window, [&](GLFWwindow* window, int width, int height) {
-		windowState.width = width;
-		windowState.height = height;
-		windowState.changed = true;
+		windowState.changeWindowSize(width, height);
 		glViewport(0, 0, width, height);
 	});
 
 	glfwSetScrollCallback(window, [&](GLFWwindow* window,double offsetX, double offsetY) {
-		windowState.scrollY = offsetY;
-		windowState.scrolled = true;
+		windowState.setScrollY(offsetY);
 	});
 
 	// Compile and link shaders
@@ -65,8 +72,7 @@ int main(int argc, char* argv[]) {
 
 	glUseProgram(textProgram);
 	glUniform1i(glGetUniformLocation(textProgram, "inputTexture"), 0);
-	auto projection = glm::ortho(0.0f, (float)windowState.width, -(float)windowState.height, 0.0f + 0);
-	glUniformMatrix4fv(glGetUniformLocation(textProgram, "projection"), 1, GL_FALSE, &projection[0][0]);
+	setProjection(textProgram, windowState);
 
 	//auto fontName = "/usr/share/fonts/truetype/freefont/FreeMono.ttf";
 	auto fontName = "/usr/share/fonts/truetype/noto/NotoMono-Regular.ttf";
@@ -95,38 +101,27 @@ int main(int argc, char* argv[]) {
 	int numFrames = 0;
 	float fps = 0.0f;
 
-	auto frameBuffer = std::make_unique<FrameBuffer>(windowState.width, windowState.height);
+	auto frameBuffer = std::make_unique<FrameBuffer>(windowState.width(), windowState.height());
 
 	auto passthroughVertexShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsText("shaders/vertex.glsl"), GL_VERTEX_SHADER);
 	auto passthroughFragmentShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsText("shaders/passthrough.glsl"), GL_FRAGMENT_SHADER);
 	auto passthroughProgram = ShaderCompiler::linkShaders(passthroughVertexShader, passthroughFragmentShader);
 
-	InputManager inputManager(window);
-
 	RenderStyle renderStyle;
-	RenderViewPort renderViewPort { glm::vec2(0, 0), windowState.width, windowState.height };
+	auto renderViewPort = getViewPort(windowState);
 
-	TextView codeTextView(font, FormatMode::Code, renderViewPort, renderStyle);
+	TextView codeTextView(window, font, FormatMode::Code, renderViewPort, renderStyle, text);
 	TextureRender frameBufferRender(passthroughProgram);
 
-	long frame = 0;
-	bool drawCaret = true;
-	long lastCaretUpdate = 0;
-
 	while (!glfwWindowShouldClose(window)) {
-		if (windowState.changed) {
-			renderViewPort = RenderViewPort { glm::vec2(), windowState.width, windowState.height };
+		windowState.update();
 
-			projection = glm::ortho(0.0f, (float)windowState.width, -(float)windowState.height, 0.0f);
-			glUseProgram(textProgram);
-			glUniformMatrix4fv(glGetUniformLocation(textProgram, "projection"), 1, GL_FALSE, &projection[0][0]);
-
+		if (windowState.hasChangedWindowSize()) {
+			renderViewPort = getViewPort(windowState);
+			setProjection(textProgram, windowState);
+			std::cout << renderViewPort.width << "x" << renderViewPort.height << std::endl;
 //			frameBuffer = std::make_unique<FrameBuffer>(windowState.width, windowState.height);
-
-			windowState.changed = false;
 		}
-
-		inputManager.update(windowState, font, renderViewPort);
 
 		// Draw text to frame buffer
 //		frameBuffer->bind();
@@ -135,11 +130,8 @@ int main(int argc, char* argv[]) {
 		glClearColor(renderStyle.backgroundColor.r, renderStyle.backgroundColor.g, renderStyle.backgroundColor.b, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		codeTextView.render(textRender, text, inputManager.getInputState(), drawCaret);
-		if (frame - lastCaretUpdate >= 30) {
-			drawCaret = !drawCaret;
-			lastCaretUpdate = frame;
-		}
+		codeTextView.update(windowState);
+		codeTextView.render(textRender);
 
 		// Draw frame buffer to screen
 //		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -159,7 +151,6 @@ int main(int argc, char* argv[]) {
 
 //		std::cout << "\rFPS: " << fps << std::flush;
 		std::this_thread::sleep_for(std::chrono::milliseconds(12));
-		frame++;
 	}
 
 	glfwTerminate();

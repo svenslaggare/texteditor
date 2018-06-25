@@ -4,6 +4,7 @@
 #include "../text/textformatter.h"
 #include "renderstyle.h"
 #include "renderviewport.h"
+#include "textview.h"
 #include "../text/text.h"
 #include "../inputmanager.h"
 

@@ -1,10 +1,11 @@
 #pragma once
+#include "../helpers.h"
+#include "../inputmanager.h"
 
 #include <string>
 #include <glm/vec2.hpp>
 
 class Font;
-class RenderViewPort;
 class RenderStyle;
 class TextRender;
 class Text;
@@ -13,30 +14,77 @@ class InputState;
 enum class FormatMode : std::uint8_t;
 
 /**
+ * The input state
+ */
+struct InputState {
+	glm::vec2 viewPosition = glm::vec2();
+	std::int64_t caretPositionX = 0;
+	std::int64_t caretPositionY = 0;
+};
+
+/**
  * Represents a text view
  */
 class TextView {
 private:
+	GLFWwindow* mWindow;
+
 	const Font& mFont;
 	FormatMode mFormatMode;
+
 	const RenderViewPort& mViewPort;
 	const RenderStyle& mRenderStyle;
+
+	InputManager mInputManager;
+	InputState mInputState;
+	const float mScrollSpeed = 4.0f;
+
+	const Text& mText;
+
+	bool mDrawCaret = false;
+	TimePoint mLastCaretUpdate;
+
+	/**
+	 * Updates the input
+	 * @param windowState The window state
+	 */
+	void updateInput(const WindowState& windowState);
+
+	/**
+	 * Returns the spacing due to line numbers
+	 */
+	float getLineNumberSpacing() const;
+
+	/**
+	 * Returns the view port for the text part
+	 */
+	RenderViewPort getTextViewPort();
 public:
 	/**
 	 * Creates a new text view
+	 * @param window The window
 	 * @param font The font
 	 * @param formatMode The format mode
 	 * @param viewPort The view port
 	 * @param renderStyle The render style
+	 * @param text The text
 	 */
-	TextView(const Font& font, FormatMode formatMode, const RenderViewPort& viewPort, const RenderStyle& renderStyle);
+	TextView(GLFWwindow* window,
+			 const Font& font,
+			 FormatMode formatMode,
+			 const RenderViewPort& viewPort,
+			 const RenderStyle& renderStyle,
+			 const Text& text);
 
 	/**
-	 * Renders the given text at the given position in the given view
-	 * @param textRender The text text render
-	 * @param text The text
-	 * @param inputState The input state
-	 * @param drawCaret Indicates if to draw the caret
+	 * Updates the text view
+	 * @param windowState The window state
 	 */
-	void render(TextRender& textRender, const Text& text, const InputState& inputState, bool drawCaret = true);
+	void update(const WindowState& windowState);
+
+	/**
+	 * Renders the current view
+	 * @param textRender The text text render
+	 */
+	void render(TextRender& textRender);
 };
