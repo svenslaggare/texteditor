@@ -63,12 +63,13 @@ bool InputManager::isKeyPressed(int key) {
 void InputManager::update(WindowState& windowState, const Font& font, const RenderViewPort& viewPort) {
 	auto lineHeight = font.lineHeight();
 
-	if (glfwGetKey(mWindow, GLFW_KEY_PAGE_UP) == GLFW_PRESS) {
-		mViewPosition.y += mPageMoveSpeed;
+	const auto pageMoveSpeed = viewPort.height;
+	if (isKeyPressed(GLFW_KEY_PAGE_UP)) {
+		mViewPosition.y += pageMoveSpeed;
 	}
 
-	if (glfwGetKey(mWindow, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS) {
-		mViewPosition.y -= mPageMoveSpeed;
+	if (isKeyPressed(GLFW_KEY_PAGE_DOWN)) {
+		mViewPosition.y -= pageMoveSpeed;
 	}
 
 	int caretPositionDiffY = 0;
@@ -96,6 +97,10 @@ void InputManager::update(WindowState& windowState, const Font& font, const Rend
 
 		if (!(-mViewPosition.y + viewPort.height >= -caretScreenPositionY && -mViewPosition.y <= -caretScreenPositionY)) {
 			mViewPosition.y = -mCaretPositionY * lineHeight + viewPort.height / 2.0f;
+		}
+
+		if (mViewPosition.y > 0) {
+			mViewPosition.y = 0;
 		}
 	}
 

@@ -35,7 +35,6 @@ private:
 	std::unordered_map<int, int> mPreviousState;
 
 	const float mScrollSpeed = 4.0f;
-	const int mPageMoveSpeed = 200;
 
 	/**
 	 * Indicates if the given key is down
