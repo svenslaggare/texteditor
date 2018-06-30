@@ -28,17 +28,17 @@ TextRender::TextRender(GLuint shaderProgram)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * FLOATS_PER_CHARACTER * MAX_CHARACTERS, nullptr, GL_DYNAMIC_DRAW);
 
 	auto vertexSize = (2 + 2 + 3) * sizeof(GLfloat);
-	auto posAttrib = glGetAttribLocation(shaderProgram, "vertexPosition");
-	glEnableVertexAttribArray(posAttrib);
-	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, vertexSize, nullptr);
+	auto posAttribute = glGetAttribLocation(shaderProgram, "vertexPosition");
+	glEnableVertexAttribArray(posAttribute);
+	glVertexAttribPointer(posAttribute, 2, GL_FLOAT, GL_FALSE, vertexSize, nullptr);
 
-	auto texAttrib = glGetAttribLocation(shaderProgram, "vertexTexcoord");
-	glEnableVertexAttribArray(texAttrib);
-	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, vertexSize, (void*)(2 * sizeof(GLfloat)));
+	auto texAttribute = glGetAttribLocation(shaderProgram, "vertexTexcoord");
+	glEnableVertexAttribArray(texAttribute);
+	glVertexAttribPointer(texAttribute, 2, GL_FLOAT, GL_FALSE, vertexSize, (void*)(2 * sizeof(GLfloat)));
 
-	auto colorAttrib = glGetAttribLocation(shaderProgram, "vertexColor");
-	glEnableVertexAttribArray(colorAttrib);
-	glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE, vertexSize, (void*)((2 + 2) * sizeof(GLfloat)));
+	auto colorAttribute = glGetAttribLocation(shaderProgram, "vertexColor");
+	glEnableVertexAttribArray(colorAttribute);
+	glVertexAttribPointer(colorAttribute, 3, GL_FLOAT, GL_FALSE, vertexSize, (void*)((2 + 2) * sizeof(GLfloat)));
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -158,12 +158,10 @@ void TextRender::render(const Font& font,
 															  std::function<void()> drawCharacter,
 															  std::int64_t lineIndex,
 															  glm::vec2& drawPosition) {
-		for (auto& token : text.getLine((std::size_t)lineIndex)) {
+		for (auto& token : text.getLine((std::size_t)lineIndex).tokens) {
 			auto color = renderStyle.getColor(token);
 
 			for (auto& character : token.text) {
-				auto& fontCharacter = font[character];
-
 				setCharacterVertices(
 					vertices,
 					offset,
@@ -173,7 +171,7 @@ void TextRender::render(const Font& font,
 					drawPosition.y,
 					color);
 
-				drawPosition.x += fontCharacter.advanceX;
+				drawPosition.x += renderStyle.getAdvanceX(font, character);
 				drawCharacter();
 			}
 		}
@@ -183,35 +181,59 @@ void TextRender::render(const Font& font,
 void TextRender::renderLineNumbers(const Font& font,
 								   const RenderStyle& renderStyle,
 								   const RenderViewPort& viewPort,
-								   std::size_t maxNumberLines,
+								   const FormattedText& text,
 								   glm::vec2 position) {
-	renderView(font, maxNumberLines, viewPort, position, [&](GLfloat* vertices,
-															 std::size_t& offset,
-															 std::function<void()> drawCharacter,
-															 std::int64_t lineIndex,
-															 glm::vec2& drawPosition) {
-		auto lineNumber = std::to_string(lineIndex + 1);
-		for (auto& character : lineNumber) {
-			auto& fontCharacter = font[character];
+	renderView(font, text.numLines(), viewPort, position, [&](GLfloat* vertices,
+															  std::size_t& offset,
+															  std::function<void()> drawCharacter,
+															  std::int64_t lineIndex,
+															  glm::vec2& drawPosition) {
+		auto& line = text.getLine((std::size_t)lineIndex);
 
-			setCharacterVertices(
-				vertices,
-				offset,
-				font,
-				character,
-				drawPosition.x,
-				drawPosition.y,
-				renderStyle.lineNumberColor);
+		if (!line.isContinuation) {
+			auto lineNumber = std::to_string(line.number + 1);
+			for (auto& character : lineNumber) {
+				setCharacterVertices(
+					vertices,
+					offset,
+					font,
+					character,
+					drawPosition.x,
+					drawPosition.y,
+					renderStyle.lineNumberColor);
 
-			drawPosition.x += fontCharacter.advanceX;
-			drawCharacter();
+				drawPosition.x += renderStyle.getAdvanceX(font, character);
+				drawCharacter();
+			}
 		}
 	});
+}
+
+float TextRender::getPositionXForIndex(const Font& font,
+									   const RenderStyle& renderStyle,
+									   const FormattedText& text,
+									   std::size_t lineNumber,
+									   std::size_t offset) {
+	float lineOffset = 0.0f;
+	std::size_t currentIndex = 0;
+	for (auto& token : text.getLine(lineNumber).tokens) {
+		for (auto character : token.text) {
+			if (currentIndex == offset) {
+				return lineOffset;
+			}
+
+			lineOffset += renderStyle.getAdvanceX(font, character);
+			currentIndex++;
+		}
+	}
+
+	return lineOffset;
 }
 
 void TextRender::renderCaret(const Font& font,
 							 const RenderStyle& renderStyle,
 							 const RenderViewPort& viewPort,
+							 const FormattedText& text,
 							 glm::vec2 spacing,
 							 const InputState& inputState) {
 	setupRendering(font);
@@ -219,12 +241,19 @@ void TextRender::renderCaret(const Font& font,
 
 	auto& fontCharacter = font['|'];
 
+	auto lineOffset = getPositionXForIndex(
+		font,
+		renderStyle,
+		text,
+		(std::size_t)inputState.caretPositionY,
+		(std::size_t)inputState.caretPositionX);
+
 	setCharacterVertices(
 		charactersVertices,
 		0,
 		font,
 		'|',
-		inputState.viewPosition.x + spacing.x + (inputState.caretPositionX) * fontCharacter.advanceX - fontCharacter.size.x,
+		inputState.viewPosition.x + spacing.x + lineOffset - fontCharacter.size.x,
 		inputState.viewPosition.y + spacing.y + (inputState.caretPositionY + 1) * font.lineHeight(),
 		renderStyle.textColor);
 

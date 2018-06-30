@@ -21,9 +21,14 @@ Font::Font(const std::string& name, std::uint32_t size)
 	const auto numChars = 128;
 
 	auto buffer = new std::uint8_t[size * size * numChars] { 0 };
-	for (GLubyte c = 0; c < numChars; c++) {
-		// Load character glyph
-		if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
+	for (GLubyte character = 0; character < numChars; character++) {
+		auto glpyhCharacter = character;
+		if (character == '\t') {
+			glpyhCharacter = ' ';
+		}
+
+		// Load fontCharacter glyph
+		if (FT_Load_Char(face, glpyhCharacter, FT_LOAD_RENDER)) {
 			std::cout << "Failed to load glyph." << std::endl;
 			continue;
 		}
@@ -36,19 +41,19 @@ Font::Font(const std::string& name, std::uint32_t size)
 		auto height = face->glyph->bitmap.rows;
 		for (std::size_t y = 0; y < height; y++) {
 			for (std::size_t x = 0; x < width; x++) {
-				buffer[y * (size * numChars) + (c * size) + x] = face->glyph->bitmap.buffer[y * width + x];
+				buffer[y * (size * numChars) + (character * size) + x] = face->glyph->bitmap.buffer[y * width + x];
 			}
 		}
 
-		// Now store character for later use
-		FontCharacter character = {
+		// Now store fontCharacter for later use
+		FontCharacter fontCharacter = {
 			0,
 			glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
 			glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
 			face->glyph->advance.x / 64.0f
 		};
 
-		mCharacters.insert({ c, character });
+		mCharacters.insert({ character, fontCharacter });
 	}
 
 	// Generate texture

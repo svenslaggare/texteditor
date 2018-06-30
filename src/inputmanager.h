@@ -3,6 +3,7 @@
 
 #include <glm/vec2.hpp>
 #include <unordered_map>
+#include <vector>
 
 class GLFWwindow;
 class WindowState;
@@ -15,6 +16,7 @@ class Font;
 class InputManager {
 private:
 	GLFWwindow* mWindow;
+	std::vector<int> mValidKeys;
 
 	std::unordered_map<int, TimePoint> mLastDown;
 	std::unordered_map<int, TimePoint> mLastPressed;

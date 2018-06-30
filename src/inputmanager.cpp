@@ -7,20 +7,26 @@
 #include <algorithm>
 #include <iostream>
 
-namespace {
-	const std::vector<int> keys = {
-		GLFW_KEY_LEFT,
-		GLFW_KEY_RIGHT,
-		GLFW_KEY_UP,
-		GLFW_KEY_DOWN,
-		GLFW_KEY_PAGE_UP,
-		GLFW_KEY_PAGE_DOWN
-	};
-}
-
 InputManager::InputManager(GLFWwindow* window)
 	: mWindow(window) {
+	mValidKeys.push_back(GLFW_KEY_LEFT);
+	mValidKeys.push_back(GLFW_KEY_RIGHT);
+	mValidKeys.push_back(GLFW_KEY_UP);
+	mValidKeys.push_back(GLFW_KEY_DOWN);
+	mValidKeys.push_back(GLFW_KEY_PAGE_UP);
+	mValidKeys.push_back(GLFW_KEY_PAGE_DOWN);
 
+	for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; key++) {
+		mValidKeys.push_back(key);
+	}
+
+	for (int key = GLFW_KEY_0; key <= GLFW_KEY_9; key++) {
+		mValidKeys.push_back(key);
+	}
+
+	mValidKeys.push_back(GLFW_KEY_SPACE);
+	mValidKeys.push_back(GLFW_KEY_BACKSPACE);
+	mValidKeys.push_back(GLFW_KEY_DELETE);
 }
 
 bool InputManager::isKeyPressed(int key) {
@@ -57,7 +63,7 @@ bool InputManager::isKeyPressed(int key) {
 }
 
 void InputManager::postUpdate() {
-	for (auto& key : keys) {
+	for (auto& key : mValidKeys) {
 		mPreviousState[key] = glfwGetKey(mWindow, key);
 	}
 }

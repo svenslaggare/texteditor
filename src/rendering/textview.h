@@ -1,6 +1,8 @@
 #pragma once
 #include "../helpers.h"
 #include "../inputmanager.h"
+#include "../text/textformatter.h"
+#include "renderviewport.h"
 
 #include <string>
 #include <glm/vec2.hpp>
@@ -39,16 +41,36 @@ private:
 	InputState mInputState;
 	const float mScrollSpeed = 4.0f;
 
-	const Text& mText;
+	FormattedText mFormattedText;
+	RenderViewPort mLastViewPort;
+	std::size_t mTextVersion = 0;
+	Text& mText;
 
 	bool mDrawCaret = false;
 	TimePoint mLastCaretUpdate;
+
+	/**
+	 * Returns the current line the caret is at
+	 */
+	const LineTokens& currentLine() const;
 
 	/**
 	 * Updates the input
 	 * @param windowState The window state
 	 */
 	void updateInput(const WindowState& windowState);
+
+	/**
+	 * Updates the editing
+	 * @param windowState The window state
+	 */
+	void updateEditing(const WindowState& windowState);
+
+	/**
+	 * Updates the view movement
+	 * @param windowState The window state
+	 */
+	void updateViewMovement(const WindowState& windowState);
 
 	/**
 	 * Returns the spacing due to line numbers
@@ -59,6 +81,12 @@ private:
 	 * Returns the view port for the text part
 	 */
 	RenderViewPort getTextViewPort();
+
+	/**
+	 * Updates the formatted text
+	 * @param viewPort The view port
+	 */
+	void updateFormattedText(const RenderViewPort& viewPort);
 public:
 	/**
 	 * Creates a new text view
@@ -74,7 +102,7 @@ public:
 			 FormatMode formatMode,
 			 const RenderViewPort& viewPort,
 			 const RenderStyle& renderStyle,
-			 const Text& text);
+			 Text& text);
 
 	/**
 	 * Updates the text view

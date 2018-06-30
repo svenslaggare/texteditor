@@ -8,6 +8,7 @@ class Font;
 class RenderViewPort;
 class RenderStyle;
 class FormattedText;
+class Text;
 
 /**
  * The type of a token
@@ -28,11 +29,33 @@ struct Token {
 };
 
 /**
+ * Represents the tokens for a text line
+ */
+struct LineTokens {
+	std::size_t number = 0;
+	std::vector<Token> tokens;
+	std::size_t offsetFromTextLine = 0;
+
+	bool isContinuation = false;
+
+	/**
+	 * Adds the given token
+	 * @param token The token
+	 */
+	void addToken(Token token);
+
+	/**
+	 * Returns the number of characters on the line
+	 */
+	std::size_t length() const;
+};
+
+/**
  * Represents formatted text
  */
 class FormattedText {
 private:
-	std::vector<std::vector<Token>> mLines;
+	std::vector<LineTokens> mLines;
 public:
 	/**
 	 * Returns the number of lines
@@ -43,13 +66,13 @@ public:
 	 * Returns the tokens at the given line
 	 * @param index The index
 	 */
-	const std::vector<Token>& getLine(std::size_t index) const;
+	const LineTokens& getLine(std::size_t index) const;
 
 	/**
 	 * Adds the given line
 	 * @param tokens The tokens on the line
 	 */
-	void addLine(std::vector<Token> tokens);
+	void addLine(LineTokens tokens);
 };
 
 /**
@@ -84,6 +107,6 @@ public:
 	void format(const Font& font,
 				const RenderStyle& renderStyle,
 				const RenderViewPort& viewPort,
-				const std::string& text,
+				const Text& text,
 				FormattedText& formattedText);
 };

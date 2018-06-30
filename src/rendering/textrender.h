@@ -65,6 +65,20 @@ private:
 					const RenderViewPort& viewPort,
 					glm::vec2 position,
 					RenderLine renderLine);
+
+	/**
+	 * Returns the position of the given index at the given line
+	 * @param font The font
+	 * @param renderStyle The render style
+	 * @param text The text
+	 * @param lineNumber The line number in the text
+	 * @param offset The offset within the line
+	 */
+	float getPositionXForIndex(const Font& font,
+							   const RenderStyle& renderStyle,
+							   const FormattedText& text,
+							   std::size_t lineNumber,
+							   std::size_t offset);
 public:
 	/**
 	 * Creates a new text render
@@ -92,13 +106,13 @@ public:
 	 * @param font The font
 	 * @param renderStyle The render style
 	 * @param viewPort The view port to render to
-	 * @param maxNumberLines The maximum number of lines
+	 * @param text The formatted text to render lines for
 	 * @param position The position to render at
 	 */
 	void renderLineNumbers(const Font& font,
 						   const RenderStyle& renderStyle,
 						   const RenderViewPort& viewPort,
-						   std::size_t maxNumberLines,
+						   const FormattedText& text,
 						   glm::vec2 position);
 
 	/**
@@ -106,12 +120,14 @@ public:
 	 * @param font The font
 	 * @param renderStyle The render style
 	 * @param viewPort The view port to render to
+	 * @param text The formatted text to caret for
 	 * @param spacing The spacing
 	 * @param inputState The input state
 	 */
 	void renderCaret(const Font& font,
 					 const RenderStyle& renderStyle,
 					 const RenderViewPort& viewPort,
+					 const FormattedText& text,
 					 glm::vec2 spacing,
 					 const InputState& inputState);
 };

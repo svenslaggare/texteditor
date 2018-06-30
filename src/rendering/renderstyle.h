@@ -2,6 +2,7 @@
 #include <glm/vec3.hpp>
 
 struct Token;
+struct Font;
 
 /**
  * The render style
@@ -12,7 +13,7 @@ struct RenderStyle {
 	float bottomSpacing = 0.0f;
 	std::size_t spacesPerTab = 4;
 
-	bool wordWrap = false;
+	bool wordWrap = true;
 
 	glm::vec3 backgroundColor = glm::vec3(30.0f / 255.0f, 30.0f / 255.0f, 30.0f / 255.0f);
 	glm::vec3 textColor = glm::vec3(212.0f / 255.0f, 212.0f / 255.0f, 212.0f / 255.0f);
@@ -26,4 +27,11 @@ struct RenderStyle {
 	 * @param token The token
 	 */
 	glm::vec3 getColor(const Token& token) const;
+
+	/**
+	 * Returns the advance for the given character in the given font
+	 * @param font The font
+	 * @param character The character
+	 */
+	float getAdvanceX(const Font& font, char character) const;
 };

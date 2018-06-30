@@ -1,9 +1,7 @@
 #pragma once
-#include "../rendering/renderviewport.h"
-#include "textformatter.h"
-
 #include <string>
 #include <vector>
+#include <functional>
 
 class Font;
 class RenderStyle;
@@ -13,11 +11,9 @@ class RenderStyle;
  */
 class Text {
 private:
-	std::string mRaw;
+	std::vector<std::string> mLines;
 	std::size_t mNumLines = 0;
-
-	mutable FormattedText mFormattedText;
-	mutable RenderViewPort mLastViewPort;
+	std::size_t mVersion = 0;
 public:
 	/**
 	 * Creates a new text
@@ -26,19 +22,39 @@ public:
 	Text(std::string text);
 
 	/**
+	 * Applies the given function to each character in the text
+	 * @param apply The function to apply
+	 */
+	void forEach(std::function<void (std::size_t, char)> apply) const;
+
+	/**
+	 * Returns the current version
+	 */
+	std::size_t version() const;
+
+	/**
+	 * Indicates if the text has changed
+	 * @param version The version to check for. If changed, updates version
+	 */
+	bool hasChanged(std::size_t& version) const;
+
+	/**
+	 * Inserts the given character at the given index at the given line
+	 * @param lineNumber The line to insert at
+	 * @param index The index
+	 * @param character The character
+	 */
+	void insertAt(std::size_t lineNumber, std::size_t index, char character);
+
+	/**
+	 * Deletes the character at the given index at the given line
+	 * @param lineNumber The line to insert at
+	 * @param index The index
+	 */
+	void deleteAt(std::size_t lineNumber, std::size_t index);
+
+	/**
 	 * Returns the number of lines
 	 */
 	std::size_t numLines() const;
-
-	/**
-	 * Returns a formatted version of the current text
-	 * @param formatMode The format mode
-	 * @param font The font
-	 * @param renderStyle The render style
-	 * @param viewPort The view port
-	 */
-	const FormattedText& getFormatted(const Font& font,
-									  FormatMode formatMode,
-									  const RenderStyle& renderStyle,
-									  const RenderViewPort& viewPort) const;
 };

@@ -1,15 +1,33 @@
 #include <iostream>
 #include <chrono>
 #include "text.h"
-#include "textformatter.h"
 #include "../helpers.h"
 
-Text::Text(std::string text)
-	: mRaw(std::move(text)) {
-	for (auto c : mRaw) {
+Text::Text(std::string text) {
+	std::string line;
+	for (auto c : text) {
 		if (c == '\n') {
+			mLines.push_back(std::move(line));
+			line = "";
 			mNumLines++;
+		} else {
+			line += c;
 		}
+	}
+
+	mLines.push_back(std::move(line));
+}
+
+void Text::forEach(std::function<void(std::size_t, char)> apply) const {
+	std::size_t i = 0;
+	for (auto& line : mLines) {
+		for (auto& c : line) {
+			apply(i, c);
+			i++;
+		}
+
+		apply(i, '\n');
+		i++;
 	}
 }
 
@@ -17,43 +35,37 @@ std::size_t Text::numLines() const {
 	return mNumLines;
 }
 
-namespace {
-	void formattedBenchmark(const Font& font, FormatMode formatMode, const RenderStyle& renderStyle, const RenderViewPort& viewPort, const std::string& text) {
-		TextFormatter textFormatter(formatMode);
-		for (int i = 0; i < 3; i++) {
-			FormattedText formattedText;
-			textFormatter.format(font, renderStyle, viewPort, text, formattedText);
-		}
-
-		int n = 10;
-		auto t0 = Helpers::timeNow();
-		for (int i = 0; i < n; i++) {
-			FormattedText formattedText;
-			textFormatter.format(font, renderStyle, viewPort, text, formattedText);
-		}
-		std::cout
-			<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) / n << " ms"
-			<< std::endl;
-	}
+std::size_t Text::version() const {
+	return mVersion;
 }
 
-const FormattedText& Text::getFormatted(const Font& font, FormatMode formatMode, const RenderStyle& renderStyle, const RenderViewPort& viewPort) const {
-	if (mLastViewPort.width != viewPort.width
-		|| mLastViewPort.height != viewPort.height
-		|| mLastViewPort.position != viewPort.position) {
-		mFormattedText = {};
-		mLastViewPort = viewPort;
-
-//		formattedBenchmark(font, formatMode, renderStyle, viewPort, mRaw);
-
-		TextFormatter textFormatter(formatMode);
-		auto t0 = Helpers::timeNow();
-		textFormatter.format(font, renderStyle, viewPort, mRaw, mFormattedText);
-		std::cout
-			<< "Formatted text (lines = " << mFormattedText.numLines() << ") in "
-	  		<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) << " ms"
-			<< std::endl;
+bool Text::hasChanged(std::size_t& version) const {
+	if (mVersion != version) {
+		version = mVersion;
+		return true;
 	}
 
-	return mFormattedText;
+	return false;
+}
+
+void Text::insertAt(std::size_t lineNumber, std::size_t index, char character) {
+	auto startTime = Helpers::timeNow();
+	mVersion++;
+	auto& line = mLines.at(lineNumber);
+	auto maxIndex = (std::size_t)std::max((std::int64_t)line.size(), 0L);
+	index = std::min(index, maxIndex);
+	line.insert(line.begin() + index, character);
+
+	std::cout << "Inserted character in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
+}
+
+void Text::deleteAt(std::size_t lineNumber, std::size_t index) {
+	auto startTime = Helpers::timeNow();
+	mVersion++;
+	auto& line = mLines.at(lineNumber);
+	auto maxIndex = (std::size_t)std::max((std::int64_t)line.size(), 0L);
+	index = std::min(index, maxIndex);
+	line.erase(line.begin() + index);
+
+	std::cout << "Deleted character in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
 }

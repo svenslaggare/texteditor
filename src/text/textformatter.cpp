@@ -9,6 +9,20 @@
 #include <iostream>
 #include <unordered_set>
 
+void LineTokens::addToken(Token token) {
+	tokens.push_back(std::move(token));
+}
+
+std::size_t LineTokens::length() const {
+	std::size_t count = 0;
+
+	for (auto& token : tokens) {
+		count += token.text.size();
+	}
+
+	return count;
+}
+
 namespace {
 	class KeywordList {
 	private:
@@ -88,11 +102,13 @@ namespace {
 		const RenderViewPort& viewPort;
 		FormattedText& formattedText;
 
+		std::size_t lineNumber = 0;
+
 		State state = State::Text;
 		bool isWhitespace = false;
 		bool isEscaped = false;
 
-		std::vector<Token> tokens;
+		LineTokens lineTokens;
 		Token currentToken;
 		float currentWidth = 0.0f;
 
@@ -117,12 +133,10 @@ namespace {
 			}
 		}
 
-		void createNewLine(bool resetState = true) {
+		void createNewLine(bool resetState = true, bool continueWithLine = false) {
 			if (mode == FormatMode::Code) {
 				tryMakeKeyword();
-				tokens.push_back(std::move(currentToken));
-				formattedText.addLine(std::move(tokens));
-				tokens = {};
+				lineTokens.addToken(std::move(currentToken));
 
 				if (resetState) {
 					currentToken = {};
@@ -138,12 +152,23 @@ namespace {
 					state = State::Text;
 				}
 			} else {
-				tokens.push_back(std::move(currentToken));
-				formattedText.addLine(std::move(tokens));
-				tokens = {};
+				lineTokens.addToken(std::move(currentToken));
 				currentToken = {};
 				currentWidth = 0.0f;
 			}
+
+			lineTokens.number = lineNumber;
+			std::size_t offsetFromTextLine = 0;
+			if (!continueWithLine) {
+				lineNumber++;
+			} else {
+				offsetFromTextLine = lineTokens.offsetFromTextLine + lineTokens.length();
+			}
+
+			formattedText.addLine(std::move(lineTokens));
+			lineTokens = {};
+			lineTokens.offsetFromTextLine = offsetFromTextLine;
+			lineTokens.isContinuation = continueWithLine;
 		}
 
 		void newToken(TokenType type = TokenType::Text, bool makeKeyword = false) {
@@ -151,7 +176,7 @@ namespace {
 				tryMakeKeyword();
 			}
 
-			tokens.push_back(std::move(currentToken));
+			lineTokens.addToken(std::move(currentToken));
 			currentToken = {};
 			currentToken.type = type;
 		}
@@ -163,10 +188,13 @@ namespace {
 		}
 
 		void handleTab() {
-			auto advanceX = font[' '].advanceX;
-			for (std::size_t i = 0; i < renderStyle.spacesPerTab; i++) {
-				addChar(' ', advanceX);
-			}
+//			auto advanceX = font[' '].advanceX;
+//			for (std::size_t i = 0; i < renderStyle.spacesPerTab; i++) {
+//				addChar(' ', advanceX);
+//			}
+//			addChar(' ', advanceX);
+//			addChar('\t', advanceX * renderStyle.spacesPerTab);
+			addChar('\t', renderStyle.getAdvanceX(font, '\t'));
 		}
 
 		void handleText(char current, float advanceX) {
@@ -282,11 +310,11 @@ namespace {
 		}
 
 		void process(char current) {
-			auto advanceX = font[current].advanceX;
+			auto advanceX = renderStyle.getAdvanceX(font, current);
 
 			if (renderStyle.wordWrap) {
 				if (currentWidth + advanceX > viewPort.width) {
-					createNewLine(false);
+					createNewLine(false, true);
 				}
 			}
 
@@ -308,11 +336,11 @@ std::size_t FormattedText::numLines() const {
 	return mLines.size();
 }
 
-const std::vector<Token>& FormattedText::getLine(std::size_t index) const {
-	return mLines[index];
+const LineTokens& FormattedText::getLine(std::size_t index) const {
+	return mLines.at(index);
 }
 
-void FormattedText::addLine(std::vector<Token> tokens) {
+void FormattedText::addLine(LineTokens tokens) {
 	mLines.push_back(std::move(tokens));
 }
 
@@ -324,13 +352,16 @@ TextFormatter::TextFormatter(FormatMode mode)
 void TextFormatter::format(const Font& font,
 						   const RenderStyle& renderStyle,
 						   const RenderViewPort& viewPort,
-						   const std::string& text,
+						   const Text& text,
 						   FormattedText& formattedText) {
 	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedText);
 
-	for (auto& current : text) {
+//	for (auto& current : text.raw()) {
+//		stateMachine.process(current);
+//	}
+	text.forEach([&](std::size_t i, char current) {
 		stateMachine.process(current);
-	}
+	});
 
 	stateMachine.createNewLine();
 }

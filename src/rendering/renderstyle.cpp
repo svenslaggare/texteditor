@@ -1,5 +1,7 @@
 #include "renderstyle.h"
 #include "../text/text.h"
+#include "../text/textformatter.h"
+#include "font.h"
 
 glm::vec3 RenderStyle::getColor(const Token& token) const {
 	switch (token.type) {
@@ -12,4 +14,12 @@ glm::vec3 RenderStyle::getColor(const Token& token) const {
 		case TokenType::Comment:
 			return commentColor;
 	}
+}
+
+float RenderStyle::getAdvanceX(const Font& font, char character) const {
+	if (character == '\t') {
+		return font[character].advanceX * spacesPerTab;
+	}
+
+	return font[character].advanceX;
 }
