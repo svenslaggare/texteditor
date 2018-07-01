@@ -17,9 +17,11 @@ glm::vec3 RenderStyle::getColor(const Token& token) const {
 }
 
 float RenderStyle::getAdvanceX(const Font& font, char character) const {
+	auto advanceX = font.getAdvanceX(character);
+
 	if (character == '\t') {
-		return font[character].advanceX * spacesPerTab;
+		return advanceX * spacesPerTab;
 	}
 
-	return font[character].advanceX;
+	return advanceX;
 }

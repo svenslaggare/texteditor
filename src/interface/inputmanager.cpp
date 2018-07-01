@@ -1,7 +1,7 @@
 #include "inputmanager.h"
-#include "windowstate.h"
-#include "rendering/renderviewport.h"
-#include "rendering/font.h"
+#include "../windowstate.h"
+#include "../rendering/renderviewport.h"
+#include "../rendering/font.h"
 
 #include <GLFW/glfw3.h>
 #include <algorithm>

@@ -29,6 +29,9 @@ private:
 	std::unordered_map<char, FontCharacter> mCharacters;
 	GLuint mTextureMap;
 	float mLineHeight = 0.0f;
+
+	bool mIsMonoSpace = true;
+	float mMonoSpaceAdvanceX = 0.0f;
 public:
 	/**
 	 * Creates a new font
@@ -63,4 +66,10 @@ public:
 	 * @param character The character
 	 */
 	const FontCharacter& operator[](char character) const;
+
+	/**
+	 * Returns the advance X for the given character
+	 * @param character The character
+	 */
+	float getAdvanceX(char character) const;
 };

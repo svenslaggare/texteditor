@@ -1,8 +1,8 @@
 #pragma once
 #include "../helpers.h"
-#include "../inputmanager.h"
+#include "inputmanager.h"
 #include "../text/textformatter.h"
-#include "renderviewport.h"
+#include "../rendering/renderviewport.h"
 
 #include <string>
 #include <glm/vec2.hpp>

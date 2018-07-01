@@ -20,11 +20,11 @@
 #include "rendering/renderstyle.h"
 #include "rendering/textrender.h"
 #include "rendering/framebuffer.h"
-#include "rendering/textview.h"
+#include "interface/textview.h"
 #include "rendering/renderviewport.h"
 #include "text/text.h"
 #include "windowstate.h"
-#include "inputmanager.h"
+#include "interface/inputmanager.h"
 #include "rendering/texturerender.h"
 #include "text/textformatter.h"
 

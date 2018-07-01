@@ -1,10 +1,11 @@
 #include "textformatter.h"
+#include "text.h"
 #include "../rendering/font.h"
 #include "../rendering/textrender.h"
 #include "../rendering/renderstyle.h"
 #include "../rendering/renderviewport.h"
-#include "text.h"
 #include "../helpers.h"
+#include "../external/bloom_filter.hpp"
 
 #include <iostream>
 #include <unordered_set>
@@ -27,12 +28,14 @@ namespace {
 	class KeywordList {
 	private:
 		std::unordered_set<std::string> mKeywords;
+//		bloom_filter mKeywordsBloomFilter;
 		std::size_t mMaxLength = 0;
 	public:
 		explicit KeywordList(std::unordered_set<std::string> keywords)
 			: mKeywords(std::move(keywords)) {
 			for (auto& keyword : mKeywords) {
 				mMaxLength = std::max(mMaxLength, keyword.size());
+//				mKeywordsBloomFilter.insert(keyword);
 			}
 		}
 
@@ -181,8 +184,8 @@ namespace {
 			currentToken.type = type;
 		}
 
-		void addChar(char c, float advanceX) {
-			currentToken.text += c;
+		void addChar(char character, float advanceX) {
+			currentToken.text += character;
 			currentWidth += advanceX;
 			isEscaped = false;
 		}

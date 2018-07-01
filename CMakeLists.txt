@@ -27,18 +27,19 @@ set(SOURCE_FILES
     src/rendering/framebuffer.cpp
     src/rendering/renderstyle.cpp
     src/rendering/renderstyle.h
-    src/rendering/textview.cpp
-    src/rendering/textview.h
+    src/interface/textview.cpp
+    src/interface/textview.h
     src/text/text.cpp
     src/text/text.h
     src/rendering/renderviewport.cpp
     src/rendering/renderviewport.h
-    src/inputmanager.cpp
-    src/inputmanager.h
+    src/interface/inputmanager.cpp
+    src/interface/inputmanager.h
     src/windowstate.cpp
     src/windowstate.h
     src/rendering/texturerender.cpp
-    src/rendering/texturerender.h)
+    src/rendering/texturerender.h
+    src/external/bloom_filter.hpp)
 
 #add_compile_options(-O3 -march=native -mtune=native)
 

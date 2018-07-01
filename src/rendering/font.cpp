@@ -64,6 +64,14 @@ Font::Font(const std::string& name, std::uint32_t size)
 			face->glyph->advance.x / 64.0f
 		};
 
+		if (mMonoSpaceAdvanceX == 0.0f) {
+			mMonoSpaceAdvanceX = fontCharacter.advanceX;
+		}
+
+		if (mMonoSpaceAdvanceX != fontCharacter.advanceX) {
+			mMonoSpaceAdvanceX = false;
+		}
+
 		mCharacters.insert({ character, fontCharacter });
 	}
 
@@ -120,4 +128,12 @@ void Font::getTextureCoordinates(char character, float& top, float& left, float&
 
 const FontCharacter& Font::operator[](char character) const {
 	return mCharacters.at(character);
+}
+
+float Font::getAdvanceX(char character) const {
+	if (mIsMonoSpace) {
+		return mMonoSpaceAdvanceX;
+	}
+
+	return (*this)[character].advanceX;
 }

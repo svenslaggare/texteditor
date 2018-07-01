@@ -1,12 +1,12 @@
 #include "textview.h"
-#include "textrender.h"
-#include "renderstyle.h"
-#include "renderviewport.h"
-#include "font.h"
+#include "../rendering/textrender.h"
+#include "../rendering/renderstyle.h"
+#include "../rendering/renderviewport.h"
+#include "../rendering/font.h"
 
 #include "../text/text.h"
 
-#include "../inputmanager.h"
+#include "inputmanager.h"
 #include "../windowstate.h"
 
 #include <chrono>
@@ -59,7 +59,7 @@ const LineTokens& TextView::currentLine() const {
 
 void TextView::moveCaretX(std::int64_t diff) {
 	auto viewPort = getTextViewPort();
-	const auto charWidth = mFont['A'].advanceX;
+	const auto charWidth = mFont.getAdvanceX('A');
 	mInputState.caretPositionX += diff;
 
 	if (diff < 0) {
@@ -74,9 +74,9 @@ void TextView::moveCaretX(std::int64_t diff) {
 		}
 	} else {
 		if (mFormattedText.numLines() > 0) {
-			if ((std::size_t) mInputState.caretPositionX > currentLine().length()) {
+			if ((std::size_t)mInputState.caretPositionX > currentLine().length()) {
 				moveCaretY(1);
-				mInputState.caretPositionX = 0;
+				mInputState.caretPositionX = 1;
 			}
 		}
 	}
@@ -123,9 +123,7 @@ void TextView::moveCaretY(std::int64_t diff) {
 		mInputState.viewPosition.y = 0;
 	}
 
-	mInputState.caretPositionX = std::min(
-		(std::size_t)mInputState.caretPositionX,
-		currentLine().length());
+	mInputState.caretPositionX = std::min((std::size_t)mInputState.caretPositionX, currentLine().length());
 }
 
 void TextView::updateViewMovement(const WindowState& windowState) {
@@ -292,7 +290,7 @@ RenderViewPort TextView::getTextViewPort() {
 }
 
 namespace {
-	void formattedBenchmark(const Font& font, FormatMode formatMode, const RenderStyle& renderStyle, const RenderViewPort& viewPort, const std::string& text) {
+	void formattedBenchmark(const Font& font, FormatMode formatMode, const RenderStyle& renderStyle, const RenderViewPort& viewPort, const Text& text) {
 		TextFormatter textFormatter(formatMode);
 		for (int i = 0; i < 3; i++) {
 			FormattedText formattedText;
@@ -319,7 +317,7 @@ void TextView::updateFormattedText(const RenderViewPort& viewPort) {
 		mFormattedText = {};
 		mLastViewPort = viewPort;
 
-//		formattedBenchmark(font, formatMode, renderStyle, viewPort, mRaw);
+//		formattedBenchmark(mFont, mFormatMode, mRenderStyle, viewPort, mText);
 
 		TextFormatter textFormatter(mFormatMode);
 		auto t0 = Helpers::timeNow();
