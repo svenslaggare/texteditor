@@ -55,6 +55,12 @@ private:
 	const LineTokens& currentLine() const;
 
 	/**
+	 * Moves the caret in the y position by the given amount
+	 * @param diff The amount to move
+	 */
+	void moveCaretY(int diff);
+
+	/**
 	 * Updates the input
 	 * @param windowState The window state
 	 */

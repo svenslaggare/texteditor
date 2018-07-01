@@ -15,7 +15,9 @@ Text::Text(std::string text) {
 		}
 	}
 
-	mLines.push_back(std::move(line));
+	if (!line.empty()) {
+		mLines.push_back(std::move(line));
+	}
 }
 
 void Text::forEach(std::function<void(std::size_t, char)> apply) const {
@@ -68,4 +70,36 @@ void Text::deleteAt(std::size_t lineNumber, std::size_t index) {
 	line.erase(line.begin() + index);
 
 	std::cout << "Deleted character in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
+}
+
+void Text::splitLine(std::size_t lineNumber, std::size_t index) {
+	auto startTime = Helpers::timeNow();
+	mVersion++;
+
+	auto& line = mLines.at(lineNumber);
+	std::string afterSplit = line.substr(index);
+	line.erase(line.begin() + index, line.end());
+	mLines.insert(mLines.begin() + lineNumber + 1, afterSplit);
+
+	std::cout << "Split line in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
+}
+
+void Text::deleteLine(std::size_t lineNumber, DeleteLineMode mode) {
+	auto startTime = Helpers::timeNow();
+	mVersion++;
+
+	if (mode == DeleteLineMode::Start) {
+		if (lineNumber > 0) {
+			mLines.at(lineNumber - 1) += mLines.at(lineNumber);
+		}
+
+		mLines.erase(mLines.begin() + lineNumber);
+	} else {
+		if (lineNumber + 1 < numLines()) {
+			mLines.at(lineNumber) += mLines.at(lineNumber + 1);
+			mLines.erase(mLines.begin() + lineNumber + 1);
+		}
+	}
+
+	std::cout << "Deleted line in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
 }

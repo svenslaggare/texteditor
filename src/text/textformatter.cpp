@@ -356,12 +356,11 @@ void TextFormatter::format(const Font& font,
 						   FormattedText& formattedText) {
 	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedText);
 
-//	for (auto& current : text.raw()) {
-//		stateMachine.process(current);
-//	}
 	text.forEach([&](std::size_t i, char current) {
 		stateMachine.process(current);
 	});
 
-	stateMachine.createNewLine();
+	if (!stateMachine.lineTokens.tokens.empty()) {
+		stateMachine.createNewLine();
+	}
 }

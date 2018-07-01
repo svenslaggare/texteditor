@@ -22,15 +22,20 @@ public:
 	Text(std::string text);
 
 	/**
+	 * Returns the current version
+	 */
+	std::size_t version() const;
+
+	/**
+	 * Returns the number of lines
+	 */
+	std::size_t numLines() const;
+
+	/**
 	 * Applies the given function to each character in the text
 	 * @param apply The function to apply
 	 */
 	void forEach(std::function<void (std::size_t, char)> apply) const;
-
-	/**
-	 * Returns the current version
-	 */
-	std::size_t version() const;
 
 	/**
 	 * Indicates if the text has changed
@@ -54,7 +59,21 @@ public:
 	void deleteAt(std::size_t lineNumber, std::size_t index);
 
 	/**
-	 * Returns the number of lines
+	 * Splits the given line
+	 * @param lineNumber The line to split
+	 * @param index The index at the line to perform the split
 	 */
-	std::size_t numLines() const;
+	void splitLine(std::size_t lineNumber, std::size_t index);
+
+	enum class DeleteLineMode {
+		Start,
+		End
+	};
+
+	/**
+	 * Deletes the given line
+	 * @param lineNumber The line to remove
+	 * @param mode How to delete the line
+	 */
+	void deleteLine(std::size_t lineNumber, DeleteLineMode mode);
 };

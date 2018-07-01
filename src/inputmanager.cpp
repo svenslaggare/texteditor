@@ -27,6 +27,7 @@ InputManager::InputManager(GLFWwindow* window)
 	mValidKeys.push_back(GLFW_KEY_SPACE);
 	mValidKeys.push_back(GLFW_KEY_BACKSPACE);
 	mValidKeys.push_back(GLFW_KEY_DELETE);
+	mValidKeys.push_back(GLFW_KEY_ENTER);
 }
 
 bool InputManager::isKeyPressed(int key) {
