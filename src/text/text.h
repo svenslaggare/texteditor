@@ -32,6 +32,12 @@ public:
 	std::size_t numLines() const;
 
 	/**
+	 * Returns the given line
+	 * @param index The index
+	 */
+	const std::string& getLine(std::size_t index) const;
+
+	/**
 	 * Applies the given function to each character in the text
 	 * @param apply The function to apply
 	 */
@@ -70,10 +76,14 @@ public:
 		End
 	};
 
+	struct DeleteLineDiff {
+		std::int64_t caretX = 0;
+	};
+
 	/**
 	 * Deletes the given line
 	 * @param lineNumber The line to remove
 	 * @param mode How to delete the line
 	 */
-	void deleteLine(std::size_t lineNumber, DeleteLineMode mode);
+	DeleteLineDiff deleteLine(std::size_t lineNumber, DeleteLineMode mode);
 };

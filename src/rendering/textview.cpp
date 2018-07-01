@@ -26,14 +26,75 @@ TextView::TextView(GLFWwindow* window,
 	  mRenderStyle(renderStyle),
 	  mInputManager(window),
 	  mText(text) {
+	for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; key++) {
+		KeyboardCommand command;
+		command.key = key;
+		command.normalMode = (char)('a' + (key - GLFW_KEY_A));
+		command.shiftMode = (char)std::toupper(command.normalMode);
+		command.altMode = '\0';
+		mKeyboardCommands.push_back(command);
+	}
 
+	mKeyboardCommands.push_back({ GLFW_KEY_0, '0', '=', '}' });
+	mKeyboardCommands.push_back({ GLFW_KEY_1, '1', '!', '\0' });
+	mKeyboardCommands.push_back({ GLFW_KEY_2, '2', '"', '@' });
+	mKeyboardCommands.push_back({ GLFW_KEY_3, '3', '#', '\0' });
+	mKeyboardCommands.push_back({ GLFW_KEY_4, '4', '\0', '\0' });
+	mKeyboardCommands.push_back({ GLFW_KEY_5, '5', '%', '\0' });
+	mKeyboardCommands.push_back({ GLFW_KEY_6, '6', '&', '\0' });
+	mKeyboardCommands.push_back({ GLFW_KEY_7, '7', '/', '{' });
+	mKeyboardCommands.push_back({ GLFW_KEY_8, '8', '(', '[' });
+	mKeyboardCommands.push_back({ GLFW_KEY_MINUS, '+', '?', '\\' });
+
+	mKeyboardCommands.push_back({ GLFW_KEY_COMMA, ',', ';', '\0' });
+	mKeyboardCommands.push_back({ GLFW_KEY_PERIOD, '.', ':', '\0' });
+	mKeyboardCommands.push_back({ GLFW_KEY_SPACE, ' ', '\0', '\0' });
+	mKeyboardCommands.push_back({ GLFW_KEY_TAB, '\t', '\0', '\0' });
+	mKeyboardCommands.push_back({ GLFW_KEY_SLASH, '-', '_', '\0' });
 }
 
 const LineTokens& TextView::currentLine() const {
 	return mFormattedText.getLine((std::size_t)mInputState.caretPositionY);
 }
 
-void TextView::moveCaretY(int diff) {
+void TextView::moveCaretX(std::int64_t diff) {
+	auto viewPort = getTextViewPort();
+	const auto charWidth = mFont['A'].advanceX;
+	mInputState.caretPositionX += diff;
+
+	if (diff < 0) {
+		if (mInputState.caretPositionX < 0L) {
+			moveCaretY(-1);
+
+			if (mFormattedText.numLines() > 0) {
+				mInputState.caretPositionX = (std::int64_t)currentLine().length();
+			} else {
+				mInputState.caretPositionX = 0;
+			}
+		}
+	} else {
+		if (mFormattedText.numLines() > 0) {
+			if ((std::size_t) mInputState.caretPositionX > currentLine().length()) {
+				moveCaretY(1);
+				mInputState.caretPositionX = 0;
+			}
+		}
+	}
+
+	auto caretScreenPositionX = -std::max(mInputState.caretPositionX + diff, 0L) * charWidth;
+	if (caretScreenPositionX < mInputState.viewPosition.x - viewPort.width) {
+		mInputState.viewPosition.x -= diff * charWidth;
+	}
+
+	if (caretScreenPositionX > mInputState.viewPosition.x) {
+		mInputState.viewPosition.x -= diff * charWidth;
+	}
+}
+
+void TextView::moveCaretY(std::int64_t diff) {
+	auto viewPort = getTextViewPort();
+	const auto lineHeight = mFont.lineHeight();
+
 	mInputState.caretPositionY += diff;
 
 	if (mInputState.caretPositionY >= mFormattedText.numLines()) {
@@ -43,45 +104,40 @@ void TextView::moveCaretY(int diff) {
 	if (mInputState.caretPositionY < 0) {
 		mInputState.caretPositionY = 0;
 	}
+
+	auto caretScreenPositionY = -std::max(mInputState.caretPositionY + diff, 0L) * lineHeight;
+	if (caretScreenPositionY < mInputState.viewPosition.y - viewPort.height) {
+		mInputState.viewPosition.y -= diff * lineHeight;
+	}
+
+	if (caretScreenPositionY > mInputState.viewPosition.y) {
+		mInputState.viewPosition.y -= diff * lineHeight;
+	}
+
+	if (!(-mInputState.viewPosition.y + viewPort.height >= -caretScreenPositionY
+		  && -mInputState.viewPosition.y <= -caretScreenPositionY)) {
+		mInputState.viewPosition.y = -mInputState.caretPositionY * lineHeight + viewPort.height / 2.0f;
+	}
+
+	if (mInputState.viewPosition.y > 0) {
+		mInputState.viewPosition.y = 0;
+	}
+
+	mInputState.caretPositionX = std::min(
+		(std::size_t)mInputState.caretPositionX,
+		currentLine().length());
 }
 
 void TextView::updateViewMovement(const WindowState& windowState) {
 	auto viewPort = getTextViewPort();
 	const auto lineHeight = mFont.lineHeight();
-	const auto lineWidth = mFont['A'].advanceX;
 
-	const auto pageMoveSpeed = viewPort.height;
+	const auto pageMoveSpeed = (std::int64_t)std::round(viewPort.height / lineHeight);
 	if (mInputManager.isKeyPressed(GLFW_KEY_PAGE_UP)) {
-		mInputState.viewPosition.y += pageMoveSpeed;
+		moveCaretY(-pageMoveSpeed);
 	} else if (mInputManager.isKeyPressed(GLFW_KEY_PAGE_DOWN)) {
-		mInputState.viewPosition.y -= pageMoveSpeed;
+		moveCaretY(pageMoveSpeed);
 	}
-
-	auto moveCaretViewY = [&](int diff) {
-		moveCaretY(diff);
-
-		auto caretScreenPositionY = -std::max(mInputState.caretPositionY + diff, 0L) * lineHeight;
-		if (caretScreenPositionY < mInputState.viewPosition.y - viewPort.height) {
-			mInputState.viewPosition.y -= diff * lineHeight;
-		}
-
-		if (caretScreenPositionY > mInputState.viewPosition.y) {
-			mInputState.viewPosition.y -= diff * lineHeight;
-		}
-
-		if (!(-mInputState.viewPosition.y + viewPort.height >= -caretScreenPositionY
-			  && -mInputState.viewPosition.y <= -caretScreenPositionY)) {
-			mInputState.viewPosition.y = -mInputState.caretPositionY * lineHeight + viewPort.height / 2.0f;
-		}
-
-		if (mInputState.viewPosition.y > 0) {
-			mInputState.viewPosition.y = 0;
-		}
-
-		mInputState.caretPositionX = std::min(
-			(std::size_t)mInputState.caretPositionX,
-			currentLine().length());
-	};
 
 	int caretPositionDiffY = 0;
 	if (mInputManager.isKeyPressed(GLFW_KEY_UP)) {
@@ -93,7 +149,7 @@ void TextView::updateViewMovement(const WindowState& windowState) {
 	if (caretPositionDiffY != 0) {
 		mDrawCaret = true;
 		mLastCaretUpdate = Helpers::timeNow();
-		moveCaretViewY(caretPositionDiffY);
+		moveCaretY(caretPositionDiffY);
 	}
 
 	int caretPositionDiffX = 0;
@@ -106,36 +162,7 @@ void TextView::updateViewMovement(const WindowState& windowState) {
 	if (caretPositionDiffX != 0) {
 		mDrawCaret = true;
 		mLastCaretUpdate = Helpers::timeNow();
-
-		mInputState.caretPositionX += caretPositionDiffX;
-
-		if (caretPositionDiffX == -1) {
-			if (mInputState.caretPositionX < 0L) {
-				moveCaretViewY(-1);
-
-				if (mFormattedText.numLines() > 0) {
-					mInputState.caretPositionX = (std::int64_t)currentLine().length();
-				} else {
-					mInputState.caretPositionX = 0;
-				}
-			}
-		} else {
-			if (mFormattedText.numLines() > 0) {
-				if ((std::size_t) mInputState.caretPositionX > currentLine().length()) {
-					moveCaretViewY(1);
-					mInputState.caretPositionX = 0;
-				}
-			}
-		}
-
-		auto caretScreenPositionX = -std::max(mInputState.caretPositionX + caretPositionDiffX, 0L) * lineWidth;
-		if (caretScreenPositionX < mInputState.viewPosition.x - viewPort.width) {
-			mInputState.viewPosition.x -= caretPositionDiffX * lineWidth;
-		}
-
-		if (caretScreenPositionX > mInputState.viewPosition.x) {
-			mInputState.viewPosition.x -= caretPositionDiffX * lineWidth;
-		}
+		moveCaretX(caretPositionDiffX);
 	}
 
 	if (windowState.hasScrolled()) {
@@ -148,14 +175,9 @@ void TextView::updateViewMovement(const WindowState& windowState) {
 }
 
 void TextView::updateEditing(const WindowState& windowState) {
-	auto moveCaretX = [&](int diff) {
-		mInputState.caretPositionX += diff;
-		updateFormattedText(getTextViewPort());
-	};
-
 	auto setCaretX = [&](std::int64_t position) {
 		mInputState.caretPositionX = position;
-		updateFormattedText(getTextViewPort());
+		mInputState.viewPosition.x = 0;
 	};
 
 	auto getLineAndOffset = [&](int offsetX = 0) {
@@ -168,6 +190,7 @@ void TextView::updateEditing(const WindowState& windowState) {
 	auto insertCharacter = [&](char current) {
 		auto lineAndOffset = getLineAndOffset();
 		mText.insertAt(lineAndOffset.first, (std::size_t)lineAndOffset.second, current);
+		updateFormattedText(getTextViewPort());
 		moveCaretX(1);
 	};
 
@@ -176,36 +199,42 @@ void TextView::updateEditing(const WindowState& windowState) {
 			return;
 		}
 
-		mText.deleteLine(currentLine().number, mode);
-
+		auto diff = mText.deleteLine(currentLine().number, mode);
 		if (mode == Text::DeleteLineMode::Start) {
-			mInputState.caretPositionX += currentLine().length();
-			moveCaretY(-1);
+			mInputState.caretPositionX = diff.caretX;
 		}
 
 		updateFormattedText(getTextViewPort());
+
+		if (mode == Text::DeleteLineMode::Start) {
+			moveCaretY(-1);
+		}
 	};
 
-	for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; key++) {
-		if (mInputManager.isKeyPressed(key)) {
-			insertCharacter((char)('a' + (key - GLFW_KEY_A)));
-		}
-	}
+	bool isShiftDown = mInputManager.isShiftDown();
+	bool isAltDown = mInputManager.isAltDown();
 
-	for (int key = GLFW_KEY_0; key <= GLFW_KEY_9; key++) {
-		if (mInputManager.isKeyPressed(key)) {
-			insertCharacter((char)('0' + (key - GLFW_KEY_0)));
+	for (auto& command : mKeyboardCommands) {
+		if (mInputManager.isKeyPressed(command.key)) {
+			if (isShiftDown) {
+				if (command.shiftMode != '\0') {
+					insertCharacter(command.shiftMode);
+				}
+			} else if (isAltDown) {
+				if (command.altMode != '\0') {
+					insertCharacter(command.altMode);
+				}
+			} else {
+				insertCharacter(command.normalMode);
+			}
 		}
-	}
-
-	if (mInputManager.isKeyPressed(GLFW_KEY_SPACE)) {
-		insertCharacter(' ');
 	}
 
 	if (mInputManager.isKeyPressed(GLFW_KEY_BACKSPACE)) {
 		auto lineAndOffset = getLineAndOffset(-1);
 		if (lineAndOffset.second >= 0) {
 			mText.deleteAt(lineAndOffset.first, (std::size_t)lineAndOffset.second);
+			updateFormattedText(getTextViewPort());
 			moveCaretX(-1);
 		} else {
 			deleteLine(Text::DeleteLineMode::Start);
@@ -224,6 +253,7 @@ void TextView::updateEditing(const WindowState& windowState) {
 	if (mInputManager.isKeyPressed(GLFW_KEY_ENTER)) {
 		auto lineAndOffset = getLineAndOffset();
 		mText.splitLine(lineAndOffset.first, (std::size_t)lineAndOffset.second);
+		updateFormattedText(getTextViewPort());
 		moveCaretY(1);
 		setCaretX(0);
 	}

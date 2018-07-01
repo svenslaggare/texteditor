@@ -25,6 +25,16 @@ struct InputState {
 };
 
 /**
+ * Represents a keyboard command
+ */
+struct KeyboardCommand {
+	int key;
+	char normalMode; 		//When no modifier key is pressed
+	char shiftMode;  		//When shift is being pressed
+	char altMode;			//When alt is being pressed
+};
+
+/**
  * Represents a text view
  */
 class TextView {
@@ -39,6 +49,7 @@ private:
 
 	InputManager mInputManager;
 	InputState mInputState;
+	std::vector<KeyboardCommand> mKeyboardCommands;
 	const float mScrollSpeed = 4.0f;
 
 	FormattedText mFormattedText;
@@ -55,10 +66,16 @@ private:
 	const LineTokens& currentLine() const;
 
 	/**
+	 * Moves the caret in the x position by the given amount
+	 * @param diff The amount to move
+	 */
+	void moveCaretX(std::int64_t diff);
+
+	/**
 	 * Moves the caret in the y position by the given amount
 	 * @param diff The amount to move
 	 */
-	void moveCaretY(int diff);
+	void moveCaretY(std::int64_t diff);
 
 	/**
 	 * Updates the input

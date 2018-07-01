@@ -9,28 +9,36 @@
 
 InputManager::InputManager(GLFWwindow* window)
 	: mWindow(window) {
-	mValidKeys.push_back(GLFW_KEY_LEFT);
-	mValidKeys.push_back(GLFW_KEY_RIGHT);
-	mValidKeys.push_back(GLFW_KEY_UP);
-	mValidKeys.push_back(GLFW_KEY_DOWN);
-	mValidKeys.push_back(GLFW_KEY_PAGE_UP);
-	mValidKeys.push_back(GLFW_KEY_PAGE_DOWN);
+//	mValidKeys.push_back(GLFW_KEY_LEFT);
+//	mValidKeys.push_back(GLFW_KEY_RIGHT);
+//	mValidKeys.push_back(GLFW_KEY_UP);
+//	mValidKeys.push_back(GLFW_KEY_DOWN);
+//	mValidKeys.push_back(GLFW_KEY_PAGE_UP);
+//	mValidKeys.push_back(GLFW_KEY_PAGE_DOWN);
+//
+//	for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; key++) {
+//		mValidKeys.push_back(key);
+//	}
+//
+//	for (int key = GLFW_KEY_0; key <= GLFW_KEY_9; key++) {
+//		mValidKeys.push_back(key);
+//	}
+//
+//	mValidKeys.push_back(GLFW_KEY_SPACE);
+//	mValidKeys.push_back(GLFW_KEY_BACKSPACE);
+//	mValidKeys.push_back(GLFW_KEY_DELETE);
+//	mValidKeys.push_back(GLFW_KEY_ENTER);
+}
 
-	for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; key++) {
-		mValidKeys.push_back(key);
-	}
-
-	for (int key = GLFW_KEY_0; key <= GLFW_KEY_9; key++) {
-		mValidKeys.push_back(key);
-	}
-
-	mValidKeys.push_back(GLFW_KEY_SPACE);
-	mValidKeys.push_back(GLFW_KEY_BACKSPACE);
-	mValidKeys.push_back(GLFW_KEY_DELETE);
-	mValidKeys.push_back(GLFW_KEY_ENTER);
+bool InputManager::isKeyDown(int key) {
+	return glfwGetKey(mWindow, key) == GLFW_PRESS;
 }
 
 bool InputManager::isKeyPressed(int key) {
+	if (mValidKeys.count(key) == 0) {
+		mValidKeys.insert(key);
+	}
+
 	auto prevState = mPreviousState.find(key);
 	bool currentPressed = glfwGetKey(mWindow, key) == GLFW_PRESS;
 	bool prevReleased = prevState != mPreviousState.end() && prevState->second == GLFW_RELEASE;
@@ -61,6 +69,14 @@ bool InputManager::isKeyPressed(int key) {
 	}
 
 	return false;
+}
+
+bool InputManager::isShiftDown() {
+	return isKeyDown(GLFW_KEY_LEFT_SHIFT) || isKeyDown(GLFW_KEY_RIGHT_SHIFT);
+}
+
+bool InputManager::isAltDown() {
+	return isKeyDown(GLFW_KEY_LEFT_ALT) || isKeyDown(GLFW_KEY_RIGHT_ALT);
 }
 
 void InputManager::postUpdate() {

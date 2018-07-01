@@ -41,6 +41,10 @@ std::size_t Text::version() const {
 	return mVersion;
 }
 
+const std::string& Text::getLine(std::size_t index) const {
+	return mLines.at(index);
+}
+
 bool Text::hasChanged(std::size_t& version) const {
 	if (mVersion != version) {
 		version = mVersion;
@@ -84,12 +88,14 @@ void Text::splitLine(std::size_t lineNumber, std::size_t index) {
 	std::cout << "Split line in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
 }
 
-void Text::deleteLine(std::size_t lineNumber, DeleteLineMode mode) {
+Text::DeleteLineDiff Text::deleteLine(std::size_t lineNumber, DeleteLineMode mode) {
 	auto startTime = Helpers::timeNow();
 	mVersion++;
+	DeleteLineDiff diff;
 
 	if (mode == DeleteLineMode::Start) {
 		if (lineNumber > 0) {
+			diff.caretX = mLines.at(lineNumber - 1).length();
 			mLines.at(lineNumber - 1) += mLines.at(lineNumber);
 		}
 
@@ -102,4 +108,5 @@ void Text::deleteLine(std::size_t lineNumber, DeleteLineMode mode) {
 	}
 
 	std::cout << "Deleted line in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
+	return diff;
 }
