@@ -188,12 +188,6 @@ namespace {
 		}
 
 		void handleTab() {
-//			auto advanceX = font[' '].advanceX;
-//			for (std::size_t i = 0; i < renderStyle.spacesPerTab; i++) {
-//				addChar(' ', advanceX);
-//			}
-//			addChar(' ', advanceX);
-//			addChar('\t', advanceX * renderStyle.spacesPerTab);
 			addChar('\t', renderStyle.getAdvanceX(font, '\t'));
 		}
 

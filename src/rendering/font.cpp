@@ -20,14 +20,25 @@ Font::Font(const std::string& name, std::uint32_t size)
 
 	const auto numChars = 128;
 
-	auto buffer = new std::uint8_t[size * size * numChars] { 0 };
+	// Determine size of the element in the map
+	for (GLubyte character = 0; character < numChars; character++) {
+		// Load font character glyph
+		if (FT_Load_Char(face, character, FT_LOAD_RENDER)) {
+			continue;
+		}
+
+		mSize = std::max(mSize, face->glyph->bitmap.width);
+		mSize = std::max(mSize, face->glyph->bitmap.rows);
+	}
+
+	auto buffer = std::make_unique<std::uint8_t[]>(mSize * mSize * numChars);
 	for (GLubyte character = 0; character < numChars; character++) {
 		auto glpyhCharacter = character;
 		if (character == '\t') {
 			glpyhCharacter = ' ';
 		}
 
-		// Load fontCharacter glyph
+		// Load font character glyph
 		if (FT_Load_Char(face, glpyhCharacter, FT_LOAD_RENDER)) {
 			std::cout << "Failed to load glyph." << std::endl;
 			continue;
@@ -41,7 +52,7 @@ Font::Font(const std::string& name, std::uint32_t size)
 		auto height = face->glyph->bitmap.rows;
 		for (std::size_t y = 0; y < height; y++) {
 			for (std::size_t x = 0; x < width; x++) {
-				buffer[y * (size * numChars) + (character * size) + x] = face->glyph->bitmap.buffer[y * width + x];
+				buffer[y * (mSize * numChars) + (character * mSize) + x] = face->glyph->bitmap.buffer[y * width + x];
 			}
 		}
 
@@ -63,12 +74,12 @@ Font::Font(const std::string& name, std::uint32_t size)
 		GL_TEXTURE_2D,
 		0,
 		GL_RED,
-		size * numChars,
-		size,
+		mSize * numChars,
+		mSize,
 		0,
 		GL_RED,
 		GL_UNSIGNED_BYTE,
-		buffer
+		buffer.get()
 	);
 
 	// Set texture options
@@ -76,48 +87,6 @@ Font::Font(const std::string& name, std::uint32_t size)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	delete[] buffer;
-
-//	for (GLubyte c = 0; c < numChars; c++) {
-//		// Load character glyph
-//		if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
-//			std::cout << "Failed to load glyph." << std::endl;
-//			continue;
-//		}
-//
-//		// Generate texture
-//		GLuint texture;
-//		glGenTextures(1, &texture);
-//		glBindTexture(GL_TEXTURE_2D, texture);
-//		glTexImage2D(
-//			GL_TEXTURE_2D,
-//			0,
-//			GL_RED,
-//			face->glyph->bitmap.width,
-//			face->glyph->bitmap.rows,
-//			0,
-//			GL_RED,
-//			GL_UNSIGNED_BYTE,
-//			face->glyph->bitmap.buffer
-//		);
-//
-//		// Set texture options
-//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-//
-//		// Now store character for later use
-//		FontCharacter character = {
-//			texture,
-//			glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-//			glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-//			face->glyph->advance.x / 64.0f
-//		};
-//
-//		mCharacters.insert({ c, character });
-//	}
 
 	FT_Done_Face(face);
 	FT_Done_FreeType(ft);

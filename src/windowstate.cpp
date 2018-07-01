@@ -8,6 +8,9 @@ void WindowState::update() {
 		mHasScrolled = false;
 		mScrollValueY = 0.0;
 	}
+
+	mInputCharacters = std::move(mCharacterBuffer);
+	mCharacterBuffer = {};
 }
 
 void WindowState::changeWindowSize(int width, int height) {
@@ -44,4 +47,12 @@ bool WindowState::hasScrolled() const {
 
 double WindowState::scrollY() const {
 	return mScrollValueY;
+}
+
+void WindowState::addCharacter(CodePoint codePoint) {
+	mCharacterBuffer.push_back(codePoint);
+}
+
+const std::vector<CodePoint>& WindowState::inputCharacters() const {
+	return mInputCharacters;
 }

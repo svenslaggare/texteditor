@@ -65,6 +65,10 @@ int main(int argc, char* argv[]) {
 		windowState.setScrollY(offsetY);
 	});
 
+	glfwSetCharCallback(window, [](GLFWwindow* window, unsigned int codePoint) {
+		windowState.addCharacter(codePoint);
+	});
+
 	// Compile and link shaders
 	auto textVertexShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsText("shaders/textVertex.glsl"), GL_VERTEX_SHADER);
 	auto textFragmentShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsText("shaders/text.glsl"), GL_FRAGMENT_SHADER);
@@ -92,9 +96,9 @@ int main(int argc, char* argv[]) {
 
 //	Text text(Helpers::readFileAsText("data/lorem.txt"));
 //	Text text(Helpers::readFileAsText("data/lorem2.txt"));
-//	Text text(Helpers::readFileAsText("data/gc.cpp"));
+	Text text(Helpers::readFileAsText("data/gc.cpp"));
 //	Text text(Helpers::readFileAsText("data/test.cpp"));
-	Text text(Helpers::readFileAsText("src/main.cpp"));
+//	Text text(Helpers::readFileAsText("src/main.cpp"));
 //	Text text(Helpers::readFileAsText("/home/antjans/curve.py"));
 
 //	std::chrono::time_point<std::chrono::system_clock> startTime;

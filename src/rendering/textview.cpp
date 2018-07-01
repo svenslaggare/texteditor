@@ -26,31 +26,31 @@ TextView::TextView(GLFWwindow* window,
 	  mRenderStyle(renderStyle),
 	  mInputManager(window),
 	  mText(text) {
-	for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; key++) {
-		KeyboardCommand command;
-		command.key = key;
-		command.normalMode = (char)('a' + (key - GLFW_KEY_A));
-		command.shiftMode = (char)std::toupper(command.normalMode);
-		command.altMode = '\0';
-		mKeyboardCommands.push_back(command);
-	}
-
-	mKeyboardCommands.push_back({ GLFW_KEY_0, '0', '=', '}' });
-	mKeyboardCommands.push_back({ GLFW_KEY_1, '1', '!', '\0' });
-	mKeyboardCommands.push_back({ GLFW_KEY_2, '2', '"', '@' });
-	mKeyboardCommands.push_back({ GLFW_KEY_3, '3', '#', '\0' });
-	mKeyboardCommands.push_back({ GLFW_KEY_4, '4', '\0', '\0' });
-	mKeyboardCommands.push_back({ GLFW_KEY_5, '5', '%', '\0' });
-	mKeyboardCommands.push_back({ GLFW_KEY_6, '6', '&', '\0' });
-	mKeyboardCommands.push_back({ GLFW_KEY_7, '7', '/', '{' });
-	mKeyboardCommands.push_back({ GLFW_KEY_8, '8', '(', '[' });
-	mKeyboardCommands.push_back({ GLFW_KEY_MINUS, '+', '?', '\\' });
-
-	mKeyboardCommands.push_back({ GLFW_KEY_COMMA, ',', ';', '\0' });
-	mKeyboardCommands.push_back({ GLFW_KEY_PERIOD, '.', ':', '\0' });
-	mKeyboardCommands.push_back({ GLFW_KEY_SPACE, ' ', '\0', '\0' });
+//	for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; key++) {
+//		KeyboardCommand command;
+//		command.key = key;
+//		command.normalMode = (char)('a' + (key - GLFW_KEY_A));
+//		command.shiftMode = (char)std::toupper(command.normalMode);
+//		command.altMode = '\0';
+//		mKeyboardCommands.push_back(command);
+//	}
+//
+//	mKeyboardCommands.push_back({ GLFW_KEY_0, '0', '=', '}' });
+//	mKeyboardCommands.push_back({ GLFW_KEY_1, '1', '!', '\0' });
+//	mKeyboardCommands.push_back({ GLFW_KEY_2, '2', '"', '@' });
+//	mKeyboardCommands.push_back({ GLFW_KEY_3, '3', '#', '\0' });
+//	mKeyboardCommands.push_back({ GLFW_KEY_4, '4', '\0', '$' });
+//	mKeyboardCommands.push_back({ GLFW_KEY_5, '5', '%', '\0' });
+//	mKeyboardCommands.push_back({ GLFW_KEY_6, '6', '&', '\0' });
+//	mKeyboardCommands.push_back({ GLFW_KEY_7, '7', '/', '{' });
+//	mKeyboardCommands.push_back({ GLFW_KEY_8, '8', '(', '[' });
+//	mKeyboardCommands.push_back({ GLFW_KEY_MINUS, '+', '?', '\\' });
+//
+//	mKeyboardCommands.push_back({ GLFW_KEY_COMMA, ',', ';', '\0' });
+//	mKeyboardCommands.push_back({ GLFW_KEY_PERIOD, '.', ':', '\0' });
+//	mKeyboardCommands.push_back({ GLFW_KEY_SPACE, ' ', '\0', '\0' });
 	mKeyboardCommands.push_back({ GLFW_KEY_TAB, '\t', '\0', '\0' });
-	mKeyboardCommands.push_back({ GLFW_KEY_SLASH, '-', '_', '\0' });
+//	mKeyboardCommands.push_back({ GLFW_KEY_SLASH, '-', '_', '\0' });
 }
 
 const LineTokens& TextView::currentLine() const {
@@ -228,6 +228,10 @@ void TextView::updateEditing(const WindowState& windowState) {
 				insertCharacter(command.normalMode);
 			}
 		}
+	}
+
+	for (auto& codePoint : windowState.inputCharacters()) {
+		insertCharacter((char)codePoint);
 	}
 
 	if (mInputManager.isKeyPressed(GLFW_KEY_BACKSPACE)) {

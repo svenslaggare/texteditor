@@ -1,5 +1,9 @@
 #pragma once
 
+#include <vector>
+
+using CodePoint = unsigned int;
+
 /**
  * Represents the state of the window
  */
@@ -13,6 +17,9 @@ private:
 	bool mScrollValueChanged = false;
 
 	bool mHasScrolled = false;
+
+	std::vector<CodePoint> mCharacterBuffer;
+	std::vector<CodePoint> mInputCharacters;
 public:
 	/**
 	 * Updates the state. Should be called in the start of the frame.
@@ -55,4 +62,15 @@ public:
 	 * Returns the Y scroll value
 	 */
 	double scrollY() const;
+
+	/**
+	 * Adds the given character
+	 * @param codePoint The code point of the character
+	 */
+	void addCharacter(CodePoint codePoint);
+
+	/**
+	 * Returns the character entered in the current frame
+	 */
+	const std::vector<CodePoint>& inputCharacters() const;
 };
