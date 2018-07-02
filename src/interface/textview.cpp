@@ -57,6 +57,10 @@ const LineTokens& TextView::currentLine() const {
 	return mFormattedText.getLine((std::size_t)mInputState.caretPositionY);
 }
 
+std::size_t TextView::currentLineNumber() const {
+	return currentLine().number;
+}
+
 std::size_t TextView::currentLineLength() const {
 	return currentLine().length();
 }
@@ -205,7 +209,7 @@ void TextView::updateEditing(const WindowState& windowState) {
 			return;
 		}
 
-		auto diff = mText.deleteLine(currentLine().number, mode);
+		auto diff = mText.deleteLine(currentLineNumber(), mode);
 		if (mode == Text::DeleteLineMode::Start) {
 			mInputState.caretPositionX = diff.caretX;
 		}

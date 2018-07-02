@@ -66,6 +66,11 @@ private:
 	const LineTokens& currentLine() const;
 
 	/**
+	 * Returns the current line number
+	 */
+	std::size_t currentLineNumber() const;
+
+	/**
 	 * Returns the length of the current line
 	 */
 	std::size_t currentLineLength() const;
