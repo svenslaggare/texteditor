@@ -66,6 +66,16 @@ private:
 	const LineTokens& currentLine() const;
 
 	/**
+	 * Returns the length of the current line
+	 */
+	std::size_t currentLineLength() const;
+
+	/**
+	 * Returns the number of lines
+	 */
+	std::size_t numLines();
+
+	/**
 	 * Moves the caret in the x position by the given amount
 	 * @param diff The amount to move
 	 */

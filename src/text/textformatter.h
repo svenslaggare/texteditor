@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <unordered_map>
 
 class Font;
 class RenderViewPort;
@@ -51,28 +52,80 @@ struct LineTokens {
 };
 
 /**
+ * Represents a base class for formatted text
+ */
+class BaseFormattedText {
+public:
+	virtual ~BaseFormattedText() = default;
+
+	/**
+	 * Returns the number of lines
+	 */
+	virtual std::size_t numLines() const = 0;
+
+	/**
+	 * Returns the tokens at the given line
+	 * @param index The index
+	 */
+	virtual const LineTokens& getLine(std::size_t index) const = 0;
+};
+
+/**
  * Represents formatted text
  */
-class FormattedText {
+class FormattedText : public BaseFormattedText {
 private:
 	std::vector<LineTokens> mLines;
 public:
 	/**
 	 * Returns the number of lines
 	 */
-	std::size_t numLines() const;
+	std::size_t numLines() const override;
 
 	/**
 	 * Returns the tokens at the given line
 	 * @param index The index
 	 */
-	const LineTokens& getLine(std::size_t index) const;
+	const LineTokens& getLine(std::size_t index) const override;
 
 	/**
 	 * Adds the given line
 	 * @param tokens The tokens on the line
 	 */
 	void addLine(LineTokens tokens);
+};
+
+/**
+ * Represents a partially formatted text
+ */
+class PartialFormattedText : public BaseFormattedText {
+private:
+	std::size_t mTotalLines;
+	std::unordered_map<std::size_t, LineTokens> mLines;
+public:
+	/**
+	 * Returns the number of lines
+	 */
+	std::size_t numLines() const override;
+
+	/**
+	 * Sets the number of lines
+	 * @param count The total number of lines
+	 */
+	void setNumLines(std::size_t count);
+
+	/**
+	 * Returns the tokens at the given line
+	 * @param index The index
+	 */
+	const LineTokens& getLine(std::size_t index) const override;
+
+	/**
+	 * Adds the given line
+	 * @param index The index for the line
+	 * @param tokens The tokens on the line
+	 */
+	void addLine(std::size_t index, LineTokens tokens);
 };
 
 /**

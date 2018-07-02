@@ -57,6 +57,14 @@ const LineTokens& TextView::currentLine() const {
 	return mFormattedText.getLine((std::size_t)mInputState.caretPositionY);
 }
 
+std::size_t TextView::currentLineLength() const {
+	return currentLine().length();
+}
+
+std::size_t TextView::numLines() {
+	return mFormattedText.numLines();
+}
+
 void TextView::moveCaretX(std::int64_t diff) {
 	auto viewPort = getTextViewPort();
 	const auto charWidth = mFont.getAdvanceX('A');
@@ -66,15 +74,15 @@ void TextView::moveCaretX(std::int64_t diff) {
 		if (mInputState.caretPositionX < 0L) {
 			moveCaretY(-1);
 
-			if (mFormattedText.numLines() > 0) {
-				mInputState.caretPositionX = (std::int64_t)currentLine().length();
+			if (numLines() > 0) {
+				mInputState.caretPositionX = (std::int64_t)currentLineLength();
 			} else {
 				mInputState.caretPositionX = 0;
 			}
 		}
 	} else {
-		if (mFormattedText.numLines() > 0) {
-			if ((std::size_t)mInputState.caretPositionX > currentLine().length()) {
+		if (numLines() > 0) {
+			if ((std::size_t)mInputState.caretPositionX > currentLineLength()) {
 				moveCaretY(1);
 				mInputState.caretPositionX = 1;
 			}
@@ -97,8 +105,8 @@ void TextView::moveCaretY(std::int64_t diff) {
 
 	mInputState.caretPositionY += diff;
 
-	if (mInputState.caretPositionY >= mFormattedText.numLines()) {
-		mInputState.caretPositionY = (std::int64_t)mFormattedText.numLines() - 1;
+	if (mInputState.caretPositionY >= numLines()) {
+		mInputState.caretPositionY = (std::int64_t)numLines() - 1;
 	}
 
 	if (mInputState.caretPositionY < 0) {
@@ -123,7 +131,7 @@ void TextView::moveCaretY(std::int64_t diff) {
 		mInputState.viewPosition.y = 0;
 	}
 
-	mInputState.caretPositionX = std::min((std::size_t)mInputState.caretPositionX, currentLine().length());
+	mInputState.caretPositionX = std::min((std::size_t)mInputState.caretPositionX, currentLineLength());
 }
 
 void TextView::updateViewMovement(const WindowState& windowState) {
@@ -245,7 +253,7 @@ void TextView::updateEditing(const WindowState& windowState) {
 
 	if (mInputManager.isKeyPressed(GLFW_KEY_DELETE)) {
 		auto lineAndOffset = getLineAndOffset();
-		if (lineAndOffset.second < currentLine().length()) {
+		if (lineAndOffset.second < currentLineLength()) {
 			mText.deleteAt(lineAndOffset.first, (std::size_t)lineAndOffset.second);
 		} else {
 			deleteLine(Text::DeleteLineMode::End);
@@ -323,11 +331,11 @@ void TextView::updateFormattedText(const RenderViewPort& viewPort) {
 		auto t0 = Helpers::timeNow();
 		textFormatter.format(mFont, mRenderStyle, viewPort, mText, mFormattedText);
 		std::cout
-			<< "Formatted text (lines = " << mFormattedText.numLines() << ") in "
+			<< "Formatted text (lines = " << numLines() << ") in "
 			<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) << " ms"
 			<< std::endl;
 
-		mInputState.caretPositionY = std::min(mInputState.caretPositionY, (std::int64_t)mFormattedText.numLines() - 1);
+		mInputState.caretPositionY = std::min(mInputState.caretPositionY, (std::int64_t)numLines() - 1);
 	}
 }
 

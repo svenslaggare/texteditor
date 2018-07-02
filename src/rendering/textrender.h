@@ -12,7 +12,7 @@
 class Font;
 class RenderStyle;
 class RenderViewPort;
-class FormattedText;
+class BaseFormattedText;
 class InputState;
 
 enum class FormatMode : std::uint8_t;
@@ -67,18 +67,18 @@ private:
 					RenderLine renderLine);
 
 	/**
-	 * Returns the position of the given index at the given line
+	 * Calculates the X position of the given index at the given line
 	 * @param font The font
 	 * @param renderStyle The render style
 	 * @param text The text
 	 * @param lineNumber The line number in the text
 	 * @param offset The offset within the line
 	 */
-	float getPositionXForIndex(const Font& font,
-							   const RenderStyle& renderStyle,
-							   const FormattedText& text,
-							   std::size_t lineNumber,
-							   std::size_t offset);
+	float calculatePositionX(const Font& font,
+							 const RenderStyle& renderStyle,
+							 const BaseFormattedText& text,
+							 std::size_t lineNumber,
+							 std::size_t offset);
 public:
 	/**
 	 * Creates a new text render
@@ -98,7 +98,7 @@ public:
 	void render(const Font& font,
 				const RenderStyle& renderStyle,
 				const RenderViewPort& viewPort,
-				const FormattedText& text,
+				const BaseFormattedText& text,
 				glm::vec2 position);
 
 	/**
@@ -112,7 +112,7 @@ public:
 	void renderLineNumbers(const Font& font,
 						   const RenderStyle& renderStyle,
 						   const RenderViewPort& viewPort,
-						   const FormattedText& text,
+						   const BaseFormattedText& text,
 						   glm::vec2 position);
 
 	/**
@@ -127,7 +127,7 @@ public:
 	void renderCaret(const Font& font,
 					 const RenderStyle& renderStyle,
 					 const RenderViewPort& viewPort,
-					 const FormattedText& text,
+					 const BaseFormattedText& text,
 					 glm::vec2 spacing,
 					 const InputState& inputState);
 };

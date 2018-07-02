@@ -151,7 +151,7 @@ void TextRender::renderView(const Font& font,
 void TextRender::render(const Font& font,
 						const RenderStyle& renderStyle,
 						const RenderViewPort& viewPort,
-						const FormattedText& text,
+						const BaseFormattedText& text,
 						glm::vec2 position) {
 	renderView(font, text.numLines(), viewPort, position, [&](GLfloat* vertices,
 															  std::size_t& offset,
@@ -181,7 +181,7 @@ void TextRender::render(const Font& font,
 void TextRender::renderLineNumbers(const Font& font,
 								   const RenderStyle& renderStyle,
 								   const RenderViewPort& viewPort,
-								   const FormattedText& text,
+								   const BaseFormattedText& text,
 								   glm::vec2 position) {
 	renderView(font, text.numLines(), viewPort, position, [&](GLfloat* vertices,
 															  std::size_t& offset,
@@ -209,11 +209,11 @@ void TextRender::renderLineNumbers(const Font& font,
 	});
 }
 
-float TextRender::getPositionXForIndex(const Font& font,
-									   const RenderStyle& renderStyle,
-									   const FormattedText& text,
-									   std::size_t lineNumber,
-									   std::size_t offset) {
+float TextRender::calculatePositionX(const Font& font,
+									 const RenderStyle& renderStyle,
+									 const BaseFormattedText& text,
+									 std::size_t lineNumber,
+									 std::size_t offset) {
 	float lineOffset = 0.0f;
 	std::size_t currentIndex = 0;
 	for (auto& token : text.getLine(lineNumber).tokens) {
@@ -233,7 +233,7 @@ float TextRender::getPositionXForIndex(const Font& font,
 void TextRender::renderCaret(const Font& font,
 							 const RenderStyle& renderStyle,
 							 const RenderViewPort& viewPort,
-							 const FormattedText& text,
+							 const BaseFormattedText& text,
 							 glm::vec2 spacing,
 							 const InputState& inputState) {
 	setupRendering(font);
@@ -241,7 +241,7 @@ void TextRender::renderCaret(const Font& font,
 
 	auto& fontCharacter = font['|'];
 
-	auto lineOffset = getPositionXForIndex(
+	auto lineOffset = calculatePositionX(
 		font,
 		renderStyle,
 		text,

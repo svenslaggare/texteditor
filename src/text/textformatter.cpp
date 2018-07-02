@@ -341,6 +341,22 @@ void FormattedText::addLine(LineTokens tokens) {
 	mLines.push_back(std::move(tokens));
 }
 
+std::size_t PartialFormattedText::numLines() const {
+	return mTotalLines;
+}
+
+void PartialFormattedText::setNumLines(std::size_t count) {
+	mTotalLines = count;
+}
+
+const LineTokens& PartialFormattedText::getLine(std::size_t index) const {
+	return mLines.at(index);
+}
+
+void PartialFormattedText::addLine(std::size_t index, LineTokens tokens) {
+	mLines[index] = std::move(tokens);
+}
+
 TextFormatter::TextFormatter(FormatMode mode)
 	: mMode(mode) {
 

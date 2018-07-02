@@ -40,7 +40,7 @@ Font::Font(const std::string& name, std::uint32_t size)
 
 		// Load font character glyph
 		if (FT_Load_Char(face, glpyhCharacter, FT_LOAD_RENDER)) {
-			std::cout << "Failed to load glyph." << std::endl;
+			std::cerr << "Failed to load glyph." << std::endl;
 			continue;
 		}
 
