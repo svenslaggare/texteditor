@@ -49,8 +49,8 @@ TextView::TextView(GLFWwindow* window,
 //	mKeyboardCommands.push_back({ GLFW_KEY_COMMA, ',', ';', '\0' });
 //	mKeyboardCommands.push_back({ GLFW_KEY_PERIOD, '.', ':', '\0' });
 //	mKeyboardCommands.push_back({ GLFW_KEY_SPACE, ' ', '\0', '\0' });
-	mKeyboardCommands.push_back({ GLFW_KEY_TAB, '\t', '\0', '\0' });
 //	mKeyboardCommands.push_back({ GLFW_KEY_SLASH, '-', '_', '\0' });
+	mKeyboardCommands.push_back({ GLFW_KEY_TAB, '\t', '\0', '\0' });
 }
 
 const LineTokens& TextView::currentLine() const {

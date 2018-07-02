@@ -96,9 +96,9 @@ int main(int argc, char* argv[]) {
 
 //	Text text(Helpers::readFileAsText("data/lorem.txt"));
 //	Text text(Helpers::readFileAsText("data/lorem2.txt"));
-	Text text(Helpers::readFileAsText("data/gc.cpp"));
+//	Text text(Helpers::readFileAsText("data/gc.cpp"));
 //	Text text(Helpers::readFileAsText("data/test.cpp"));
-//	Text text(Helpers::readFileAsText("src/main.cpp"));
+	Text text(Helpers::readFileAsText("src/main.cpp"));
 //	Text text(Helpers::readFileAsText("/home/antjans/curve.py"));
 
 //	std::chrono::time_point<std::chrono::system_clock> startTime;
