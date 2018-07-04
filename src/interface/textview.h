@@ -81,6 +81,12 @@ private:
 	std::size_t numLines();
 
 	/**
+	 * Returns the current line number and offset
+	 * @param offsetX Additional offset
+	 */
+	std::pair<std::size_t, std::int64_t> getLineAndOffset(int offsetX = 0) const;
+
+	/**
 	 * Moves the caret in the x position by the given amount
 	 * @param diff The amount to move
 	 */
@@ -125,6 +131,13 @@ private:
 	 * @param viewPort The view port
 	 */
 	void updateFormattedText(const RenderViewPort& viewPort);
+
+	/**
+	 * Performs formatting on the view port
+	 * @param viewPort The view port
+	 * @param position The current position
+	 */
+	PartialFormattedText performPartialFormatting(const RenderViewPort& viewPort, glm::vec2 position);
 public:
 	/**
 	 * Creates a new text view

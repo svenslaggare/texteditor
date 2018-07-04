@@ -362,6 +362,27 @@ TextFormatter::TextFormatter(FormatMode mode)
 
 }
 
+void TextFormatter::formatLine(const Font& font,
+							   const RenderStyle& renderStyle,
+							   const RenderViewPort& viewPort,
+							   const std::string& line,
+							   LineTokens& formattedLine) {
+	FormattedText formattedText;
+	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedText);
+
+	for (auto current : line) {
+		stateMachine.process(current);
+	}
+
+	stateMachine.process('\n');
+
+	if (!stateMachine.lineTokens.tokens.empty()) {
+		stateMachine.createNewLine();
+	}
+
+	formattedLine = formattedText.getLine(0);
+}
+
 void TextFormatter::format(const Font& font,
 						   const RenderStyle& renderStyle,
 						   const RenderViewPort& viewPort,

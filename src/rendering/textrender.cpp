@@ -95,6 +95,7 @@ void TextRender::setupRendering(const Font& font) {
 	glBindBuffer(GL_ARRAY_BUFFER, mVBO);
 }
 
+
 void TextRender::renderView(const Font& font,
 							std::size_t maxNumLines,
 							const RenderViewPort& viewPort,

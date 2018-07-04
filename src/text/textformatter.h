@@ -150,6 +150,20 @@ public:
 	explicit TextFormatter(FormatMode mode = FormatMode::Code);
 
 	/**
+	 * Formats the given line
+	 * @param font The font
+	 * @param viewPort The view port to render to
+	 * @param renderStyle The render style
+	 * @param line The line to format
+	 * @param formattedLine The formatted line
+	 */
+	void formatLine(const Font& font,
+					const RenderStyle& renderStyle,
+					const RenderViewPort& viewPort,
+					const std::string& line,
+					LineTokens& formattedLine);
+
+	/**
 	 * Formats the given text using the given font
 	 * @param font The font
 	 * @param viewPort The view port to render to
