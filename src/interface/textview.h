@@ -35,11 +35,30 @@ struct KeyboardCommand {
 };
 
 /**
+ * Defines how the formatting is performed
+ */
+enum class PerformFormattingType {
+	Full,
+	Partial
+};
+
+/**
+ * Defines how character entries are handled
+ */
+enum class CharacterInputType {
+	Native, // Uses the native GLFW methods
+	Custom // Uses a custom implementation
+};
+
+/**
  * Represents a text view
  */
 class TextView {
 private:
 	GLFWwindow* mWindow;
+
+	PerformFormattingType mPerformFormattingType = PerformFormattingType::Partial;
+	CharacterInputType mCharacterInputType = CharacterInputType::Native;
 
 	const Font& mFont;
 	FormatMode mFormatMode;

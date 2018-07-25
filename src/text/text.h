@@ -12,7 +12,6 @@ class RenderStyle;
 class Text {
 private:
 	std::vector<std::string> mLines;
-	std::size_t mNumLines = 0;
 	std::size_t mVersion = 0;
 public:
 	/**

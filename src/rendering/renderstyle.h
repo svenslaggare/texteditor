@@ -13,7 +13,7 @@ struct RenderStyle {
 	float bottomSpacing = 0.0f;
 	std::size_t spacesPerTab = 4;
 
-	bool wordWrap = true;
+	bool wordWrap = false;
 
 	glm::vec3 backgroundColor = glm::vec3(30.0f / 255.0f, 30.0f / 255.0f, 30.0f / 255.0f);
 	glm::vec3 textColor = glm::vec3(212.0f / 255.0f, 212.0f / 255.0f, 212.0f / 255.0f);

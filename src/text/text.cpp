@@ -9,7 +9,6 @@ Text::Text(std::string text) {
 		if (c == '\n') {
 			mLines.push_back(std::move(line));
 			line = "";
-			mNumLines++;
 		} else {
 			line += c;
 		}
@@ -34,7 +33,7 @@ void Text::forEach(std::function<void(std::size_t, char)> apply) const {
 }
 
 std::size_t Text::numLines() const {
-	return mNumLines;
+	return mLines.size();
 }
 
 std::size_t Text::version() const {

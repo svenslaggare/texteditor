@@ -12,6 +12,7 @@
 #include <chrono>
 #include <iostream>
 #include <algorithm>
+#include <memory>
 
 TextView::TextView(GLFWwindow* window,
 				   const Font& font,
@@ -26,30 +27,33 @@ TextView::TextView(GLFWwindow* window,
 	  mRenderStyle(renderStyle),
 	  mInputManager(window),
 	  mText(text) {
-//	for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; key++) {
-//		KeyboardCommand command;
-//		command.key = key;
-//		command.normalMode = (char)('a' + (key - GLFW_KEY_A));
-//		command.shiftMode = (char)std::toupper(command.normalMode);
-//		command.altMode = '\0';
-//		mKeyboardCommands.push_back(command);
-//	}
-//
-//	mKeyboardCommands.push_back({ GLFW_KEY_0, '0', '=', '}' });
-//	mKeyboardCommands.push_back({ GLFW_KEY_1, '1', '!', '\0' });
-//	mKeyboardCommands.push_back({ GLFW_KEY_2, '2', '"', '@' });
-//	mKeyboardCommands.push_back({ GLFW_KEY_3, '3', '#', '\0' });
-//	mKeyboardCommands.push_back({ GLFW_KEY_4, '4', '\0', '$' });
-//	mKeyboardCommands.push_back({ GLFW_KEY_5, '5', '%', '\0' });
-//	mKeyboardCommands.push_back({ GLFW_KEY_6, '6', '&', '\0' });
-//	mKeyboardCommands.push_back({ GLFW_KEY_7, '7', '/', '{' });
-//	mKeyboardCommands.push_back({ GLFW_KEY_8, '8', '(', '[' });
-//	mKeyboardCommands.push_back({ GLFW_KEY_MINUS, '+', '?', '\\' });
-//
-//	mKeyboardCommands.push_back({ GLFW_KEY_COMMA, ',', ';', '\0' });
-//	mKeyboardCommands.push_back({ GLFW_KEY_PERIOD, '.', ':', '\0' });
-//	mKeyboardCommands.push_back({ GLFW_KEY_SPACE, ' ', '\0', '\0' });
-//	mKeyboardCommands.push_back({ GLFW_KEY_SLASH, '-', '_', '\0' });
+	if (mCharacterInputType == CharacterInputType::Custom) {
+		for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; key++) {
+			KeyboardCommand command;
+			command.key = key;
+			command.normalMode = (char)('a' + (key - GLFW_KEY_A));
+			command.shiftMode = (char)std::toupper(command.normalMode);
+			command.altMode = '\0';
+			mKeyboardCommands.push_back(command);
+		}
+
+		mKeyboardCommands.push_back({ GLFW_KEY_0, '0', '=', '}' });
+		mKeyboardCommands.push_back({ GLFW_KEY_1, '1', '!', '\0' });
+		mKeyboardCommands.push_back({ GLFW_KEY_2, '2', '"', '@' });
+		mKeyboardCommands.push_back({ GLFW_KEY_3, '3', '#', '\0' });
+		mKeyboardCommands.push_back({ GLFW_KEY_4, '4', '\0', '$' });
+		mKeyboardCommands.push_back({ GLFW_KEY_5, '5', '%', '\0' });
+		mKeyboardCommands.push_back({ GLFW_KEY_6, '6', '&', '\0' });
+		mKeyboardCommands.push_back({ GLFW_KEY_7, '7', '/', '{' });
+		mKeyboardCommands.push_back({ GLFW_KEY_8, '8', '(', '[' });
+		mKeyboardCommands.push_back({ GLFW_KEY_MINUS, '+', '?', '\\' });
+
+		mKeyboardCommands.push_back({ GLFW_KEY_COMMA, ',', ';', '\0' });
+		mKeyboardCommands.push_back({ GLFW_KEY_PERIOD, '.', ':', '\0' });
+		mKeyboardCommands.push_back({ GLFW_KEY_SPACE, ' ', '\0', '\0' });
+		mKeyboardCommands.push_back({ GLFW_KEY_SLASH, '-', '_', '\0' });
+	}
+
 	mKeyboardCommands.push_back({ GLFW_KEY_TAB, '\t', '\0', '\0' });
 }
 
@@ -57,42 +61,42 @@ const LineTokens& TextView::currentLine() const {
 	return mFormattedText.getLine((std::size_t)mInputState.caretPositionY);
 }
 
-std::size_t TextView::currentLineNumber() const {
-	return currentLine().number;
-}
-
-std::size_t TextView::currentLineLength() const {
-	return currentLine().length();
-}
-
-std::size_t TextView::numLines() {
-	return mFormattedText.numLines();
-}
-
-std::pair<std::size_t, std::int64_t> TextView::getLineAndOffset(int offsetX) const {
-	auto& line = currentLine();
-	std::size_t lineIndex = line.number;
-	auto offset = (std::int64_t)line.offsetFromTextLine + mInputState.caretPositionX + offsetX;
-	return std::make_pair(lineIndex, offset);
-}
-
 //std::size_t TextView::currentLineNumber() const {
-//	return (std::size_t)mInputState.caretPositionY;
+//	return currentLine().number;
 //}
 //
 //std::size_t TextView::currentLineLength() const {
-//	return mText.getLine(currentLineNumber()).length();
+//	return currentLine().length();
 //}
 //
 //std::size_t TextView::numLines() {
-//	return mText.numLines();
+//	return mFormattedText.numLines();
 //}
 //
 //std::pair<std::size_t, std::int64_t> TextView::getLineAndOffset(int offsetX) const {
-//	std::size_t lineIndex = currentLineNumber();
-//	auto offset = mInputState.caretPositionX + offsetX;
+//	auto& line = currentLine();
+//	std::size_t lineIndex = line.number;
+//	auto offset = (std::int64_t)line.offsetFromTextLine + mInputState.caretPositionX + offsetX;
 //	return std::make_pair(lineIndex, offset);
 //}
+
+std::size_t TextView::currentLineNumber() const {
+	return (std::size_t)mInputState.caretPositionY;
+}
+
+std::size_t TextView::currentLineLength() const {
+	return mText.getLine(currentLineNumber()).length();
+}
+
+std::size_t TextView::numLines() {
+	return mText.numLines();
+}
+
+std::pair<std::size_t, std::int64_t> TextView::getLineAndOffset(int offsetX) const {
+	std::size_t lineIndex = currentLineNumber();
+	auto offset = mInputState.caretPositionX + offsetX;
+	return std::make_pair(lineIndex, offset);
+}
 
 void TextView::moveCaretX(std::int64_t diff) {
 	auto viewPort = getTextViewPort();
@@ -262,8 +266,10 @@ void TextView::updateEditing(const WindowState& windowState) {
 		}
 	}
 
-	for (auto& codePoint : windowState.inputCharacters()) {
-		insertCharacter((char)codePoint);
+	if (mCharacterInputType == CharacterInputType::Native) {
+		for (auto& codePoint : windowState.inputCharacters()) {
+			insertCharacter((char) codePoint);
+		}
 	}
 
 	if (mInputManager.isKeyPressed(GLFW_KEY_BACKSPACE)) {
@@ -344,22 +350,24 @@ namespace {
 }
 
 void TextView::updateFormattedText(const RenderViewPort& viewPort) {
-	if (mLastViewPort.width != viewPort.width
-		|| mLastViewPort.height != viewPort.height
-		|| mLastViewPort.position != viewPort.position
-		|| mText.hasChanged(mTextVersion)) {
-		mFormattedText = {};
-		mLastViewPort = viewPort;
+	if (mPerformFormattingType == PerformFormattingType::Full) {
+		if (mLastViewPort.width != viewPort.width
+			|| mLastViewPort.height != viewPort.height
+			|| mLastViewPort.position != viewPort.position
+			|| mText.hasChanged(mTextVersion)) {
+			mFormattedText = {};
+			mLastViewPort = viewPort;
 
-		TextFormatter textFormatter(mFormatMode);
-		auto t0 = Helpers::timeNow();
-		textFormatter.format(mFont, mRenderStyle, viewPort, mText, mFormattedText);
-		std::cout
-			<< "Formatted text (lines = " << numLines() << ") in "
-			<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) << " ms"
-			<< std::endl;
+			TextFormatter textFormatter(mFormatMode);
+			auto t0 = Helpers::timeNow();
+			textFormatter.format(mFont, mRenderStyle, viewPort, mText, mFormattedText);
+			std::cout
+				<< "Formatted text (lines = " << numLines() << ") in "
+				<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) << " ms"
+				<< std::endl;
 
-		mInputState.caretPositionY = std::min(mInputState.caretPositionY, (std::int64_t)numLines() - 1);
+			mInputState.caretPositionY = std::min(mInputState.caretPositionY, (std::int64_t)numLines() - 1);
+		}
 	}
 }
 
@@ -405,8 +413,18 @@ void TextView::render(TextRender& textRender) {
 		mInputState.viewPosition.y + mRenderStyle.topSpacing);
 
 	updateFormattedText(viewPort);
-	auto& formattedText = mFormattedText;
-//	auto formattedText = performPartialFormatting(viewPort, drawPosition + glm::vec2(lineNumberSpacing, 0.0f));
+
+	std::unique_ptr<BaseFormattedText> ownedFormattedText;
+	BaseFormattedText* formattedText = nullptr;
+	switch (mPerformFormattingType) {
+		case PerformFormattingType::Full:
+			formattedText = &mFormattedText;
+			break;
+		case PerformFormattingType::Partial:
+			ownedFormattedText = std::make_unique<PartialFormattedText>(performPartialFormatting(viewPort, drawPosition + glm::vec2(lineNumberSpacing, 0.0f)));
+			formattedText = ownedFormattedText.get();
+			break;
+	}
 
 //	textRender.renderLineNumbers(
 //		mFont,
@@ -427,7 +445,7 @@ void TextView::render(TextRender& textRender) {
 		mFont,
 		mRenderStyle,
 		viewPort,
-		formattedText,
+		*formattedText,
 		drawPosition,
 		lineNumberSpacing);
 
@@ -436,7 +454,7 @@ void TextView::render(TextRender& textRender) {
 			mFont,
 			mRenderStyle,
 			viewPort,
-			formattedText,
+			*formattedText,
 			{ lineNumberSpacing + mRenderStyle.sideSpacing, mRenderStyle.topSpacing },
 			mInputState);
 	}

@@ -201,11 +201,6 @@ void TextRender::render(const Font& font,
 			for (auto& character : token.text) {
 				auto advanceX = renderStyle.getAdvanceX(font, character);
 
-//				if (drawPosition.x + advanceX > viewPort.width + startDrawPosition.x) {
-//					drawPosition.x = startDrawPosition.x;
-//					drawPosition.y += font.lineHeight();
-//				}
-
 				setCharacterVertices(
 					vertices,
 					offset,
