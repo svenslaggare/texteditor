@@ -408,19 +408,28 @@ void TextView::render(TextRender& textRender) {
 	auto& formattedText = mFormattedText;
 //	auto formattedText = performPartialFormatting(viewPort, drawPosition + glm::vec2(lineNumberSpacing, 0.0f));
 
-	textRender.renderLineNumbers(
-		mFont,
-		mRenderStyle,
-		viewPort,
-		formattedText,
-		drawPosition);
+//	textRender.renderLineNumbers(
+//		mFont,
+//		mRenderStyle,
+//		viewPort,
+//		formattedText,
+//		drawPosition);
+//
+//	textRender.render(
+//		mFont,
+//		mRenderStyle,
+//		viewPort,
+//		formattedText,
+//		drawPosition + glm::vec2(lineNumberSpacing, 0.0f));
 
+	//
 	textRender.render(
 		mFont,
 		mRenderStyle,
 		viewPort,
 		formattedText,
-		drawPosition + glm::vec2(lineNumberSpacing, 0.0f));
+		drawPosition,
+		lineNumberSpacing);
 
 	if (mDrawCaret) {
 		textRender.renderCaret(

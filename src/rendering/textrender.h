@@ -50,7 +50,7 @@ private:
 	 */
 	void setupRendering(const Font& font);
 
-	using RenderLine = std::function<void (GLfloat* vertices, std::size_t& offset, std::function<void()>, std::int64_t, glm::vec2&)>;
+	using RenderLine = std::function<void (GLfloat* vertices, std::size_t& offset, std::function<void()>, std::int64_t, const RenderViewPort&, glm::vec2&)>;
 
 	/**
 	 * Renders the current view
@@ -94,12 +94,14 @@ public:
 	 * @param viewPort The view port to render to
 	 * @param text The formatted text to render
 	 * @param position The position to render at
+	 * @param lineNumberSpacing The spacing due to line numbering
 	 */
 	void render(const Font& font,
 				const RenderStyle& renderStyle,
 				const RenderViewPort& viewPort,
 				const BaseFormattedText& text,
-				glm::vec2 position);
+				glm::vec2 position,
+				float lineNumberSpacing = 0.0f);
 
 	/**
 	 * Renders the line numbers

@@ -123,9 +123,14 @@ void TextRender::renderView(const Font& font,
 	};
 
 	auto cursorLineIndex = (std::int64_t)std::floor(-position.y / font.lineHeight());
+	float offsetY = 0.0f;
+
 	for (std::int64_t lineIndex = cursorLineIndex; lineIndex < (std::int64_t)maxNumLines; lineIndex++) {
 		if (lineIndex >= 0) {
-			glm::vec2 drawPosition(position.x, position.y + (lineIndex + 1) * font.lineHeight());
+			glm::vec2 drawPosition(position.x, position.y + (lineIndex + 1) * font.lineHeight() + offsetY);
+			auto originalY = drawPosition.y;
+
+			RenderViewPort currentView { drawPosition, viewPort.width, viewPort.height };
 
 			if (drawPosition.y >= viewPort.top()) {
 				renderLine(
@@ -133,7 +138,10 @@ void TextRender::renderView(const Font& font,
 					charactersOffset,
 					drawCharacter,
 					lineIndex,
+					currentView,
 					drawPosition);
+
+				offsetY += drawPosition.y - originalY;
 			}
 
 			if (drawPosition.y > viewPort.bottom()) {
@@ -153,16 +161,51 @@ void TextRender::render(const Font& font,
 						const RenderStyle& renderStyle,
 						const RenderViewPort& viewPort,
 						const BaseFormattedText& text,
-						glm::vec2 position) {
+						glm::vec2 position,
+						float lineNumberSpacing) {
 	renderView(font, text.numLines(), viewPort, position, [&](GLfloat* vertices,
 															  std::size_t& offset,
 															  std::function<void()> drawCharacter,
 															  std::int64_t lineIndex,
+															  const RenderViewPort& currentView,
 															  glm::vec2& drawPosition) {
-		for (auto& token : text.getLine((std::size_t)lineIndex).tokens) {
+		auto& line = text.getLine((std::size_t)lineIndex);
+
+		float currentLineNumberSpacing = 0.0f;
+		if (!line.isContinuation) {
+			auto lineNumber = std::to_string(line.number + 1);
+			for (auto& character : lineNumber) {
+				setCharacterVertices(
+					vertices,
+					offset,
+					font,
+					character,
+					drawPosition.x,
+					drawPosition.y,
+					renderStyle.lineNumberColor);
+
+				auto advanceX = renderStyle.getAdvanceX(font, character);
+				drawPosition.x += advanceX;
+				currentLineNumberSpacing += advanceX;
+				drawCharacter();
+			}
+		}
+
+		auto actualLineNumberSpacing = lineNumberSpacing - currentLineNumberSpacing;
+		drawPosition.x += actualLineNumberSpacing;
+		auto startDrawPosition = drawPosition;
+
+		for (auto& token : line.tokens) {
 			auto color = renderStyle.getColor(token);
 
 			for (auto& character : token.text) {
+				auto advanceX = renderStyle.getAdvanceX(font, character);
+
+//				if (drawPosition.x + advanceX > viewPort.width + startDrawPosition.x) {
+//					drawPosition.x = startDrawPosition.x;
+//					drawPosition.y += font.lineHeight();
+//				}
+
 				setCharacterVertices(
 					vertices,
 					offset,
@@ -172,7 +215,7 @@ void TextRender::render(const Font& font,
 					drawPosition.y,
 					color);
 
-				drawPosition.x += renderStyle.getAdvanceX(font, character);
+				drawPosition.x += advanceX;
 				drawCharacter();
 			}
 		}
@@ -188,6 +231,7 @@ void TextRender::renderLineNumbers(const Font& font,
 															  std::size_t& offset,
 															  std::function<void()> drawCharacter,
 															  std::int64_t lineIndex,
+															  const RenderViewPort& currentView,
 															  glm::vec2& drawPosition) {
 		auto& line = text.getLine((std::size_t)lineIndex);
 
