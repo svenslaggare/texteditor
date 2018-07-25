@@ -24,7 +24,7 @@ namespace {
 				}
 			}
 
-			return Helpers::readFileAsText(includeFileName);
+			return Helpers::readFileAsUTF8Text(includeFileName);
 		}
 
 		return line + (addLine ? "\n" : "");

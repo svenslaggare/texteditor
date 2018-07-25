@@ -8,7 +8,7 @@ Text::Text(String text) {
 	for (auto c : text) {
 		if (c == '\n') {
 			mLines.push_back(std::move(line));
-			line = "";
+			line = {};
 		} else {
 			line += c;
 		}

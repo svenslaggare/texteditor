@@ -49,47 +49,47 @@ namespace {
 	};
 
 	const KeywordList keywords { {
-		"if",
-		"else",
-		"while",
-		"for",
-		"case",
-		"switch",
-		"break",
-		"default",
-		"return",
-		"assert",
+		u"if",
+		u"else",
+		u"while",
+		u"for",
+		u"case",
+		u"switch",
+		u"break",
+		u"default",
+		u"return",
+		u"assert",
 
-		"inline",
-		"static",
+		u"inline",
+		u"static",
 
-		"struct",
-		"class",
-		"enum",
-		"namespace",
+		u"struct",
+		u"class",
+		u"enum",
+		u"namespace",
 
-		"public",
-		"private",
+		u"public",
+		u"private",
 
-		"auto",
-		"void",
-		"const",
-		"unsigned",
-		"char",
-		"int",
-		"short",
-		"long",
-		"float",
-		"double",
-		"bool",
+		u"auto",
+		u"void",
+		u"const",
+		u"unsigned",
+		u"char",
+		u"int",
+		u"short",
+		u"long",
+		u"float",
+		u"double",
+		u"bool",
 
-		"#include",
-		"#if",
-		"#define",
-		"#define",
-		"#ifdef",
-		"#endif",
-		"#else",
+		u"#include",
+		u"#if",
+		u"#define",
+		u"#define",
+		u"#ifdef",
+		u"#endif",
+		u"#else",
 	} };
 
 	enum class State {
@@ -144,7 +144,7 @@ namespace {
 				if (resetState) {
 					currentToken = {};
 				} else {
-					currentToken.text = "";
+					currentToken.text = {};
 				}
 
 				currentWidth = 0.0f;

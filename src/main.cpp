@@ -65,13 +65,14 @@ int main(int argc, char* argv[]) {
 		windowState.setScrollY(offsetY);
 	});
 
-	glfwSetCharCallback(window, [](GLFWwindow* window, unsigned int codePoint) {
+	glfwSetCharCallback(window, [](GLFWwindow* window, CodePoint codePoint) {
+//		codePoint = 0x191;
 		windowState.addCharacter(codePoint);
 	});
 
 	// Compile and link shaders
-	auto textVertexShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsText("shaders/textVertex.glsl"), GL_VERTEX_SHADER);
-	auto textFragmentShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsText("shaders/text.glsl"), GL_FRAGMENT_SHADER);
+	auto textVertexShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsUTF8Text("shaders/textVertex.glsl"), GL_VERTEX_SHADER);
+	auto textFragmentShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsUTF8Text("shaders/text.glsl"), GL_FRAGMENT_SHADER);
 	auto textProgram = ShaderCompiler::linkShaders(textVertexShader, textFragmentShader);
 
 	glUseProgram(textProgram);
@@ -94,12 +95,12 @@ int main(int argc, char* argv[]) {
 //  std::string text = "hello	world\nmy friend";
 //  std::string inlineText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse eu enim vitae erat viverra dignissim. Cras congue hendrerit eleifend. Curabitur augue mauris, rutrum laoreet mollis in, laoreet in lacus. Phasellus laoreet lectus quis magna convallis elementum. Donec tempus, nibh vitae ultricies molestie, ex enim porttitor dolor, vel dignissim mauris massa vitae leo.\n\nUt varius semper eros, et gravida nulla maximus sed. Phasellus viverra libero at dignissim mollis. Fusce consectetur porta volutpat. Pellentesque aliquam pharetra convallis. Nunc at elit quam. Proin urna lorem, bibendum vitae consectetur nec, rhoncus at magna. Interdum et malesuada fames ac ante ipsum primis in faucibus. Phasellus odio sapien, scelerisque quis facilisis quis, suscipit eget ligula. Morbi vitae elementum leo. Nullam mollis est quis consectetur finibus. Suspendisse vehicula purus vel libero auctor ultrices. Ut scelerisque quam ante, vitae tincidunt velit laoreet et. Quisque tellus urna, pellentesque nec tincidunt in, semper et nisl. Proin id euismod lorem. Nam nec lorem ornare, blandit arcu nec, pulvinar justo. Curabitur nec rutrum risus. Aenean maximus turpis sit amet risus blandit vehicula. Vestibulum tincidunt odio lectus, non viverra nibh mattis non. Mauris vitae ex posuere diam tincidunt accumsan.\n\nQuisque pretium tortor vitae diam suscipit pellentesque at ac erat. In hac habitasse platea dictumst. Proin sodales dapibus pretium. Duis id eros nulla. Ut hendrerit vehicula lobortis. Etiam sagittis porta dui, vel porttitor tellus scelerisque vel. Quisque cursus rhoncus velit, quis volutpat velit volutpat sit amet. Sed quis molestie libero, eu sollicitudin felis.\n\nNunc tempor eu leo non fermentum. Donec bibendum et lectus vel malesuada. Vivamus malesuada eros nibh, id faucibus eros elementum at. Integer ac sem lorem. Curabitur luctus feugiat justo. Nulla at tortor sit amet orci cursus ornare non id massa. Vivamus vel lacus feugiat, vehicula urna dignissim, blandit lectus. Morbi non urna dui. Morbi ac libero a ligula varius lobortis. Proin at purus eget velit mattis viverra vel sed quam. Duis sollicitudin massa magna, viverra fringilla arcu ultricies eget. Suspendisse potenti. Morbi turpis felis, pellentesque id pretium vel, euismod non eros. Nulla mauris ipsum, interdum at leo aliquam, porttitor condimentum nunc. Cras semper feugiat hendrerit.";
 
-//	Text text(Helpers::readFileAsText("data/lorem.txt"));
-//	Text text(Helpers::readFileAsText("data/lorem2.txt"));
-//	Text text(Helpers::readFileAsText("data/gc.cpp"));
-//	Text text(Helpers::readFileAsText("data/test.cpp"));
-	Text text(Helpers::readFileAsText("src/main.cpp"));
-//	Text text(Helpers::readFileAsText("/home/antjans/curve.py"));
+//	Text text(Helpers::readFileAsText<String>("data/lorem.txt"));
+//	Text text(Helpers::readFileAsText<String>("data/lorem2.txt"));
+//	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
+//	Text text(Helpers::readFileAsText<String>("data/test.cpp"));
+	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
+//	Text text(Helpers::readFileAsText<String>("/home/antjans/curve.py"));
 
 //	std::chrono::time_point<std::chrono::system_clock> startTime;
 	auto startTime = std::chrono::system_clock::now();
@@ -108,8 +109,8 @@ int main(int argc, char* argv[]) {
 
 	auto frameBuffer = std::make_unique<FrameBuffer>(windowState.width(), windowState.height());
 
-	auto passthroughVertexShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsText("shaders/vertex.glsl"), GL_VERTEX_SHADER);
-	auto passthroughFragmentShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsText("shaders/passthrough.glsl"), GL_FRAGMENT_SHADER);
+	auto passthroughVertexShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsUTF8Text("shaders/vertex.glsl"), GL_VERTEX_SHADER);
+	auto passthroughFragmentShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsUTF8Text("shaders/passthrough.glsl"), GL_FRAGMENT_SHADER);
 	auto passthroughProgram = ShaderCompiler::linkShaders(passthroughVertexShader, passthroughFragmentShader);
 
 	RenderStyle renderStyle;

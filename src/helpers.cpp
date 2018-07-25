@@ -1,7 +1,9 @@
 #include "helpers.h"
 #include <fstream>
+#include <codecvt>
+#include <locale>
 
-std::string Helpers::readFileAsText(const std::string& fileName) {
+std::string Helpers::readFileAsUTF8Text(const std::string& fileName) {
 	std::ifstream configStream(fileName);
 	if (!configStream.is_open()) {
 		throw std::runtime_error("The file '" + fileName + "' does not exist.");
@@ -19,16 +21,10 @@ std::string Helpers::readFileAsText(const std::string& fileName) {
 	return text;
 }
 
-std::string Helpers::replaceAll(const std::string& str, const std::string& from, const std::string& to) {
-	auto result = str;
-
-	std::size_t start_pos = 0;
-	while((start_pos = result.find(from, start_pos)) != std::string::npos) {
-		result.replace(start_pos, from.length(), to);
-		start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-	}
-
-	return result;
+std::u16string Helpers::readFileAsUTF16Text(const std::string& fileName) {
+	auto text = readFileAsUTF8Text(fileName);
+	std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> cv;
+	return cv.from_bytes(text);
 }
 
 TimePoint Helpers::timeNow() {

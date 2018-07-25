@@ -7,8 +7,10 @@
 class Font;
 class RenderStyle;
 
-using Char = char;
-using String = std::string;
+//using Char = char;
+//using String = std::string;
+using Char = char16_t;
+using String = std::u16string;
 
 /**
  * Represents text

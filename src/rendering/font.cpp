@@ -2,6 +2,10 @@
 #include <iostream>
 #include <memory>
 
+namespace {
+	const auto numChars = 256;
+}
+
 Font::Font(const std::string& name, std::uint32_t size)
 	: mSize(size) {
 	FT_Library ft;
@@ -18,10 +22,8 @@ Font::Font(const std::string& name, std::uint32_t size)
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction
 
-	const auto numChars = 128;
-
-	// Determine size of the element in the map
-	for (GLubyte character = 0; character < numChars; character++) {
+	// Determine size of the elements in the map
+	for (unsigned int character = 0; character < numChars; character++) {
 		// Load font character glyph
 		if (FT_Load_Char(face, character, FT_LOAD_RENDER)) {
 			continue;
@@ -31,8 +33,11 @@ Font::Font(const std::string& name, std::uint32_t size)
 		mSize = std::max(mSize, face->glyph->bitmap.rows);
 	}
 
+	mCharsPerColumn = numChars;
+	const auto maxWidth = numChars * (float)mSize;
+
 	auto buffer = std::make_unique<std::uint8_t[]>(mSize * mSize * numChars);
-	for (GLubyte character = 0; character < numChars; character++) {
+	for (unsigned int character = 0; character < numChars; character++) {
 		auto glpyhCharacter = character;
 		if (character == '\t') {
 			glpyhCharacter = ' ';
@@ -50,9 +55,11 @@ Font::Font(const std::string& name, std::uint32_t size)
 
 		auto width = face->glyph->bitmap.width;
 		auto height = face->glyph->bitmap.rows;
+		auto charMapOffset = character * mSize;
+
 		for (std::size_t y = 0; y < height; y++) {
 			for (std::size_t x = 0; x < width; x++) {
-				buffer[y * (mSize * numChars) + (character * mSize) + x] = face->glyph->bitmap.buffer[y * width + x];
+				buffer[y * (mSize * mCharsPerColumn) + charMapOffset + x] = face->glyph->bitmap.buffer[y * width + x];
 			}
 		}
 
@@ -61,7 +68,12 @@ Font::Font(const std::string& name, std::uint32_t size)
 			0,
 			glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
 			glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-			face->glyph->advance.x / 64.0f
+			face->glyph->advance.x / 64.0f,
+
+			0.0f, // Top
+			charMapOffset / maxWidth, // Left
+			fontCharacter.size.y / (float)mSize, // Bottom
+			(charMapOffset + fontCharacter.size.x) / maxWidth //Right
 		};
 
 		if (mMonoSpaceAdvanceX == 0.0f) {
@@ -74,6 +86,8 @@ Font::Font(const std::string& name, std::uint32_t size)
 
 		mCharacters.insert({ character, fontCharacter });
 	}
+
+	std::cout << "loaded font map" << std::endl;
 
 	// Generate texture
 	glGenTextures(1, &mTextureMap);
@@ -115,15 +129,11 @@ float Font::lineHeight() const {
 }
 
 void Font::getTextureCoordinates(Char character, float& top, float& left, float& bottom, float& right) const {
-	const auto numChars = 128;
-	const auto maxWidth = numChars * (float)mSize;
-
 	auto& fontCharacter = mCharacters.at(character);
-
-	top = 0.0f;
-	left = (character * mSize) / maxWidth;
-	bottom = fontCharacter.size.y / (float)mSize;
-	right = (character * mSize + fontCharacter.size.x) / maxWidth;
+	top = fontCharacter.textureTop;
+	left = fontCharacter.textureLeft;
+	bottom = fontCharacter.textureBottom;
+	right = fontCharacter.textureRight;
 }
 
 const FontCharacter& Font::operator[](Char character) const {

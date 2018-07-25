@@ -12,9 +12,18 @@
 #include <iostream>
 #include <algorithm>
 #include <memory>
+#include <codecvt>
+#include <locale>
 
 namespace {
+	std::string print(char16_t current) {
+		std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> cv;
+		return cv.to_bytes(std::u16string { current });
+	}
+
 	Char convertCodePointToChar(CodePoint codePoint) {
+//		auto test = (char16_t)codePoint;
+//		std::cout << codePoint << ", " << test << ", " << print(test) << std::endl;
 		return (Char)codePoint;
 	}
 }

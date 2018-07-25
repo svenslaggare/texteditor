@@ -8,18 +8,43 @@ namespace Helpers {
 	/**
 	 * Returns the content of the given file as string
 	 * @param fileName The name of the file
-	 * @return
 	 */
-	std::string readFileAsText(const std::string& fileName);
+	std::string readFileAsUTF8Text(const std::string& fileName);
 
 	/**
-	 * Replaces all occurrences of from in str with to returning a new string
-	 * @param str The string
-	 * @param from The characters to search from
-	 * @param to The replace characters
-	 * @return The new string
+	 * Returns the content of the given file as u16string
+	 * @param fileName The name of the file
 	 */
-	std::string replaceAll(const std::string& str, const std::string& from, const std::string& to);
+	std::u16string readFileAsUTF16Text(const std::string& fileName);
+
+	template<typename T>
+	struct FileTextReader {
+		T read(const std::string& fileName);
+	};
+
+	template<>
+	struct FileTextReader<std::string> {
+		std::string read(const std::string& fileName) {
+			return readFileAsUTF8Text(fileName);
+		}
+	};
+
+	template<>
+	struct FileTextReader<std::u16string> {
+		std::u16string read(const std::string& fileName) {
+			return readFileAsUTF16Text(fileName);
+		}
+	};
+
+	/**
+	 * Returns the content of the given file as string
+	 * @param fileName The name of the file
+	 * @tparam T The type of the string
+	 */
+	template<typename T>
+	T readFileAsText(const std::string& fileName) {
+		return FileTextReader<T>().read(fileName);
+	}
 
 	/*
 	 * Returns the current time

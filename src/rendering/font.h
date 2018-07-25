@@ -19,6 +19,11 @@ struct FontCharacter {
 	glm::ivec2 size;
 	glm::ivec2 bearing;
 	float advanceX;
+
+	float textureTop;
+	float textureLeft;
+	float textureBottom;
+	float textureRight;
 };
 
 /**
@@ -27,6 +32,7 @@ struct FontCharacter {
 class Font {
 private:
 	std::uint32_t mSize;
+	std::size_t mCharsPerColumn;
 	std::unordered_map<Char, FontCharacter> mCharacters;
 	GLuint mTextureMap;
 	float mLineHeight = 0.0f;
