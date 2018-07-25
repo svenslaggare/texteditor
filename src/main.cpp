@@ -66,9 +66,14 @@ int main(int argc, char* argv[]) {
 	});
 
 	glfwSetCharCallback(window, [](GLFWwindow* window, CodePoint codePoint) {
-//		codePoint = 0x191;
 		windowState.addCharacter(codePoint);
 	});
+
+//	glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods) {
+//		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+//			std::cout << "left pressed" << std::endl;
+//		}
+//	});
 
 	// Compile and link shaders
 	auto textVertexShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsUTF8Text("shaders/textVertex.glsl"), GL_VERTEX_SHADER);

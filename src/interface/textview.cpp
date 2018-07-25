@@ -318,6 +318,21 @@ void TextView::updateEditing(const WindowState& windowState) {
 void TextView::updateInput(const WindowState& windowState) {
 	updateViewMovement(windowState);
 	updateEditing(windowState);
+
+	if (glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+//		std::cout << "left pressed" << std::endl;
+		double mouseX;
+		double mouseY;
+		glfwGetCursorPos(mWindow, &mouseX, &mouseY);
+
+		auto drawPosition = glm::vec2(
+			mInputState.viewPosition.x + mRenderStyle.sideSpacing,
+			mInputState.viewPosition.y + mRenderStyle.topSpacing);
+
+		mInputState.caretPositionY = (std::int64_t)std::floor((-drawPosition.y + mouseY) / mFont.lineHeight());
+		mInputState.caretPositionX = (int)std::round((mouseX - getLineNumberSpacing() - drawPosition.x) / mFont.getAdvanceX('A'));
+	}
+
 	mInputManager.postUpdate();
 }
 
