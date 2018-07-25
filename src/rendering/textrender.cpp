@@ -171,6 +171,7 @@ void TextRender::render(const Font& font,
 															  glm::vec2& drawPosition) {
 		auto& line = text.getLine((std::size_t)lineIndex);
 
+		// Start by drawing the line number
 		float currentLineNumberSpacing = 0.0f;
 		if (!line.isContinuation) {
 			auto lineNumber = std::to_string(line.number + 1);
@@ -191,6 +192,7 @@ void TextRender::render(const Font& font,
 			}
 		}
 
+		// Then the text on the line
 		auto actualLineNumberSpacing = lineNumberSpacing - currentLineNumberSpacing;
 		drawPosition.x += actualLineNumberSpacing;
 		auto startDrawPosition = drawPosition;
