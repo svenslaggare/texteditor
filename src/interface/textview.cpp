@@ -5,7 +5,6 @@
 #include "../rendering/font.h"
 
 #include "../text/text.h"
-
 #include "inputmanager.h"
 #include "../windowstate.h"
 
@@ -13,6 +12,12 @@
 #include <iostream>
 #include <algorithm>
 #include <memory>
+
+namespace {
+	Char convertCodePointToChar(CodePoint codePoint) {
+		return (Char)codePoint;
+	}
+}
 
 TextView::TextView(GLFWwindow* window,
 				   const Font& font,
@@ -223,7 +228,7 @@ void TextView::updateEditing(const WindowState& windowState) {
 		mInputState.viewPosition.x = 0;
 	};
 
-	auto insertCharacter = [&](char current) {
+	auto insertCharacter = [&](Char current) {
 		auto lineAndOffset = getLineAndOffset();
 		mText.insertAt(lineAndOffset.first, (std::size_t)lineAndOffset.second, current);
 		updateFormattedText(getTextViewPort());
@@ -268,7 +273,7 @@ void TextView::updateEditing(const WindowState& windowState) {
 
 	if (mCharacterInputType == CharacterInputType::Native) {
 		for (auto& codePoint : windowState.inputCharacters()) {
-			insertCharacter((char) codePoint);
+			insertCharacter(convertCodePointToChar(codePoint));
 		}
 	}
 

@@ -8,6 +8,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <functional>
+#include "../text/text.h"
 
 class Font;
 class RenderStyle;
@@ -39,7 +40,7 @@ private:
 	void setCharacterVertices(GLfloat* charactersVertices,
 							  std::size_t offset,
 							  const Font& font,
-							  char character,
+							  Char character,
 							  float currentX,
 							  float currentY,
 							  glm::vec3 color);

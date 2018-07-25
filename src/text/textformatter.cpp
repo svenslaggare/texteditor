@@ -27,11 +27,11 @@ std::size_t LineTokens::length() const {
 namespace {
 	class KeywordList {
 	private:
-		std::unordered_set<std::string> mKeywords;
+		std::unordered_set<String> mKeywords;
 //		bloom_filter mKeywordsBloomFilter;
 		std::size_t mMaxLength = 0;
 	public:
-		explicit KeywordList(std::unordered_set<std::string> keywords)
+		explicit KeywordList(std::unordered_set<String> keywords)
 			: mKeywords(std::move(keywords)) {
 			for (auto& keyword : mKeywords) {
 				mMaxLength = std::max(mMaxLength, keyword.size());
@@ -39,7 +39,7 @@ namespace {
 			}
 		}
 
-		inline bool isKeyword(const std::string& str) const {
+		inline bool isKeyword(const String& str) const {
 			if (str.size() <= mMaxLength) {
 				return mKeywords.count(str) > 0;
 			}
@@ -115,7 +115,7 @@ namespace {
 		Token currentToken;
 		float currentWidth = 0.0f;
 
-		char prevChar = '\0';
+		Char prevChar = '\0';
 
 		FormatterStateMachine(FormatMode mode,
 							  const Font& font,
@@ -184,7 +184,7 @@ namespace {
 			currentToken.type = type;
 		}
 
-		void addChar(char character, float advanceX) {
+		void addChar(Char character, float advanceX) {
 			currentToken.text += character;
 			currentWidth += advanceX;
 			isEscaped = false;
@@ -194,7 +194,7 @@ namespace {
 			addChar('\t', renderStyle.getAdvanceX(font, '\t'));
 		}
 
-		void handleText(char current, float advanceX) {
+		void handleText(Char current, float advanceX) {
 			switch (current) {
 				case '\n':
 					createNewLine();
@@ -240,7 +240,7 @@ namespace {
 			}
 		}
 
-		void handleString(char current, float advanceX) {
+		void handleString(Char current, float advanceX) {
 			switch (current) {
 				case '\n':
 					createNewLine();
@@ -268,7 +268,7 @@ namespace {
 			}
 		}
 
-		void handleComment(char current, float advanceX) {
+		void handleComment(Char current, float advanceX) {
 			switch (current) {
 				case '\n':
 					createNewLine();
@@ -282,7 +282,7 @@ namespace {
 			}
 		}
 
-		void handleCodeMode(char current, float advanceX) {
+		void handleCodeMode(Char current, float advanceX) {
 			switch (state) {
 				case State::Text:
 					handleText(current, advanceX);
@@ -296,7 +296,7 @@ namespace {
 			}
 		}
 
-		void handleTextMode(char current, float advanceX) {
+		void handleTextMode(Char current, float advanceX) {
 			if (current == '\n') {
 				createNewLine();
 			} else if (current == '\t') {
@@ -306,7 +306,7 @@ namespace {
 			}
 		}
 
-		void process(char current) {
+		void process(Char current) {
 			auto advanceX = renderStyle.getAdvanceX(font, current);
 
 			if (renderStyle.wordWrap) {
@@ -365,7 +365,7 @@ TextFormatter::TextFormatter(FormatMode mode)
 void TextFormatter::formatLine(const Font& font,
 							   const RenderStyle& renderStyle,
 							   const RenderViewPort& viewPort,
-							   const std::string& line,
+							   const String& line,
 							   LineTokens& formattedLine) {
 	FormattedText formattedText;
 	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedText);
@@ -390,7 +390,7 @@ void TextFormatter::format(const Font& font,
 						   FormattedText& formattedText) {
 	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedText);
 
-	text.forEach([&](std::size_t i, char current) {
+	text.forEach([&](std::size_t i, Char current) {
 		stateMachine.process(current);
 	});
 

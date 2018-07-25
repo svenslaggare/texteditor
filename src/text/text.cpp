@@ -3,8 +3,8 @@
 #include "text.h"
 #include "../helpers.h"
 
-Text::Text(std::string text) {
-	std::string line;
+Text::Text(String text) {
+	String line;
 	for (auto c : text) {
 		if (c == '\n') {
 			mLines.push_back(std::move(line));
@@ -19,7 +19,7 @@ Text::Text(std::string text) {
 	}
 }
 
-void Text::forEach(std::function<void(std::size_t, char)> apply) const {
+void Text::forEach(std::function<void(std::size_t, Char)> apply) const {
 	std::size_t i = 0;
 	for (auto& line : mLines) {
 		for (auto& c : line) {
@@ -40,7 +40,7 @@ std::size_t Text::version() const {
 	return mVersion;
 }
 
-const std::string& Text::getLine(std::size_t index) const {
+const String& Text::getLine(std::size_t index) const {
 	return mLines.at(index);
 }
 
@@ -53,7 +53,7 @@ bool Text::hasChanged(std::size_t& version) const {
 	return false;
 }
 
-void Text::insertAt(std::size_t lineNumber, std::size_t index, char character) {
+void Text::insertAt(std::size_t lineNumber, std::size_t index, Char character) {
 	auto startTime = Helpers::timeNow();
 	mVersion++;
 	auto& line = mLines.at(lineNumber);
@@ -80,7 +80,7 @@ void Text::splitLine(std::size_t lineNumber, std::size_t index) {
 	mVersion++;
 
 	auto& line = mLines.at(lineNumber);
-	std::string afterSplit = line.substr(index);
+	auto afterSplit = line.substr(index);
 	line.erase(line.begin() + index, line.end());
 	mLines.insert(mLines.begin() + lineNumber + 1, afterSplit);
 

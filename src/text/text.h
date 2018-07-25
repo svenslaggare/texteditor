@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include <vector>
 #include <functional>
@@ -6,19 +7,22 @@
 class Font;
 class RenderStyle;
 
+using Char = char;
+using String = std::string;
+
 /**
  * Represents text
  */
 class Text {
 private:
-	std::vector<std::string> mLines;
+	std::vector<String> mLines;
 	std::size_t mVersion = 0;
 public:
 	/**
 	 * Creates a new text
 	 * @param text The raw text
 	 */
-	Text(std::string text);
+	Text(String text);
 
 	/**
 	 * Returns the current version
@@ -34,13 +38,13 @@ public:
 	 * Returns the given line
 	 * @param index The index
 	 */
-	const std::string& getLine(std::size_t index) const;
+	const String& getLine(std::size_t index) const;
 
 	/**
 	 * Applies the given function to each character in the text
 	 * @param apply The function to apply
 	 */
-	void forEach(std::function<void (std::size_t, char)> apply) const;
+	void forEach(std::function<void (std::size_t, Char)> apply) const;
 
 	/**
 	 * Indicates if the text has changed
@@ -54,7 +58,7 @@ public:
 	 * @param index The index
 	 * @param character The character
 	 */
-	void insertAt(std::size_t lineNumber, std::size_t index, char character);
+	void insertAt(std::size_t lineNumber, std::size_t index, Char character);
 
 	/**
 	 * Deletes the character at the given index at the given line

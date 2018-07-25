@@ -9,6 +9,7 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include "../text/text.h"
 
 /**
  * Represents a character for a font
@@ -26,7 +27,7 @@ struct FontCharacter {
 class Font {
 private:
 	std::uint32_t mSize;
-	std::unordered_map<char, FontCharacter> mCharacters;
+	std::unordered_map<Char, FontCharacter> mCharacters;
 	GLuint mTextureMap;
 	float mLineHeight = 0.0f;
 
@@ -59,17 +60,17 @@ public:
 	 * @param bottom The bottom texture coordinate
 	 * @param right The right texture coordinate
 	 */
-	void getTextureCoordinates(char character, float& top, float& left, float& bottom, float& right) const;
+	void getTextureCoordinates(Char character, float& top, float& left, float& bottom, float& right) const;
 
 	/**
 	 * Returns the given character
 	 * @param character The character
 	 */
-	const FontCharacter& operator[](char character) const;
+	const FontCharacter& operator[](Char character) const;
 
 	/**
 	 * Returns the advance X for the given character
 	 * @param character The character
 	 */
-	float getAdvanceX(char character) const;
+	float getAdvanceX(Char character) const;
 };

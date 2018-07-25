@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/vec3.hpp>
+#include "../text/text.h"
 
 struct Token;
 struct Font;
@@ -33,5 +34,5 @@ struct RenderStyle {
 	 * @param font The font
 	 * @param character The character
 	 */
-	float getAdvanceX(const Font& font, char character) const;
+	float getAdvanceX(const Font& font, Char character) const;
 };

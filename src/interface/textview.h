@@ -29,9 +29,9 @@ struct InputState {
  */
 struct KeyboardCommand {
 	int key;
-	char normalMode; 		//When no modifier key is pressed
-	char shiftMode;  		//When shift is being pressed
-	char altMode;			//When alt is being pressed
+	Char normalMode; 		//When no modifier key is pressed
+	Char shiftMode;  		//When shift is being pressed
+	Char altMode;			//When alt is being pressed
 };
 
 /**

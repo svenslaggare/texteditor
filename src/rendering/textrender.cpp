@@ -52,7 +52,7 @@ TextRender::~TextRender() {
 void TextRender::setCharacterVertices(GLfloat* charactersVertices,
 									  std::size_t offset,
 									  const Font& font,
-									  char character,
+									  Char character,
 									  float currentX,
 									  float currentY,
 									  glm::vec3 color) {

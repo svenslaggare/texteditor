@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <unordered_map>
+#include "text.h"
 
 class Font;
 class RenderViewPort;
@@ -26,7 +27,7 @@ enum class TokenType {
  */
 struct Token {
 	TokenType type = TokenType::Text;
-	std::string text;
+	String text;
 };
 
 /**
@@ -160,7 +161,7 @@ public:
 	void formatLine(const Font& font,
 					const RenderStyle& renderStyle,
 					const RenderViewPort& viewPort,
-					const std::string& line,
+					const String& line,
 					LineTokens& formattedLine);
 
 	/**

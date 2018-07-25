@@ -114,7 +114,7 @@ float Font::lineHeight() const {
 	return mLineHeight;
 }
 
-void Font::getTextureCoordinates(char character, float& top, float& left, float& bottom, float& right) const {
+void Font::getTextureCoordinates(Char character, float& top, float& left, float& bottom, float& right) const {
 	const auto numChars = 128;
 	const auto maxWidth = numChars * (float)mSize;
 
@@ -126,11 +126,11 @@ void Font::getTextureCoordinates(char character, float& top, float& left, float&
 	right = (character * mSize + fontCharacter.size.x) / maxWidth;
 }
 
-const FontCharacter& Font::operator[](char character) const {
+const FontCharacter& Font::operator[](Char character) const {
 	return mCharacters.at(character);
 }
 
-float Font::getAdvanceX(char character) const {
+float Font::getAdvanceX(Char character) const {
 	if (mIsMonoSpace) {
 		return mMonoSpaceAdvanceX;
 	}
