@@ -82,6 +82,7 @@ namespace {
 		u"float",
 		u"double",
 		u"bool",
+		u"nullptr",
 
 		u"#include",
 		u"#if",
@@ -225,6 +226,7 @@ namespace {
 				case '(':
 				case ')':
 				case '*':
+				case '&':
 					newToken(TokenType::Text, true);
 					addChar(current, advanceX);
 					newToken(TokenType::Text, true);

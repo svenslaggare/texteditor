@@ -11,10 +11,10 @@
 #include "../text/text.h"
 
 class Font;
-class RenderStyle;
-class RenderViewPort;
+struct RenderStyle;
+struct RenderViewPort;
 class BaseFormattedText;
-class InputState;
+struct InputState;
 
 enum class FormatMode : std::uint8_t;
 

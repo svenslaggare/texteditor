@@ -10,13 +10,26 @@
 
 #include <vector>
 #include <iostream>
-#include <glm/vec3.hpp>
 #include <cmath>
+#include <codecvt>
+#include <locale>
+
+#include <glm/vec3.hpp>
 
 namespace {
 	const std::size_t NUM_TRIANGLES = 6;
 	const std::size_t MAX_CHARACTERS = 200;
 	const std::size_t FLOATS_PER_CHARACTER = NUM_TRIANGLES * (2 + 2 + 3);
+
+	Char convertFromChar(char character) {
+		return (Char)character;
+	}
+
+	template<typename T>
+	String numericToString(T value) {
+		std::wstring_convert<std::codecvt_utf8<Char>, Char> cv;
+		return cv.from_bytes(std::to_string(value));
+	}
 }
 
 TextRender::TextRender(GLuint shaderProgram)
@@ -174,18 +187,18 @@ void TextRender::render(const Font& font,
 		// Start by drawing the line number
 		float currentLineNumberSpacing = 0.0f;
 		if (!line.isContinuation) {
-			auto lineNumber = std::to_string(line.number + 1);
+			auto lineNumber = numericToString(line.number + 1);
 			for (auto& character : lineNumber) {
 				setCharacterVertices(
 					vertices,
 					offset,
 					font,
-					(Char)character,
+					character,
 					drawPosition.x,
 					drawPosition.y,
 					renderStyle.lineNumberColor);
 
-				auto advanceX = renderStyle.getAdvanceX(font, (Char)character);
+				auto advanceX = renderStyle.getAdvanceX(font, character);
 				drawPosition.x += advanceX;
 				currentLineNumberSpacing += advanceX;
 				drawCharacter();
@@ -233,18 +246,18 @@ void TextRender::renderLineNumbers(const Font& font,
 		auto& line = text.getLine((std::size_t)lineIndex);
 
 		if (!line.isContinuation) {
-			auto lineNumber = std::to_string(line.number + 1);
+			auto lineNumber = numericToString(line.number + 1);
 			for (auto& character : lineNumber) {
 				setCharacterVertices(
 					vertices,
 					offset,
 					font,
-					(Char)character,
+					character,
 					drawPosition.x,
 					drawPosition.y,
 					renderStyle.lineNumberColor);
 
-				drawPosition.x += renderStyle.getAdvanceX(font, (Char)character);
+				drawPosition.x += renderStyle.getAdvanceX(font, character);
 				drawCharacter();
 			}
 		}

@@ -22,8 +22,6 @@ namespace {
 	}
 
 	Char convertCodePointToChar(CodePoint codePoint) {
-//		auto test = (char16_t)codePoint;
-//		std::cout << codePoint << ", " << test << ", " << print(test) << std::endl;
 		return (Char)codePoint;
 	}
 }
@@ -45,8 +43,8 @@ TextView::TextView(GLFWwindow* window,
 		for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; key++) {
 			KeyboardCommand command;
 			command.key = key;
-			command.normalMode = (char)('a' + (key - GLFW_KEY_A));
-			command.shiftMode = (char)std::toupper(command.normalMode);
+			command.normalMode = (Char)('a' + (key - GLFW_KEY_A));
+			command.shiftMode = (Char)std::toupper(command.normalMode);
 			command.altMode = '\0';
 			mKeyboardCommands.push_back(command);
 		}
@@ -103,6 +101,18 @@ std::size_t TextView::currentLineLength() const {
 	return mText.getLine(currentLineNumber()).length();
 }
 
+float TextView::currentLineWidth() const {
+	float lineWidth = 0.0f;
+	for (auto& token : currentLine().tokens) {
+		for (auto character : token.text) {
+			auto advanceX = mRenderStyle.getAdvanceX(mFont, character);
+			lineWidth += advanceX;
+		}
+	}
+
+	return lineWidth;
+}
+
 std::size_t TextView::numLines() {
 	return mText.numLines();
 }
@@ -114,7 +124,7 @@ std::pair<std::size_t, std::int64_t> TextView::getLineAndOffset(int offsetX) con
 }
 
 void TextView::moveCaretX(std::int64_t diff) {
-	mViewMoved = true;
+//	mViewMoved = true;
 
 	auto viewPort = getTextViewPort();
 	const auto charWidth = mFont.getAdvanceX('A');
@@ -123,6 +133,13 @@ void TextView::moveCaretX(std::int64_t diff) {
 	if (diff < 0) {
 		if (mInputState.caretPositionX < 0L) {
 			moveCaretY(-1);
+
+			auto lineWidth = currentLineWidth();
+			if (lineWidth >= viewPort.width) {
+				mInputState.viewPosition.x = -(lineWidth - viewPort.width);
+			} else {
+				mInputState.viewPosition.x = 0.0f;
+			}
 
 			if (numLines() > 0) {
 				mInputState.caretPositionX = (std::int64_t)currentLineLength();
@@ -134,13 +151,14 @@ void TextView::moveCaretX(std::int64_t diff) {
 		if (numLines() > 0) {
 			if ((std::size_t)mInputState.caretPositionX > currentLineLength()) {
 				moveCaretY(1);
-				mInputState.caretPositionX = 1;
+				mInputState.caretPositionX = 0;
+				mInputState.viewPosition.x = 0.0f;
 			}
 		}
 	}
 
 	auto caretScreenPositionX = -std::max(mInputState.caretPositionX + diff, 0L) * charWidth;
-	if (caretScreenPositionX < mInputState.viewPosition.x - viewPort.width) {
+	if (caretScreenPositionX <= mInputState.viewPosition.x - viewPort.width + charWidth) {
 		mInputState.viewPosition.x -= diff * charWidth;
 	}
 
@@ -233,6 +251,11 @@ void TextView::updateViewMovement(const WindowState& windowState) {
 
 		if (mInputState.viewPosition.y > 0) {
 			mInputState.viewPosition.y = 0;
+		}
+
+		auto maxViewHeight = std::ceil((numLines() * mFont.lineHeight() - viewPort.height) / mFont.lineHeight()) * mFont.lineHeight();
+		if (mInputState.viewPosition.y < -maxViewHeight) {
+			mInputState.viewPosition.y = -maxViewHeight;
 		}
 	}
 }
@@ -341,9 +364,7 @@ std::size_t TextView::getCharIndexFromScreenPosition(std::size_t lineIndex, floa
 	return currentCharIndex;
 }
 
-
 void TextView::updateMouseMovement(const WindowState& windowState) {
-//	if (glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
 	if (windowState.isLeftMouseButtonPressed()) {
 		updateFormattedText(getTextViewPort());
 

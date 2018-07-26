@@ -3,7 +3,7 @@
 #include "../text/text.h"
 
 struct Token;
-struct Font;
+class Font;
 
 /**
  * The render style

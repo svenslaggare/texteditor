@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
 		glViewport(0, 0, width, height);
 	});
 
-	glfwSetScrollCallback(window, [](GLFWwindow* window,double offsetX, double offsetY) {
+	glfwSetScrollCallback(window, [](GLFWwindow* window, double offsetX, double offsetY) {
 		auto& windowState = getWindowState(window);
 		windowState.setScrollY(offsetY);
 	});
@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
 	glUniform1i(glGetUniformLocation(textProgram, "inputTexture"), 0);
 	setProjection(textProgram, windowState);
 
-	//auto fontName = "/usr/share/fonts/truetype/freefont/FreeMono.ttf";
+//	auto fontName = "/usr/share/fonts/truetype/freefont/FreeMono.ttf";
 	auto fontName = "/usr/share/fonts/truetype/noto/NotoMono-Regular.ttf";
 
 //	Font font(fontName, 28);
@@ -116,9 +116,9 @@ int main(int argc, char* argv[]) {
 
 //	Text text(Helpers::readFileAsText<String>("data/lorem.txt"));
 //	Text text(Helpers::readFileAsText<String>("data/lorem2.txt"));
-	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
+//	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
 //	Text text(Helpers::readFileAsText<String>("data/test.cpp"));
-//	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
+	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
 //	Text text(Helpers::readFileAsText<String>("/home/antjans/curve.py"));
 
 //	std::chrono::time_point<std::chrono::system_clock> startTime;

@@ -7,8 +7,8 @@
 #include "text.h"
 
 class Font;
-class RenderViewPort;
-class RenderStyle;
+struct RenderViewPort;
+struct RenderStyle;
 class FormattedText;
 class Text;
 

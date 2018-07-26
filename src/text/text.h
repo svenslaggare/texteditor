@@ -5,7 +5,7 @@
 #include <functional>
 
 class Font;
-class RenderStyle;
+struct RenderStyle;
 
 //using Char = char;
 //using String = std::string;

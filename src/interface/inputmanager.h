@@ -6,9 +6,9 @@
 #include <vector>
 #include <unordered_set>
 
-class GLFWwindow;
+struct GLFWwindow;
 class WindowState;
-class RenderViewPort;
+struct RenderViewPort;
 class Font;
 
 /**

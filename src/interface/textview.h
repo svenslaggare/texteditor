@@ -9,10 +9,10 @@
 #include <glm/vec2.hpp>
 
 class Font;
-class RenderStyle;
+struct RenderStyle;
 class TextRender;
 class Text;
-class InputState;
+struct InputState;
 
 enum class FormatMode : std::uint8_t;
 
@@ -96,6 +96,11 @@ private:
 	 * Returns the length of the current line
 	 */
 	std::size_t currentLineLength() const;
+
+	/**
+	 * Returns the width of the current line
+	 */
+	float currentLineWidth() const;
 
 	/**
 	 * Returns the number of lines
