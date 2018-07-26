@@ -343,7 +343,8 @@ std::size_t TextView::getCharIndexFromScreenPosition(std::size_t lineIndex, floa
 
 
 void TextView::updateMouseMovement(const WindowState& windowState) {
-	if (glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+//	if (glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+	if (windowState.isLeftMouseButtonPressed()) {
 		updateFormattedText(getTextViewPort());
 
 		double mouseX;
@@ -358,7 +359,7 @@ void TextView::updateMouseMovement(const WindowState& windowState) {
 		auto relativeMousePositionX = mouseX - getLineNumberSpacing() - drawPosition.x;
 		mInputState.caretPositionX = (std::int64_t)getCharIndexFromScreenPosition(currentLineNumber(), (float)relativeMousePositionX);
 
-		mViewMoved = true;
+//		mViewMoved = true;
 	}
 }
 

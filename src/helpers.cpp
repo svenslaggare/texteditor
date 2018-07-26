@@ -4,18 +4,18 @@
 #include <locale>
 
 std::string Helpers::readFileAsUTF8Text(const std::string& fileName) {
-	std::ifstream configStream(fileName);
-	if (!configStream.is_open()) {
+	std::ifstream fileStream(fileName);
+	if (!fileStream.is_open()) {
 		throw std::runtime_error("The file '" + fileName + "' does not exist.");
 	}
 
 	std::string text;
 
-	configStream.seekg(0, std::ios::end);
-	text.reserve(configStream.tellg());
-	configStream.seekg(0, std::ios::beg);
+	fileStream.seekg(0, std::ios::end);
+	text.reserve(fileStream.tellg());
+	fileStream.seekg(0, std::ios::beg);
 
-	text.assign(std::istreambuf_iterator<char>(configStream),
+	text.assign(std::istreambuf_iterator<char>(fileStream),
 				std::istreambuf_iterator<char>());
 
 	return text;

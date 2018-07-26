@@ -11,6 +11,20 @@ void WindowState::update() {
 
 	mInputCharacters = std::move(mCharacterBuffer);
 	mCharacterBuffer = {};
+
+	if (mLeftMouseButtonPressedChanged) {
+		mLeftMouseButtonPressed = true;
+		mLeftMouseButtonPressedChanged = false;
+	} else {
+		mLeftMouseButtonPressed = false;
+	}
+
+	if (mRightMouseButtonPressedChanged) {
+		mRightMouseButtonPressed = true;
+		mRightMouseButtonPressedChanged = false;
+	} else {
+		mRightMouseButtonPressed = false;
+	}
 }
 
 void WindowState::changeWindowSize(int width, int height) {
@@ -55,4 +69,20 @@ void WindowState::addCharacter(CodePoint codePoint) {
 
 const std::vector<CodePoint>& WindowState::inputCharacters() const {
 	return mInputCharacters;
+}
+
+void WindowState::leftMouseButtonPressed() {
+	mLeftMouseButtonPressedChanged = true;
+}
+
+bool WindowState::isLeftMouseButtonPressed() const {
+	return mLeftMouseButtonPressed;
+}
+
+void WindowState::rightMouseButtonPressed() {
+	mRightMouseButtonPressedChanged = true;
+}
+
+bool WindowState::isRightMouseButtonPressed() const {
+	return mRightMouseButtonPressed;
 }

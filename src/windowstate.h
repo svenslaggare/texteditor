@@ -19,6 +19,11 @@ private:
 
 	std::vector<CodePoint> mCharacterBuffer;
 	std::vector<CodePoint> mInputCharacters;
+
+	bool mLeftMouseButtonPressed = false;
+	bool mLeftMouseButtonPressedChanged = false;
+	bool mRightMouseButtonPressed = false;
+	bool mRightMouseButtonPressedChanged = false;
 public:
 	/**
 	 * Updates the state. Should be called in the start of the frame.
@@ -72,4 +77,24 @@ public:
 	 * Returns the character entered in the current frame
 	 */
 	const std::vector<CodePoint>& inputCharacters() const;
+
+	/**
+	 * Marks that the left mouse button was pressed
+	 */
+	void leftMouseButtonPressed();
+
+	/**
+	 * Indicates if the left mouse button was pressed
+	 */
+	bool isLeftMouseButtonPressed() const;
+
+	/**
+	 * Marks that the right mouse button was pressed
+	 */
+	void rightMouseButtonPressed();
+
+	/**
+	 * Indicates if the right mouse button was pressed
+	 */
+	bool isRightMouseButtonPressed() const;
 };

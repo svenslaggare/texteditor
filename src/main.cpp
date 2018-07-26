@@ -28,8 +28,6 @@
 #include "rendering/texturerender.h"
 #include "text/textformatter.h"
 
-static WindowState windowState;
-
 RenderViewPort getViewPort(const WindowState& windowState) {
 	return RenderViewPort { glm::vec2(0, 0), (float)windowState.width(), (float)windowState.height() };
 }
@@ -38,6 +36,10 @@ void setProjection(GLuint shaderProgram, const WindowState& windowState) {
 	auto projection = glm::ortho(0.0f, (float)windowState.width(), -(float)windowState.height(), 0.0f);
 	glUseProgram(shaderProgram);
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, &projection[0][0]);
+}
+
+WindowState& getWindowState(GLFWwindow* window) {
+	return *(WindowState*)glfwGetWindowUserPointer(window);
 }
 
 int main(int argc, char* argv[]) {
@@ -50,30 +52,42 @@ int main(int argc, char* argv[]) {
 
 	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 
+	WindowState windowState;
+
 	auto window = glfwCreateWindow(windowState.width(), windowState.height(), "TextEditor", nullptr, nullptr);
 	glfwMakeContextCurrent(window);
+	glfwSetWindowUserPointer(window, &windowState),
 
 	glewExperimental = GL_TRUE;
 	glewInit();
 
-	glfwSetWindowSizeCallback(window, [&](GLFWwindow* window, int width, int height) {
+	glfwSetWindowSizeCallback(window, [](GLFWwindow* window, int width, int height) {
+		auto& windowState = getWindowState(window);
 		windowState.changeWindowSize(width, height);
 		glViewport(0, 0, width, height);
 	});
 
-	glfwSetScrollCallback(window, [&](GLFWwindow* window,double offsetX, double offsetY) {
+	glfwSetScrollCallback(window, [](GLFWwindow* window,double offsetX, double offsetY) {
+		auto& windowState = getWindowState(window);
 		windowState.setScrollY(offsetY);
 	});
 
 	glfwSetCharCallback(window, [](GLFWwindow* window, CodePoint codePoint) {
+		auto& windowState = getWindowState(window);
 		windowState.addCharacter(codePoint);
 	});
 
-//	glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods) {
-//		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-//			std::cout << "left pressed" << std::endl;
-//		}
-//	});
+	glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods) {
+		auto& windowState = getWindowState(window);
+
+		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+			windowState.leftMouseButtonPressed();
+		}
+
+		if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+			windowState.rightMouseButtonPressed();
+		}
+	});
 
 	// Compile and link shaders
 	auto textVertexShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsUTF8Text("shaders/textVertex.glsl"), GL_VERTEX_SHADER);
