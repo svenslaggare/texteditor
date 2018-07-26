@@ -31,7 +31,7 @@
 static WindowState windowState;
 
 RenderViewPort getViewPort(const WindowState& windowState) {
-	return RenderViewPort { glm::vec2(0, 0), windowState.width(), windowState.height() };
+	return RenderViewPort { glm::vec2(0, 0), (float)windowState.width(), (float)windowState.height() };
 }
 
 void setProjection(GLuint shaderProgram, const WindowState& windowState) {
@@ -102,9 +102,9 @@ int main(int argc, char* argv[]) {
 
 //	Text text(Helpers::readFileAsText<String>("data/lorem.txt"));
 //	Text text(Helpers::readFileAsText<String>("data/lorem2.txt"));
-//	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
+	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
 //	Text text(Helpers::readFileAsText<String>("data/test.cpp"));
-	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
+//	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
 //	Text text(Helpers::readFileAsText<String>("/home/antjans/curve.py"));
 
 //	std::chrono::time_point<std::chrono::system_clock> startTime;

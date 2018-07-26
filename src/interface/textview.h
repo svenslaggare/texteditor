@@ -5,6 +5,7 @@
 #include "../rendering/renderviewport.h"
 
 #include <string>
+#include <memory>
 #include <glm/vec2.hpp>
 
 class Font;
@@ -71,10 +72,12 @@ private:
 	std::vector<KeyboardCommand> mKeyboardCommands;
 	const float mScrollSpeed = 4.0f;
 
-	FormattedText mFormattedText;
-	RenderViewPort mLastViewPort;
 	std::size_t mTextVersion = 0;
 	Text& mText;
+
+	std::unique_ptr<BaseFormattedText> mFormattedText;
+	RenderViewPort mLastViewPort;
+	bool mViewMoved = false;
 
 	bool mDrawCaret = false;
 	TimePoint mLastCaretUpdate;
@@ -118,6 +121,13 @@ private:
 	void moveCaretY(std::int64_t diff);
 
 	/**
+	 * Returns the index of the character that the given screen position points to
+	 * @param lineIndex The line index
+	 * @param screenPositionX The X screen position
+	 */
+	std::size_t getCharIndexFromScreenPosition(std::size_t lineIndex, float screenPositionX) const;
+
+	/**
 	 * Updates the input
 	 * @param windowState The window state
 	 */
@@ -136,6 +146,12 @@ private:
 	void updateViewMovement(const WindowState& windowState);
 
 	/**
+	 * Updates the mouse movement
+	 * @param windowState The window state
+	 */
+	void updateMouseMovement(const WindowState& windowState);
+
+	/**
 	 * Returns the spacing due to line numbers
 	 */
 	float getLineNumberSpacing() const;
@@ -143,7 +159,12 @@ private:
 	/**
 	 * Returns the view port for the text part
 	 */
-	RenderViewPort getTextViewPort();
+	RenderViewPort getTextViewPort() const;
+
+	/**
+	 * Returns the draw position
+	 */
+	glm::vec2 getDrawPosition() const;
 
 	/**
 	 * Updates the formatted text

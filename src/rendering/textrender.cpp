@@ -180,12 +180,12 @@ void TextRender::render(const Font& font,
 					vertices,
 					offset,
 					font,
-					character,
+					(Char)character,
 					drawPosition.x,
 					drawPosition.y,
 					renderStyle.lineNumberColor);
 
-				auto advanceX = renderStyle.getAdvanceX(font, character);
+				auto advanceX = renderStyle.getAdvanceX(font, (Char)character);
 				drawPosition.x += advanceX;
 				currentLineNumberSpacing += advanceX;
 				drawCharacter();
@@ -239,12 +239,12 @@ void TextRender::renderLineNumbers(const Font& font,
 					vertices,
 					offset,
 					font,
-					character,
+					(Char)character,
 					drawPosition.x,
 					drawPosition.y,
 					renderStyle.lineNumberColor);
 
-				drawPosition.x += renderStyle.getAdvanceX(font, character);
+				drawPosition.x += renderStyle.getAdvanceX(font, (Char)character);
 				drawCharacter();
 			}
 		}

@@ -72,7 +72,8 @@ TextView::TextView(GLFWwindow* window,
 }
 
 const LineTokens& TextView::currentLine() const {
-	return mFormattedText.getLine((std::size_t)mInputState.caretPositionY);
+	auto lineIndex = (std::size_t)mInputState.caretPositionY;
+	return mFormattedText->getLine(lineIndex);
 }
 
 //std::size_t TextView::currentLineNumber() const {
@@ -113,6 +114,8 @@ std::pair<std::size_t, std::int64_t> TextView::getLineAndOffset(int offsetX) con
 }
 
 void TextView::moveCaretX(std::int64_t diff) {
+	mViewMoved = true;
+
 	auto viewPort = getTextViewPort();
 	const auto charWidth = mFont.getAdvanceX('A');
 	mInputState.caretPositionX += diff;
@@ -147,6 +150,8 @@ void TextView::moveCaretX(std::int64_t diff) {
 }
 
 void TextView::moveCaretY(std::int64_t diff) {
+	mViewMoved = true;
+
 	auto viewPort = getTextViewPort();
 	const auto lineHeight = mFont.lineHeight();
 
@@ -223,6 +228,7 @@ void TextView::updateViewMovement(const WindowState& windowState) {
 	}
 
 	if (windowState.hasScrolled()) {
+		mViewMoved = true;
 		mInputState.viewPosition.y += mScrollSpeed * lineHeight * windowState.scrollY();
 
 		if (mInputState.viewPosition.y > 0) {
@@ -233,6 +239,7 @@ void TextView::updateViewMovement(const WindowState& windowState) {
 
 void TextView::updateEditing(const WindowState& windowState) {
 	auto setCaretX = [&](std::int64_t position) {
+		mViewMoved = true;
 		mInputState.caretPositionX = position;
 		mInputState.viewPosition.x = 0;
 	};
@@ -315,12 +322,30 @@ void TextView::updateEditing(const WindowState& windowState) {
 	}
 }
 
-void TextView::updateInput(const WindowState& windowState) {
-	updateViewMovement(windowState);
-	updateEditing(windowState);
+std::size_t TextView::getCharIndexFromScreenPosition(std::size_t lineIndex, float screenPositionX) const {
+	float currentCharOffset = 0.0f;
+	std::size_t currentCharIndex = 0;
+	for (auto& token : mFormattedText->getLine(lineIndex).tokens) {
+		for (auto character : token.text) {
+			auto advanceX = mRenderStyle.getAdvanceX(mFont, character);
 
+			if (screenPositionX >= currentCharOffset && screenPositionX <= currentCharOffset + advanceX) {
+				break;
+			}
+
+			currentCharOffset += advanceX;
+			currentCharIndex++;
+		}
+	}
+
+	return currentCharIndex;
+}
+
+
+void TextView::updateMouseMovement(const WindowState& windowState) {
 	if (glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-//		std::cout << "left pressed" << std::endl;
+		updateFormattedText(getTextViewPort());
+
 		double mouseX;
 		double mouseY;
 		glfwGetCursorPos(mWindow, &mouseX, &mouseY);
@@ -330,9 +355,17 @@ void TextView::updateInput(const WindowState& windowState) {
 			mInputState.viewPosition.y + mRenderStyle.topSpacing);
 
 		mInputState.caretPositionY = (std::int64_t)std::floor((-drawPosition.y + mouseY) / mFont.lineHeight());
-		mInputState.caretPositionX = (int)std::round((mouseX - getLineNumberSpacing() - drawPosition.x) / mFont.getAdvanceX('A'));
-	}
+		auto relativeMousePositionX = mouseX - getLineNumberSpacing() - drawPosition.x;
+		mInputState.caretPositionX = (std::int64_t)getCharIndexFromScreenPosition(currentLineNumber(), (float)relativeMousePositionX);
 
+		mViewMoved = true;
+	}
+}
+
+void TextView::updateInput(const WindowState& windowState) {
+	updateViewMovement(windowState);
+	updateEditing(windowState);
+	updateMouseMovement(windowState);
 	mInputManager.postUpdate();
 }
 
@@ -350,12 +383,18 @@ float TextView::getLineNumberSpacing() const {
 	return (std::to_string(mText.numLines()).size() + 1) * mFont['A'].advanceX;
 }
 
-RenderViewPort TextView::getTextViewPort() {
+RenderViewPort TextView::getTextViewPort() const {
 	auto viewPort = mViewPort;
 	viewPort.width -= mRenderStyle.sideSpacing * 2;
 	viewPort.height -= mRenderStyle.bottomSpacing;
 	viewPort.width -= getLineNumberSpacing();
 	return viewPort;
+}
+
+glm::vec2 TextView::getDrawPosition() const {
+	return glm::vec2(
+		mInputState.viewPosition.x + mRenderStyle.sideSpacing,
+		mInputState.viewPosition.y + mRenderStyle.topSpacing);
 }
 
 namespace {
@@ -379,23 +418,45 @@ namespace {
 }
 
 void TextView::updateFormattedText(const RenderViewPort& viewPort) {
-	if (mPerformFormattingType == PerformFormattingType::Full) {
-		if (mLastViewPort.width != viewPort.width
-			|| mLastViewPort.height != viewPort.height
-			|| mLastViewPort.position != viewPort.position
-			|| mText.hasChanged(mTextVersion)) {
-			mFormattedText = {};
-			mLastViewPort = viewPort;
+	bool needUpdate = mLastViewPort.width != viewPort.width
+					  || mLastViewPort.height != viewPort.height
+					  || mLastViewPort.position != viewPort.position
+					  || mText.hasChanged(mTextVersion);
 
-			TextFormatter textFormatter(mFormatMode);
-			auto t0 = Helpers::timeNow();
-			textFormatter.format(mFont, mRenderStyle, viewPort, mText, mFormattedText);
-			std::cout
-				<< "Formatted text (lines = " << numLines() << ") in "
-				<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) << " ms"
-				<< std::endl;
+	if (mPerformFormattingType == PerformFormattingType::Partial) {
+		needUpdate |= mViewMoved;
+	}
 
-			mInputState.caretPositionY = std::min(mInputState.caretPositionY, (std::int64_t)numLines() - 1);
+	if (needUpdate) {
+		mLastViewPort = viewPort;
+
+		switch (mPerformFormattingType) {
+			case PerformFormattingType::Full: {
+				TextFormatter textFormatter(mFormatMode);
+				auto t0 = Helpers::timeNow();
+				auto formattedText = std::make_unique<FormattedText>();
+				textFormatter.format(mFont, mRenderStyle, viewPort, mText, *formattedText);
+				mFormattedText = std::move(formattedText);
+				std::cout
+					<< "Formatted text (lines = " << numLines() << ") in "
+					<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) << " ms"
+					<< std::endl;
+
+				mInputState.caretPositionY = std::min(mInputState.caretPositionY, (std::int64_t) numLines() - 1);
+				break;
+			}
+			case PerformFormattingType::Partial: {
+				auto t0 = Helpers::timeNow();
+				mViewMoved = false;
+				mFormattedText = std::make_unique<PartialFormattedText>(
+				performPartialFormatting(viewPort, getDrawPosition() + glm::vec2(getLineNumberSpacing(), 0.0f)));
+
+				std::cout
+					<< "Partial formatted text (lines = " << numLines() << ") in "
+					<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) << " ms"
+					<< std::endl;
+				break;
+			}
 		}
 	}
 }
@@ -437,23 +498,9 @@ void TextView::render(TextRender& textRender) {
 	auto lineNumberSpacing = getLineNumberSpacing();
 
 //	auto startTime = std::chrono::system_clock::now();
-	auto drawPosition = glm::vec2(
-		mInputState.viewPosition.x + mRenderStyle.sideSpacing,
-		mInputState.viewPosition.y + mRenderStyle.topSpacing);
-
+	auto drawPosition = getDrawPosition();
 	updateFormattedText(viewPort);
-
-	std::unique_ptr<BaseFormattedText> ownedFormattedText;
-	BaseFormattedText* formattedText = nullptr;
-	switch (mPerformFormattingType) {
-		case PerformFormattingType::Full:
-			formattedText = &mFormattedText;
-			break;
-		case PerformFormattingType::Partial:
-			ownedFormattedText = std::make_unique<PartialFormattedText>(performPartialFormatting(viewPort, drawPosition + glm::vec2(lineNumberSpacing, 0.0f)));
-			formattedText = ownedFormattedText.get();
-			break;
-	}
+	auto formattedText = mFormattedText.get();
 
 //	textRender.renderLineNumbers(
 //		mFont,
