@@ -15,6 +15,7 @@ struct RenderStyle;
 struct RenderViewPort;
 class BaseFormattedText;
 struct InputState;
+class TextMetrics;
 
 enum class FormatMode : std::uint8_t;
 
@@ -66,20 +67,6 @@ private:
 					const RenderViewPort& viewPort,
 					glm::vec2 position,
 					RenderLine renderLine);
-
-	/**
-	 * Calculates the X position of the given index at the given line
-	 * @param font The font
-	 * @param renderStyle The render style
-	 * @param text The text
-	 * @param lineNumber The line number in the text
-	 * @param offset The offset within the line
-	 */
-	float calculatePositionX(const Font& font,
-							 const RenderStyle& renderStyle,
-							 const BaseFormattedText& text,
-							 std::size_t lineNumber,
-							 std::size_t offset);
 public:
 	/**
 	 * Creates a new text render
@@ -123,12 +110,14 @@ public:
 	 * @param font The font
 	 * @param renderStyle The render style
 	 * @param viewPort The view port to render to
+	 * @param textMetrics The text metrics
 	 * @param text The formatted text to caret for
 	 * @param spacing The spacing
 	 * @param inputState The input state
 	 */
 	void renderCaret(const Font& font,
 					 const RenderStyle& renderStyle,
+					 const TextMetrics& textMetrics,
 					 const RenderViewPort& viewPort,
 					 const BaseFormattedText& text,
 					 glm::vec2 spacing,

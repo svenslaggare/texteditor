@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		codeTextView.update(windowState);
-		codeTextView.render(textRender);
+		codeTextView.render(windowState, textRender);
 
 		// Draw frame buffer to screen
 //		glBindFramebuffer(GL_FRAMEBUFFER, 0);

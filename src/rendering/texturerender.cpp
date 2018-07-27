@@ -23,13 +23,13 @@ TextureRender::TextureRender(GLuint shaderProgram)
 	glBindBuffer(GL_ARRAY_BUFFER, mVBO);
 	glUseProgram(shaderProgram);
 
-	auto posAttrib = glGetAttribLocation(shaderProgram, "vertexPosition");
-	glEnableVertexAttribArray(posAttrib);
-	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), nullptr);
+	auto posAttribute = glGetAttribLocation(shaderProgram, "vertexPosition");
+	glEnableVertexAttribArray(posAttribute);
+	glVertexAttribPointer(posAttribute, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), nullptr);
 
-	auto texAttrib = glGetAttribLocation(shaderProgram, "vertexTexcoord");
-	glEnableVertexAttribArray(texAttrib);
-	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
+	auto texAttribute = glGetAttribLocation(shaderProgram, "vertexTexcoord");
+	glEnableVertexAttribArray(texAttribute);
+	glVertexAttribPointer(texAttribute, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
 
 	glUniform1i(glGetUniformLocation(shaderProgram, "inputTexture"), 0);
 

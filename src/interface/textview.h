@@ -3,10 +3,13 @@
 #include "inputmanager.h"
 #include "../text/textformatter.h"
 #include "../rendering/renderviewport.h"
+#include "../rendering/textmetrics.h"
+#include "../rendering/textselectionrender.h"
 
 #include <string>
 #include <memory>
 #include <glm/vec2.hpp>
+#include <GL/glew.h>
 
 class Font;
 struct RenderStyle;
@@ -23,6 +26,11 @@ struct InputState {
 	glm::vec2 viewPosition = glm::vec2();
 	std::int64_t caretPositionX = 0;
 	std::int64_t caretPositionY = 0;
+
+	std::int64_t selectionStartX = 0;
+	std::int64_t selectionStartY = 0;
+	std::int64_t selectionEndX = 0;
+	std::int64_t selectionEndY = 0;
 };
 
 /**
@@ -47,7 +55,7 @@ enum class PerformFormattingType {
  * Defines how character entries are handled
  */
 enum class CharacterInputType {
-	Native, // Uses the native GLFW methods
+	Native, // Uses the native GLFW method
 	Custom // Uses a custom implementation
 };
 
@@ -63,9 +71,10 @@ private:
 
 	const Font& mFont;
 	FormatMode mFormatMode;
+	const RenderStyle& mRenderStyle;
+	TextMetrics mTextMetrics;
 
 	const RenderViewPort& mViewPort;
-	const RenderStyle& mRenderStyle;
 
 	InputManager mInputManager;
 	InputState mInputState;
@@ -82,6 +91,8 @@ private:
 	bool mDrawCaret = false;
 	TimePoint mLastCaretUpdate;
 
+	TextSelectionRender mTextSelectionRender;
+
 	/**
 	 * Returns the current line the caret is at
 	 */
@@ -96,6 +107,16 @@ private:
 	 * Returns the length of the current line
 	 */
 	std::size_t currentLineLength() const;
+
+	/**
+	 * Returns the width of the given line
+	 * @param lineIndex The index of the line
+	 * @param startCharIndex The start character index to use on the line
+	 * @param maxCharIndex The maximum character index to use on the line
+	 */
+	float getLineWidth(std::size_t lineIndex,
+					   std::size_t startCharIndex = 0,
+					   std::size_t* maxCharIndex = nullptr) const;
 
 	/**
 	 * Returns the width of the current line
@@ -208,7 +229,8 @@ public:
 
 	/**
 	 * Renders the current view
+	 * @param windowState The window state
 	 * @param textRender The text text render
 	 */
-	void render(TextRender& textRender);
+	void render(const WindowState& windowState, TextRender& textRender);
 };

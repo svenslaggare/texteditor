@@ -7,6 +7,8 @@
 #include "../text/text.h"
 #include "inputmanager.h"
 #include "../windowstate.h"
+#include "../rendering/glhelpers.h"
+#include "../rendering/shadercompiler.h"
 
 #include <chrono>
 #include <iostream>
@@ -14,6 +16,7 @@
 #include <memory>
 #include <codecvt>
 #include <locale>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace {
 	std::string print(char16_t current) {
@@ -35,8 +38,9 @@ TextView::TextView(GLFWwindow* window,
 	: mWindow(window),
 	  mFont(font),
 	  mFormatMode(formatMode),
-	  mViewPort(viewPort),
 	  mRenderStyle(renderStyle),
+	  mTextMetrics(mFont, mRenderStyle),
+	  mViewPort(viewPort),
 	  mInputManager(window),
 	  mText(text) {
 	if (mCharacterInputType == CharacterInputType::Custom) {
@@ -101,16 +105,12 @@ std::size_t TextView::currentLineLength() const {
 	return mText.getLine(currentLineNumber()).length();
 }
 
-float TextView::currentLineWidth() const {
-	float lineWidth = 0.0f;
-	for (auto& token : currentLine().tokens) {
-		for (auto character : token.text) {
-			auto advanceX = mRenderStyle.getAdvanceX(mFont, character);
-			lineWidth += advanceX;
-		}
-	}
+float TextView::getLineWidth(std::size_t lineIndex, std::size_t startCharIndex, std::size_t* maxCharIndex) const {
+	return mTextMetrics.getLineWidth(mFormattedText->getLine(lineIndex), startCharIndex, maxCharIndex);
+}
 
-	return lineWidth;
+float TextView::currentLineWidth() const {
+	return mTextMetrics.getLineWidth(currentLine(), 0, nullptr);
 }
 
 std::size_t TextView::numLines() {
@@ -124,8 +124,6 @@ std::pair<std::size_t, std::int64_t> TextView::getLineAndOffset(int offsetX) con
 }
 
 void TextView::moveCaretX(std::int64_t diff) {
-//	mViewMoved = true;
-
 	auto viewPort = getTextViewPort();
 	const auto charWidth = mFont.getAdvanceX('A');
 	mInputState.caretPositionX += diff;
@@ -515,7 +513,7 @@ PartialFormattedText TextView::performPartialFormatting(const RenderViewPort& vi
 	return formattedText;
 }
 
-void TextView::render(TextRender& textRender) {
+void TextView::render(const WindowState& windowState, TextRender& textRender) {
 	auto viewPort = getTextViewPort();
 	auto lineNumberSpacing = getLineNumberSpacing();
 
@@ -551,11 +549,23 @@ void TextView::render(TextRender& textRender) {
 		textRender.renderCaret(
 			mFont,
 			mRenderStyle,
+			mTextMetrics,
 			viewPort,
 			*formattedText,
 			{ lineNumberSpacing + mRenderStyle.sideSpacing, mRenderStyle.topSpacing },
 			mInputState);
 	}
+
+	mTextSelectionRender.render(
+		windowState,
+		mFont,
+		mTextMetrics,
+		*formattedText,
+		{
+			mInputState.viewPosition.x + lineNumberSpacing + mRenderStyle.sideSpacing,
+			mInputState.viewPosition.y + mRenderStyle.topSpacing
+		},
+		mInputState);
 
 //	std::cout
 //		<< "Render time: " << (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count() / 1E3)

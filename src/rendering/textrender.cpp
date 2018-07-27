@@ -264,29 +264,9 @@ void TextRender::renderLineNumbers(const Font& font,
 	});
 }
 
-float TextRender::calculatePositionX(const Font& font,
-									 const RenderStyle& renderStyle,
-									 const BaseFormattedText& text,
-									 std::size_t lineNumber,
-									 std::size_t offset) {
-	float lineOffset = 0.0f;
-	std::size_t currentIndex = 0;
-	for (auto& token : text.getLine(lineNumber).tokens) {
-		for (auto character : token.text) {
-			if (currentIndex == offset) {
-				return lineOffset;
-			}
-
-			lineOffset += renderStyle.getAdvanceX(font, character);
-			currentIndex++;
-		}
-	}
-
-	return lineOffset;
-}
-
 void TextRender::renderCaret(const Font& font,
 							 const RenderStyle& renderStyle,
+							 const TextMetrics& textMetrics,
 							 const RenderViewPort& viewPort,
 							 const BaseFormattedText& text,
 							 glm::vec2 spacing,
@@ -296,9 +276,7 @@ void TextRender::renderCaret(const Font& font,
 
 	auto& fontCharacter = font['|'];
 
-	auto lineOffset = calculatePositionX(
-		font,
-		renderStyle,
+	auto lineOffset = textMetrics.calculatePositionX(
 		text,
 		(std::size_t)inputState.caretPositionY,
 		(std::size_t)inputState.caretPositionX);
