@@ -61,8 +61,28 @@ bool InputManager::isAltDown() {
 	return isKeyDown(GLFW_KEY_LEFT_ALT) || isKeyDown(GLFW_KEY_RIGHT_ALT);
 }
 
+bool InputManager::isMouseButtonHoldDown(int button, int timeMs) {
+	auto prevState = mMousePreviousState.find(button);
+	bool currentPressed = glfwGetMouseButton(mWindow, button) == GLFW_PRESS;
+	bool prevReleased = prevState != mMousePreviousState.end() && prevState->second == GLFW_RELEASE;
+
+	if (currentPressed && prevReleased) {
+		mMouseLastDown[button] = Helpers::timeNow();
+	}
+
+	auto lastDownIterator = mMouseLastDown.find(button);
+	if (currentPressed && lastDownIterator != mMouseLastDown.end()) {
+		return Helpers::durationMilliseconds(Helpers::timeNow(), lastDownIterator->second) >= timeMs;
+	}
+
+	return false;
+}
+
 void InputManager::postUpdate() {
 	for (auto& key : mValidKeys) {
 		mPreviousState[key] = glfwGetKey(mWindow, key);
 	}
+
+	mMousePreviousState[GLFW_MOUSE_BUTTON_LEFT] = glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_LEFT);
+	mMousePreviousState[GLFW_MOUSE_BUTTON_RIGHT] = glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_RIGHT);
 }

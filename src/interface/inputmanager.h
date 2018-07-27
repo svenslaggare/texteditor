@@ -22,6 +22,9 @@ private:
 	std::unordered_map<int, TimePoint> mLastDown;
 	std::unordered_map<int, TimePoint> mLastPressed;
 	std::unordered_map<int, int> mPreviousState;
+
+	std::unordered_map<int, TimePoint> mMouseLastDown;
+	std::unordered_map<int, int> mMousePreviousState;
 public:
 	/**
 	 * Creates a new input manager
@@ -50,6 +53,13 @@ public:
 	 * Indicates if the shift alt is pressed
 	 */
 	bool isAltDown();
+
+	/**
+	 * Indicates if the given mouse button has been held down for the given amount of time
+	 * @param button The button
+	 * @param timeMs The time in milliseconds
+	 */
+	bool isMouseButtonHoldDown(int button, int timeMs);
 
 	/**
 	 * Updates the input manager

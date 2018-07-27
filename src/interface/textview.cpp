@@ -105,10 +105,6 @@ std::size_t TextView::currentLineLength() const {
 	return mText.getLine(currentLineNumber()).length();
 }
 
-float TextView::getLineWidth(std::size_t lineIndex, std::size_t startCharIndex, std::size_t* maxCharIndex) const {
-	return mTextMetrics.getLineWidth(mFormattedText->getLine(lineIndex), startCharIndex, maxCharIndex);
-}
-
 float TextView::currentLineWidth() const {
 	return mTextMetrics.getLineWidth(currentLine(), 0, nullptr);
 }
@@ -363,9 +359,7 @@ std::size_t TextView::getCharIndexFromScreenPosition(std::size_t lineIndex, floa
 }
 
 void TextView::updateMouseMovement(const WindowState& windowState) {
-	if (windowState.isLeftMouseButtonPressed()) {
-		updateFormattedText(getTextViewPort());
-
+	auto getMouseTextPosition = [&]() {
 		double mouseX;
 		double mouseY;
 		glfwGetCursorPos(mWindow, &mouseX, &mouseY);
@@ -374,11 +368,58 @@ void TextView::updateMouseMovement(const WindowState& windowState) {
 			mInputState.viewPosition.x + mRenderStyle.sideSpacing,
 			mInputState.viewPosition.y + mRenderStyle.topSpacing);
 
-		mInputState.caretPositionY = (std::int64_t)std::floor((-drawPosition.y + mouseY) / mFont.lineHeight());
+		auto textY = (std::int64_t)std::floor((-drawPosition.y + mouseY) / mFont.lineHeight());
 		auto relativeMousePositionX = mouseX - getLineNumberSpacing() - drawPosition.x;
-		mInputState.caretPositionX = (std::int64_t)getCharIndexFromScreenPosition(currentLineNumber(), (float)relativeMousePositionX);
+		auto textX = (std::int64_t)getCharIndexFromScreenPosition(mFormattedText->getLine((std::size_t)textY).number, (float)relativeMousePositionX);
 
+		return std::make_pair(textX, textY);
+	};
+
+	if (windowState.isLeftMouseButtonPressed()) {
+		updateFormattedText(getTextViewPort());
+
+		auto mouseTextPosition = getMouseTextPosition();
+		mInputState.caretPositionX = mouseTextPosition.first;
+		mInputState.caretPositionY = mouseTextPosition.second;
 //		mViewMoved = true;
+	}
+
+	if (glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+		auto mouseTextPosition = getMouseTextPosition();
+
+		if (!mSelectionStarted) {
+			mPotentialSelectionStartX = mouseTextPosition.first;
+			mPotentialSelectionStartY = mouseTextPosition.second;
+		} else {
+			mPotentialSelectionEndX = mouseTextPosition.first;
+			mPotentialSelectionEndY = mouseTextPosition.second;
+		}
+	}
+
+	if (mInputManager.isMouseButtonHoldDown(GLFW_MOUSE_BUTTON_LEFT, 10)) {
+		if (!mSelectionStarted) {
+			mSelectionStarted = true;
+			std::cout << "selection started" << std::endl;
+		}
+	} else if (mSelectionStarted) {
+		mSelectionStarted = false;
+
+		mInputState.selectionStartX = mPotentialSelectionStartX;
+		mInputState.selectionStartY = mPotentialSelectionStartY;
+		mInputState.selectionEndX = mPotentialSelectionEndX;
+		mInputState.selectionEndY = mPotentialSelectionEndY;
+
+		if (mInputState.selectionEndY < mInputState.selectionStartY) {
+			std::swap(mInputState.selectionStartX, mInputState.selectionEndX);
+			std::swap(mInputState.selectionStartY, mInputState.selectionEndY);
+		}
+
+		std::cout
+			<< "selection ended: "
+	  		<< mInputState.selectionStartX << ", " << mInputState.selectionStartY
+			<< " -> "
+	  		<< mInputState.selectionEndX << ", " << mInputState.selectionEndY
+			<< std::endl;
 	}
 }
 

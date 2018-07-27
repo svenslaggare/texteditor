@@ -92,6 +92,11 @@ private:
 	TimePoint mLastCaretUpdate;
 
 	TextSelectionRender mTextSelectionRender;
+	bool mSelectionStarted = false;
+	std::int64_t mPotentialSelectionStartX;
+	std::int64_t mPotentialSelectionStartY;
+	std::int64_t mPotentialSelectionEndX;
+	std::int64_t mPotentialSelectionEndY;
 
 	/**
 	 * Returns the current line the caret is at
@@ -107,16 +112,6 @@ private:
 	 * Returns the length of the current line
 	 */
 	std::size_t currentLineLength() const;
-
-	/**
-	 * Returns the width of the given line
-	 * @param lineIndex The index of the line
-	 * @param startCharIndex The start character index to use on the line
-	 * @param maxCharIndex The maximum character index to use on the line
-	 */
-	float getLineWidth(std::size_t lineIndex,
-					   std::size_t startCharIndex = 0,
-					   std::size_t* maxCharIndex = nullptr) const;
 
 	/**
 	 * Returns the width of the current line

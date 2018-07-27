@@ -37,7 +37,7 @@ float TextMetrics::getLineWidth(const LineTokens& lineTokens, size_t startCharIn
 			}
 
 			charIndex++;
-			if (maxCharIndex != nullptr && charIndex >= *maxCharIndex) {
+			if (maxCharIndex != nullptr && charIndex > *maxCharIndex) {
 				break;
 			}
 		}

@@ -50,18 +50,32 @@ void TextSelectionRender::render(const WindowState& windowState,
 								 const BaseFormattedText& formattedText,
 								 glm::vec2 offset,
 								 const InputState& inputState) {
+	if (inputState.selectionStartX == inputState.selectionEndY && inputState.selectionStartY == inputState.selectionEndY) {
+		return;
+	}
+
 	glUseProgram(mSelectionShaderProgram);
 
 	auto projection = glm::ortho(0.0f, (float)windowState.width(), -(float)windowState.height(), 0.0f);
 	glUniformMatrix4fv(glGetUniformLocation(mSelectionShaderProgram, "projection"), 1, GL_FALSE, &projection[0][0]);
-	
+
 	glBindVertexArray(mSelectionVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, mSelectionVBO);
 
-	for (auto selectionLineIndex = (std::size_t)inputState.caretPositionY; selectionLineIndex < (std::size_t)inputState.caretPositionY + 3; selectionLineIndex++) {
+	for (auto selectionLineIndex = (std::size_t)inputState.selectionStartY; selectionLineIndex <= (std::size_t)inputState.selectionEndY; selectionLineIndex++) {
+		auto& line = formattedText.getLine(selectionLineIndex);
+
 		std::size_t selectionLineCharStartIndex = 0;
-		if (selectionLineIndex == (std::size_t)inputState.caretPositionY) {
-			selectionLineCharStartIndex = (std::size_t)inputState.caretPositionX;
+		std::size_t selectionLineCharEndIndex = line.length();
+		bool isLastLine = false;
+
+		if (selectionLineIndex == (std::size_t)inputState.selectionStartY) {
+			selectionLineCharStartIndex = (std::size_t)inputState.selectionStartX;
+		}
+
+		if (selectionLineIndex == (std::size_t)(inputState.selectionEndY)) {
+			selectionLineCharEndIndex = (std::size_t)inputState.selectionEndX;
+			isLastLine = true;
 		}
 
 		auto lineOffset = textMetrics.calculatePositionX(
@@ -74,9 +88,17 @@ void TextSelectionRender::render(const WindowState& windowState,
 		auto selectionPositionY = -(offset.y + selectionLineIndex * font.lineHeight()) - (fontCharacter.size.y - fontCharacter.bearing.y);
 
 		float selectionLineWidth = textMetrics.getLineWidth(
-			formattedText.getLine(selectionLineIndex),
+			line,
 			selectionLineCharStartIndex,
-			nullptr);
+			&selectionLineCharEndIndex);
+
+		if (!isLastLine) {
+			selectionLineWidth = windowState.width();
+		}
+
+//		if (selectionLineCharStartIndex == selectionLineCharEndIndex) {
+//			selectionLineWidth = 0.0f;
+//		}
 
 		float selectionLineHeight = font.lineHeight();
 
