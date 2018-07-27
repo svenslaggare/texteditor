@@ -370,6 +370,18 @@ void TextView::updateMouseMovement(const WindowState& windowState) {
 
 		auto textY = (std::int64_t)std::floor((-drawPosition.y + mouseY) / mFont.lineHeight());
 		auto relativeMousePositionX = mouseX - getLineNumberSpacing() - drawPosition.x;
+
+		if (mPerformFormattingType == PerformFormattingType::Partial) {
+			auto* formattedText = (PartialFormattedText*)mFormattedText.get();
+			if (!formattedText->hasLine((std::size_t)textY)) {
+				TextFormatter textFormatter(mFormatMode);
+				LineTokens lineTokens;
+				textFormatter.formatLine(mFont, mRenderStyle, getTextViewPort(), mText.getLine((std::size_t)textY), lineTokens);
+				lineTokens.number = (std::size_t)textY;
+				formattedText->addLine((std::size_t)textY, lineTokens);
+			}
+		}
+
 		auto textX = (std::int64_t)getCharIndexFromScreenPosition(mFormattedText->getLine((std::size_t)textY).number, (float)relativeMousePositionX);
 
 		return std::make_pair(textX, textY);
@@ -393,6 +405,33 @@ void TextView::updateMouseMovement(const WindowState& windowState) {
 		} else {
 			mPotentialSelectionEndX = mouseTextPosition.first;
 			mPotentialSelectionEndY = mouseTextPosition.second;
+
+			mInputState.selectionStartX = mPotentialSelectionStartX;
+			mInputState.selectionStartY = mPotentialSelectionStartY;
+			mInputState.selectionEndX = mPotentialSelectionEndX;
+			mInputState.selectionEndY = mPotentialSelectionEndY;
+
+			if (mInputState.selectionEndY < mInputState.selectionStartY) {
+				std::swap(mInputState.selectionStartX, mInputState.selectionEndX);
+				std::swap(mInputState.selectionStartY, mInputState.selectionEndY);
+			}
+
+			if (mPerformFormattingType == PerformFormattingType::Partial) {
+				auto* formattedText = (PartialFormattedText*)mFormattedText.get();
+
+				bool needUpdate = false;
+				for (std::int64_t lineIndex = mInputState.selectionStartY; lineIndex <= mInputState.selectionEndY; lineIndex++) {
+					needUpdate |= !formattedText->hasLine((std::size_t)lineIndex);
+					if (needUpdate) {
+						break;
+					}
+				}
+
+				if (needUpdate) {
+					mViewMoved = true;
+					updateFormattedText(getTextViewPort());
+				}
+			}
 		}
 	}
 
@@ -403,16 +442,6 @@ void TextView::updateMouseMovement(const WindowState& windowState) {
 		}
 	} else if (mSelectionStarted) {
 		mSelectionStarted = false;
-
-		mInputState.selectionStartX = mPotentialSelectionStartX;
-		mInputState.selectionStartY = mPotentialSelectionStartY;
-		mInputState.selectionEndX = mPotentialSelectionEndX;
-		mInputState.selectionEndY = mPotentialSelectionEndY;
-
-		if (mInputState.selectionEndY < mInputState.selectionStartY) {
-			std::swap(mInputState.selectionStartX, mInputState.selectionEndX);
-			std::swap(mInputState.selectionStartY, mInputState.selectionEndY);
-		}
 
 		std::cout
 			<< "selection ended: "
@@ -548,6 +577,12 @@ PartialFormattedText TextView::performPartialFormatting(const RenderViewPort& vi
 			if (drawPosition.y > viewPort.bottom()) {
 				break;
 			}
+		}
+	}
+
+	if (mInputState.selectionStartY != mInputState.selectionEndY) {
+		for (std::int64_t lineIndex = mInputState.selectionStartY; lineIndex <= mInputState.selectionEndY; lineIndex++) {
+			formatLine((std::size_t)lineIndex);
 		}
 	}
 

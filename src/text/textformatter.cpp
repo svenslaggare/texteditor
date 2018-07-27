@@ -359,6 +359,10 @@ void PartialFormattedText::addLine(std::size_t index, LineTokens tokens) {
 	mLines[index] = std::move(tokens);
 }
 
+bool PartialFormattedText::hasLine(std::size_t index) const {
+	return mLines.count(index) > 0;
+}
+
 TextFormatter::TextFormatter(FormatMode mode)
 	: mMode(mode) {
 

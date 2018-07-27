@@ -127,6 +127,12 @@ public:
 	 * @param tokens The tokens on the line
 	 */
 	void addLine(std::size_t index, LineTokens tokens);
+
+	/**
+	 * Indicates if the given line exists
+	 * @param index The index
+	 */
+	bool hasLine(std::size_t index) const;
 };
 
 /**
