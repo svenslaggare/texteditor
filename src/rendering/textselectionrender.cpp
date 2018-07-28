@@ -62,6 +62,7 @@ void TextSelectionRender::render(const WindowState& windowState,
 		float selectionLineWidth = windowState.width();
 		float selectionLineHeight = font.lineHeight();
 
+		// Note: formatted line only guaranteed to be available for first and last line.
 		if (selectionLineIndex == inputState.selection.startY) {
 			selectionLineCharStartIndex = inputState.selection.startX;
 			lineOffset = textMetrics.calculatePositionX(
@@ -79,14 +80,17 @@ void TextSelectionRender::render(const WindowState& windowState,
 				&selectionLineCharEndIndex);
 		}
 
+		// Calculate position of bounding box line
 		auto& fontCharacter = font['|'];
 		auto selectionPositionX = offset.x + lineOffset;
 		auto drawPositionY = offset.y + selectionLineIndex * font.lineHeight();
 		auto selectionPositionY = -drawPositionY - (fontCharacter.size.y - fontCharacter.bearing.y);
+
 		if (drawPositionY > viewPort.bottom()) {
 			break;
 		}
 
+		//TODO: batch draw calls maybe
 		GLfloat vertices[] = {
 			selectionPositionX, selectionPositionY, 0.0f, 0.0f, 0.0f,  // Top-left
 			selectionPositionX + selectionLineWidth, selectionPositionY, 0.0f, 0.0f, 0.0f, // Top-right
