@@ -6,6 +6,7 @@
 class WindowState;
 class Font;
 struct RenderStyle;
+struct RenderViewPort;
 class TextMetrics;
 struct InputState;
 class BaseFormattedText;
@@ -27,6 +28,7 @@ public:
 	 * Renders the given text selection
 	 * @param windowState The window state
 	 * @param font The font
+	 * @param viewPort The view port
 	 * @param textMetrics The text metrics
 	 * @param formattedText The formatted text
 	 * @param offset The draw offset
@@ -34,6 +36,7 @@ public:
 	 */
 	void render(const WindowState& windowState,
 				const Font& font,
+				const RenderViewPort& viewPort,
 				const TextMetrics& textMetrics,
 				const BaseFormattedText& formattedText,
 				glm::vec2 offset,

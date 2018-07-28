@@ -399,7 +399,7 @@ std::pair<std::int64_t, std::int64_t> TextView::getMouseTextPosition() {
 		textY = 0;
 	}
 
-	if (textY >= numLines()) {
+	if (textY >= (std::int64_t)numLines()) {
 		textY = numLines() - 1;
 	}
 
@@ -448,20 +448,22 @@ void TextView::updateTextSelection(const WindowState& windowState) {
 			}
 
 			if (mPerformFormattingType == PerformFormattingType::Partial) {
-				auto* formattedText = (PartialFormattedText*) mFormattedText.get();
+				auto* formattedText = (PartialFormattedText*)mFormattedText.get();
+				auto viewPort = getTextViewPort();
+				TextFormatter textFormatter(mFormatMode);
 
-				bool needUpdate = false;
-				for (std::size_t lineIndex = mInputState.selection.startY; lineIndex <= mInputState.selection.endY; lineIndex++) {
-					needUpdate |= !formattedText->hasLine((std::size_t)lineIndex);
-					if (needUpdate) {
-						break;
-					}
+//				for (std::size_t lineIndex = mInputState.selection.startY; lineIndex <= mInputState.selection.endY; lineIndex++) {
+//					if (!formattedText->hasLine((std::size_t)lineIndex)) {
+//						formatLinePartialMode(viewPort, textFormatter, *formattedText, lineIndex);
+//					}
+//				}
+
+				if (!formattedText->hasLine((std::size_t)mInputState.selection.startY)) {
+					formatLinePartialMode(viewPort, textFormatter, *formattedText, (std::size_t)mInputState.selection.startY);
 				}
 
-				if (needUpdate) {
-					//TODO: Only reformat new lines
-					mViewMoved = true;
-					updateFormattedText(getTextViewPort());
+				if (!formattedText->hasLine((std::size_t)mInputState.selection.endY)) {
+					formatLinePartialMode(viewPort, textFormatter, *formattedText, (std::size_t)mInputState.selection.endY);
 				}
 			}
 		} else {
@@ -646,9 +648,12 @@ PartialFormattedText TextView::performPartialFormatting(const RenderViewPort& vi
 	}
 
 	if (mInputState.selection.startY != mInputState.selection.endY && mShowSelection) {
-		for (std::size_t lineIndex = mInputState.selection.startY; lineIndex <= std::min(mInputState.selection.endY, numLines() - 1); lineIndex++) {
-			formatLine(lineIndex);
-		}
+//		for (std::size_t lineIndex = mInputState.selection.startY; lineIndex <= std::min(mInputState.selection.endY, numLines() - 1); lineIndex++) {
+//			formatLine(lineIndex);
+//		}
+
+		formatLine(mInputState.selection.startY);
+		formatLine(std::min(mInputState.selection.endY, numLines() - 1));
 	}
 
 	return formattedText;
@@ -690,11 +695,12 @@ void TextView::render(const WindowState& windowState, TextRender& textRender) {
 		mTextSelectionRender.render(
 			windowState,
 			mFont,
+			viewPort,
 			mTextMetrics,
 			*formattedText,
 			{
-				mInputState.viewPosition.x + lineNumberSpacing + mRenderStyle.sideSpacing,
-				mInputState.viewPosition.y + mRenderStyle.topSpacing
+				drawPosition.x + lineNumberSpacing,
+				drawPosition.y
 			},
 			mInputState);
 	} else {

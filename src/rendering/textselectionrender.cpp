@@ -39,6 +39,7 @@ TextSelectionRender::~TextSelectionRender() {
 
 void TextSelectionRender::render(const WindowState& windowState,
 								 const Font& font,
+								 const RenderViewPort& viewPort,
 								 const TextMetrics& textMetrics,
 								 const BaseFormattedText& formattedText,
 								 glm::vec2 offset,
@@ -52,45 +53,39 @@ void TextSelectionRender::render(const WindowState& windowState,
 	glBindBuffer(GL_ARRAY_BUFFER, mVBO);
 	mShaderProgram.setParameters({ ShaderParameter::float4x4MatrixParameter("projection", windowState.projection()) });
 
-	for (auto selectionLineIndex = inputState.selection.startY; selectionLineIndex <= inputState.selection.endY; selectionLineIndex++) {
-		auto& line = formattedText.getLine(selectionLineIndex);
-
+//	auto startTime = Helpers::timeNow();
+	auto cursorLineIndex = (std::size_t)std::floor(std::max(-offset.y / font.lineHeight(), 0.0f));
+	for (auto selectionLineIndex = std::max(cursorLineIndex, inputState.selection.startY); selectionLineIndex <= inputState.selection.endY; selectionLineIndex++) {
 		std::size_t selectionLineCharStartIndex = 0;
-		std::size_t selectionLineCharEndIndex = line.length();
-		bool isLastLine = false;
+		auto lineOffset = 0.0f;
+
+		float selectionLineWidth = windowState.width();
+		float selectionLineHeight = font.lineHeight();
 
 		if (selectionLineIndex == inputState.selection.startY) {
 			selectionLineCharStartIndex = inputState.selection.startX;
+			lineOffset = textMetrics.calculatePositionX(
+				formattedText,
+				selectionLineIndex,
+				selectionLineCharStartIndex);
 		}
 
 		if (selectionLineIndex == (inputState.selection.endY)) {
-			selectionLineCharEndIndex = inputState.selection.endX;
-			isLastLine = true;
+			auto& line = formattedText.getLine(selectionLineIndex);
+			auto selectionLineCharEndIndex = inputState.selection.endX;
+			selectionLineWidth = textMetrics.getLineWidth(
+				line,
+				selectionLineCharStartIndex,
+				&selectionLineCharEndIndex);
 		}
-
-		auto lineOffset = textMetrics.calculatePositionX(
-			formattedText,
-			selectionLineIndex,
-			selectionLineCharStartIndex);
 
 		auto& fontCharacter = font['|'];
 		auto selectionPositionX = offset.x + lineOffset;
-		auto selectionPositionY = -(offset.y + selectionLineIndex * font.lineHeight()) - (fontCharacter.size.y - fontCharacter.bearing.y);
-
-		float selectionLineWidth = textMetrics.getLineWidth(
-			line,
-			selectionLineCharStartIndex,
-			&selectionLineCharEndIndex);
-
-		if (!isLastLine) {
-			selectionLineWidth = windowState.width();
+		auto drawPositionY = offset.y + selectionLineIndex * font.lineHeight();
+		auto selectionPositionY = -drawPositionY - (fontCharacter.size.y - fontCharacter.bearing.y);
+		if (drawPositionY > viewPort.bottom()) {
+			break;
 		}
-
-//		if (selectionLineCharStartIndex == selectionLineCharEndIndex) {
-//			selectionLineWidth = 0.0f;
-//		}
-
-		float selectionLineHeight = font.lineHeight();
 
 		GLfloat vertices[] = {
 			selectionPositionX, selectionPositionY, 0.0f, 0.0f, 0.0f,  // Top-left
@@ -105,4 +100,6 @@ void TextSelectionRender::render(const WindowState& windowState,
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
+
+//	std::cout << "Render time: " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << std::endl;
 }
