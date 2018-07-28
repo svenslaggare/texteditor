@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <glm/detail/type_mat4x4.hpp>
 
 using CodePoint = unsigned int;
 
@@ -46,6 +47,11 @@ public:
 	 * Returns the height of the window
 	 */
 	int height() const;
+
+	/**
+	 * Returns the projection matrix
+	 */
+	glm::mat4x4 projection() const;
 
 	/**
 	 * Indicates if the window size has changed, if that the case, clears the indication

@@ -31,8 +31,11 @@ namespace {
 //		bloom_filter mKeywordsBloomFilter;
 		std::size_t mMaxLength = 0;
 	public:
-		explicit KeywordList(std::unordered_set<String> keywords)
-			: mKeywords(std::move(keywords)) {
+		explicit KeywordList(const std::unordered_set<std::string>& keywords) {
+			for (auto& keyword : keywords) {
+				mKeywords.insert(Helpers::fromString<String>(keyword));
+			}
+
 			for (auto& keyword : mKeywords) {
 				mMaxLength = std::max(mMaxLength, keyword.size());
 //				mKeywordsBloomFilter.insert(keyword);
@@ -49,48 +52,48 @@ namespace {
 	};
 
 	const KeywordList keywords { {
-		u"if",
-		u"else",
-		u"while",
-		u"for",
-		u"case",
-		u"switch",
-		u"break",
-		u"default",
-		u"return",
-		u"assert",
+		"if",
+		"else",
+		"while",
+		"for",
+		"case",
+		"switch",
+		"break",
+		"default",
+		"return",
+		"assert",
 
-		u"inline",
-		u"static",
+		"inline",
+		"static",
 
-		u"struct",
-		u"class",
-		u"enum",
-		u"namespace",
+		"struct",
+		"class",
+		"enum",
+		"namespace",
 
-		u"public",
-		u"private",
+		"public",
+		"private",
 
-		u"auto",
-		u"void",
-		u"const",
-		u"unsigned",
-		u"char",
-		u"int",
-		u"short",
-		u"long",
-		u"float",
-		u"double",
-		u"bool",
-		u"nullptr",
+		"auto",
+		"void",
+		"const",
+		"unsigned",
+		"char",
+		"int",
+		"short",
+		"long",
+		"float",
+		"double",
+		"bool",
+		"nullptr",
 
-		u"#include",
-		u"#if",
-		u"#define",
-		u"#define",
-		u"#ifdef",
-		u"#endif",
-		u"#else",
+		"#include",
+		"#if",
+		"#define",
+		"#define",
+		"#ifdef",
+		"#endif",
+		"#else",
 	} };
 
 	enum class State {

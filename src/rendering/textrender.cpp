@@ -25,10 +25,15 @@ namespace {
 		return (Char)character;
 	}
 
-	template<typename T>
-	String numericToString(T value) {
+	template<typename TString, typename TValue>
+	TString numericToString(TValue value) {
 		std::wstring_convert<std::codecvt_utf8<Char>, Char> cv;
 		return cv.from_bytes(std::to_string(value));
+	}
+
+	template<typename TValue>
+	std::string numericToString(TValue value) {
+		return std::to_string(value);
 	}
 }
 
@@ -108,7 +113,6 @@ void TextRender::setupRendering(const Font& font) {
 	glBindBuffer(GL_ARRAY_BUFFER, mVBO);
 }
 
-
 void TextRender::renderView(const Font& font,
 							std::size_t maxNumLines,
 							const RenderViewPort& viewPort,
@@ -187,7 +191,7 @@ void TextRender::render(const Font& font,
 		// Start by drawing the line number
 		float currentLineNumberSpacing = 0.0f;
 		if (!line.isContinuation) {
-			auto lineNumber = numericToString(line.number + 1);
+			auto lineNumber = numericToString<String>(line.number + 1);
 			for (auto& character : lineNumber) {
 				setCharacterVertices(
 					vertices,
@@ -208,7 +212,6 @@ void TextRender::render(const Font& font,
 		// Then the text on the line
 		auto actualLineNumberSpacing = lineNumberSpacing - currentLineNumberSpacing;
 		drawPosition.x += actualLineNumberSpacing;
-		auto startDrawPosition = drawPosition;
 
 		for (auto& token : line.tokens) {
 			auto color = renderStyle.getColor(token);
@@ -246,7 +249,7 @@ void TextRender::renderLineNumbers(const Font& font,
 		auto& line = text.getLine((std::size_t)lineIndex);
 
 		if (!line.isContinuation) {
-			auto lineNumber = numericToString(line.number + 1);
+			auto lineNumber = numericToString<String>(line.number + 1);
 			for (auto& character : lineNumber) {
 				setCharacterVertices(
 					vertices,

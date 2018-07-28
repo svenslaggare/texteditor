@@ -27,11 +27,6 @@ std::u16string Helpers::readFileAsUTF16Text(const std::string& fileName) {
 	return cv.from_bytes(text);
 }
 
-std::string Helpers::toString(const String& str) {
-	std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> cv;
-	return cv.to_bytes(str);
-}
-
 TimePoint Helpers::timeNow() {
 	return std::chrono::system_clock::now();
 }

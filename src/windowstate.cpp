@@ -1,3 +1,4 @@
+#include <glm/gtc/matrix_transform.hpp>
 #include "windowstate.h"
 
 void WindowState::update() {
@@ -39,6 +40,10 @@ int WindowState::width() const {
 
 int WindowState::height() const {
 	return mHeight;
+}
+
+glm::mat4x4 WindowState::projection() const {
+	return glm::ortho(0.0f, (float)width(), -(float)height(), 0.0f);
 }
 
 bool WindowState::hasChangedWindowSize() {

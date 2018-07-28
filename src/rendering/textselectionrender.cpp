@@ -10,24 +10,21 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-TextSelectionRender::TextSelectionRender() {
-	mVertexShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsUTF8Text("shaders/selectionVertex.glsl"), GL_VERTEX_SHADER);
-	mFragmentShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsUTF8Text("shaders/selection.glsl"), GL_FRAGMENT_SHADER);
-	mSelectionShaderProgram = ShaderCompiler::linkShaders(mVertexShader, mFragmentShader);
-
-	glGenVertexArrays(1, &mSelectionVAO);
-	glGenBuffers(1, &mSelectionVBO);
-	glBindVertexArray(mSelectionVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, mSelectionVBO);
+TextSelectionRender::TextSelectionRender()
+	: mShaderProgram(Helpers::readFileAsUTF8Text("shaders/selectionVertex.glsl"), Helpers::readFileAsUTF8Text("shaders/selection.glsl")) {
+	glGenVertexArrays(1, &mVAO);
+	glGenBuffers(1, &mVBO);
+	glBindVertexArray(mVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, mVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 5 * 6, nullptr, GL_DYNAMIC_DRAW);
 
-	glUseProgram(mSelectionShaderProgram);
+	glUseProgram(mShaderProgram.id());
 
-	auto posAttribute = glGetAttribLocation(mSelectionShaderProgram, "vertexPosition");
+	auto posAttribute = glGetAttribLocation(mShaderProgram.id(), "vertexPosition");
 	glEnableVertexAttribArray(posAttribute);
 	glVertexAttribPointer(posAttribute, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), nullptr);
 
-	auto colorAttribute = glGetAttribLocation(mSelectionShaderProgram, "vertexColor");
+	auto colorAttribute = glGetAttribLocation(mShaderProgram.id(), "vertexColor");
 	glEnableVertexAttribArray(colorAttribute);
 	glVertexAttribPointer(colorAttribute, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
 
@@ -36,12 +33,8 @@ TextSelectionRender::TextSelectionRender() {
 }
 
 TextSelectionRender::~TextSelectionRender() {
-	glDeleteShader(mVertexShader);
-	glDeleteShader(mFragmentShader);
-	glDeleteProgram(mSelectionShaderProgram);
-
-	glDeleteVertexArrays(1, &mSelectionVAO);
-	glDeleteBuffers(1, &mSelectionVBO);
+	glDeleteVertexArrays(1, &mVAO);
+	glDeleteBuffers(1, &mVBO);
 }
 
 void TextSelectionRender::render(const WindowState& windowState,
@@ -54,13 +47,10 @@ void TextSelectionRender::render(const WindowState& windowState,
 //		return;
 //	}
 
-	glUseProgram(mSelectionShaderProgram);
-
-	auto projection = glm::ortho(0.0f, (float)windowState.width(), -(float)windowState.height(), 0.0f);
-	glUniformMatrix4fv(glGetUniformLocation(mSelectionShaderProgram, "projection"), 1, GL_FALSE, &projection[0][0]);
-
-	glBindVertexArray(mSelectionVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, mSelectionVBO);
+	glUseProgram(mShaderProgram.id());
+	glBindVertexArray(mVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, mVBO);
+	mShaderProgram.setParameters({ ShaderParameter::float4x4MatrixParameter("projection", windowState.projection()) });
 
 	for (auto selectionLineIndex = inputState.selection.startY; selectionLineIndex <= inputState.selection.endY; selectionLineIndex++) {
 		auto& line = formattedText.getLine(selectionLineIndex);

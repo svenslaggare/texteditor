@@ -1,6 +1,7 @@
 #pragma once
 #include <GL/glew.h>
 #include <glm/vec2.hpp>
+#include "shaderprogram.h"
 
 class WindowState;
 class Font;
@@ -14,12 +15,10 @@ class BaseFormattedText;
  */
 class TextSelectionRender {
 private:
-	GLuint mVertexShader;
-	GLuint mFragmentShader;
-	GLuint mSelectionShaderProgram;
+	ShaderProgram mShaderProgram;
 
-	GLuint mSelectionVAO;
-	GLuint mSelectionVBO;
+	GLuint mVAO;
+	GLuint mVBO;
 public:
 	TextSelectionRender();
 	~TextSelectionRender();

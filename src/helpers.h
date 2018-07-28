@@ -1,7 +1,10 @@
 #pragma once
+#include "text/text.h"
+
 #include <string>
 #include <chrono>
-#include "text/text.h"
+#include <codecvt>
+#include <locale>
 
 using TimePoint = std::chrono::time_point<std::chrono::system_clock>;
 
@@ -51,7 +54,39 @@ namespace Helpers {
 	 * Converts the given String type to std::string
 	 * @param str The string
 	 */
-	std::string toString(const String& str);
+	template<typename T>
+	inline std::string toString(const T& str) {
+		std::wstring_convert<std::codecvt_utf8<Char>, Char> cv;
+		return cv.to_bytes(str);
+	}
+
+	/**
+	 * Converts the given String type to std::string
+	 * @param str The string
+	 */
+	template<typename T>
+	inline std::string toString(const std::string& str) {
+		return str;
+	}
+
+	/**
+	 * Converts the given std::string to a String type
+	 * @param str The string
+	 */
+	template<typename T>
+	inline T fromString(const std::string& str) {
+		std::wstring_convert<std::codecvt_utf8<Char>, Char> cv;
+		return cv.from_bytes(str);
+	}
+
+	/**
+ 	 * Converts the given std::string to a String type
+ 	 * @param str The string
+ 	 */
+	template<>
+	inline std::string fromString(const std::string& str) {
+		return str;
+	}
 
 	/*
 	 * Returns the current time

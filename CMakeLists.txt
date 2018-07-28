@@ -39,7 +39,13 @@ set(SOURCE_FILES
     src/windowstate.h
     src/rendering/texturerender.cpp
     src/rendering/texturerender.h
-    src/external/bloom_filter.hpp src/rendering/textselectionrender.cpp src/rendering/textselectionrender.h src/rendering/textmetrics.cpp src/rendering/textmetrics.h)
+    src/external/bloom_filter.hpp
+    src/rendering/textselectionrender.cpp
+    src/rendering/textselectionrender.h
+    src/rendering/textmetrics.cpp
+    src/rendering/textmetrics.h
+    src/rendering/shaderprogram.h
+    src/rendering/shaderprogram.cpp)
 
 #add_compile_options(-O3 -march=native -mtune=native)
 

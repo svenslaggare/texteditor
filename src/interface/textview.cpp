@@ -353,7 +353,7 @@ void TextView::updateEditing(const WindowState& windowState) {
 		if (mInputState.selection.isSingle() || !mShowSelection) {
 			auto lineAndOffset = getLineAndOffset(-1);
 			if (lineAndOffset.second >= 0) {
-				mText.deleteAt(lineAndOffset.first, (std::size_t) lineAndOffset.second);
+				mText.deleteAt(lineAndOffset.first, (std::size_t)lineAndOffset.second);
 				updateFormattedText(getTextViewPort());
 				moveCaretX(-1);
 			} else {
@@ -459,6 +459,7 @@ void TextView::updateTextSelection(const WindowState& windowState) {
 				}
 
 				if (needUpdate) {
+					//TODO: Only reformat new lines
 					mViewMoved = true;
 					updateFormattedText(getTextViewPort());
 				}
@@ -473,6 +474,7 @@ void TextView::updateTextSelection(const WindowState& windowState) {
 		if (!mSelectionStarted) {
 			mSelectionStarted = true;
 			mShowSelection = true;
+			mViewMoved = true;
 //			std::cout << "selection started" << std::endl;
 		}
 	} else if (mSelectionStarted) {
@@ -554,6 +556,7 @@ namespace {
 			FormattedText formattedText;
 			textFormatter.format(font, renderStyle, viewPort, text, formattedText);
 		}
+
 		std::cout
 			<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) / n << " ms"
 			<< std::endl;
@@ -642,7 +645,7 @@ PartialFormattedText TextView::performPartialFormatting(const RenderViewPort& vi
 		}
 	}
 
-	if (mInputState.selection.startY != mInputState.selection.endY) {
+	if (mInputState.selection.startY != mInputState.selection.endY && mShowSelection) {
 		for (std::size_t lineIndex = mInputState.selection.startY; lineIndex <= std::min(mInputState.selection.endY, numLines() - 1); lineIndex++) {
 			formatLine(lineIndex);
 		}

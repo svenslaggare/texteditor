@@ -27,15 +27,16 @@
 #include "interface/inputmanager.h"
 #include "rendering/texturerender.h"
 #include "text/textformatter.h"
+#include "rendering/shaderprogram.h"
 
 RenderViewPort getViewPort(const WindowState& windowState) {
 	return RenderViewPort { glm::vec2(0, 0), (float)windowState.width(), (float)windowState.height() };
 }
 
-void setProjection(GLuint shaderProgram, const WindowState& windowState) {
-	auto projection = glm::ortho(0.0f, (float)windowState.width(), -(float)windowState.height(), 0.0f);
-	glUseProgram(shaderProgram);
-	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, &projection[0][0]);
+void setProjection(ShaderProgram& shaderProgram, const WindowState& windowState) {
+	auto projection = windowState.projection();
+	glUseProgram(shaderProgram.id());
+	shaderProgram.setParameters({ ShaderParameter::float4x4MatrixParameter("projection", projection) });
 }
 
 WindowState& getWindowState(GLFWwindow* window) {
@@ -90,12 +91,12 @@ int main(int argc, char* argv[]) {
 	});
 
 	// Compile and link shaders
-	auto textVertexShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsUTF8Text("shaders/textVertex.glsl"), GL_VERTEX_SHADER);
-	auto textFragmentShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsUTF8Text("shaders/text.glsl"), GL_FRAGMENT_SHADER);
-	auto textProgram = ShaderCompiler::linkShaders(textVertexShader, textFragmentShader);
+	ShaderProgram textProgram(
+		Helpers::readFileAsUTF8Text("shaders/textVertex.glsl"),
+		Helpers::readFileAsUTF8Text("shaders/text.glsl"));
 
-	glUseProgram(textProgram);
-	glUniform1i(glGetUniformLocation(textProgram, "inputTexture"), 0);
+	glUseProgram(textProgram.id());
+	textProgram.setParameters({ ShaderParameter::textureParameter("inputTexture", 0) });
 	setProjection(textProgram, windowState);
 
 //	auto fontName = "/usr/share/fonts/truetype/freefont/FreeMono.ttf";
@@ -104,7 +105,7 @@ int main(int argc, char* argv[]) {
 //	Font font(fontName, 28);
 	Font font(fontName, 16);
 //	Font font(fontName, 8);
-	TextRender textRender(textProgram);
+	TextRender textRender(textProgram.id());
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -116,28 +117,27 @@ int main(int argc, char* argv[]) {
 
 //	Text text(Helpers::readFileAsText<String>("data/lorem.txt"));
 //	Text text(Helpers::readFileAsText<String>("data/lorem2.txt"));
-//	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
+	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
 //	Text text(Helpers::readFileAsText<String>("data/test.cpp"));
-	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
+//	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
 //	Text text(Helpers::readFileAsText<String>("/home/antjans/curve.py"));
 //	Text text({});
 
-//	std::chrono::time_point<std::chrono::system_clock> startTime;
-	auto startTime = std::chrono::system_clock::now();
+	auto startTime = Helpers::timeNow();
 	int numFrames = 0;
 	float fps = 0.0f;
 
 	auto frameBuffer = std::make_unique<FrameBuffer>(windowState.width(), windowState.height());
 
-	auto passthroughVertexShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsUTF8Text("shaders/vertex.glsl"), GL_VERTEX_SHADER);
-	auto passthroughFragmentShader = ShaderCompiler::loadAndCompileShader(Helpers::readFileAsUTF8Text("shaders/passthrough.glsl"), GL_FRAGMENT_SHADER);
-	auto passthroughProgram = ShaderCompiler::linkShaders(passthroughVertexShader, passthroughFragmentShader);
+	ShaderProgram passthroughProgram(
+		Helpers::readFileAsUTF8Text("shaders/vertex.glsl"),
+		Helpers::readFileAsUTF8Text("shaders/passthrough.glsl"));
 
 	RenderStyle renderStyle;
 	auto renderViewPort = getViewPort(windowState);
 
 	TextView codeTextView(window, font, FormatMode::Code, renderViewPort, renderStyle, text);
-	TextureRender frameBufferRender(passthroughProgram);
+	TextureRender frameBufferRender(passthroughProgram.id());
 
 	while (!glfwWindowShouldClose(window)) {
 		windowState.update();
@@ -167,10 +167,10 @@ int main(int argc, char* argv[]) {
 		glfwPollEvents();
 
 		numFrames++;
-		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime).count();
+		auto duration = (float)Helpers::durationMilliseconds(Helpers::timeNow(), startTime);
 		if (duration >= 1000) {
 			fps = numFrames / (duration * 0.001f);
-			startTime = std::chrono::system_clock::now();
+			startTime = Helpers::timeNow();
 			numFrames = 0;
 		}
 
