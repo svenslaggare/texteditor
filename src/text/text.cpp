@@ -151,26 +151,6 @@ void Text::deleteSelection(const TextSelection& textSelection) {
 		}
 
 		mLines.erase(mLines.begin() + deleteLineStartIndex, mLines.begin() + deleteLineEndIndex + 1);
-
-//		for (std::size_t lineIndex = textSelection.startY; lineIndex <= textSelection.endY; lineIndex++) {
-//			bool isFirst = lineIndex == textSelection.startY;
-//			bool isLast = lineIndex == textSelection.endY;
-//
-//			if (isFirst) {
-//				mLines.at(textSelection.startY) = mLines.at(textSelection.startY).substr(0, textSelection.startX);
-//			} else if (isLast) {
-//				auto& line = mLines.at(textSelection.startY + 1);
-//				auto removeIndex = std::min(textSelection.endX + 1, line.size());
-//
-//				if (removeIndex == line.size()) {
-//					mLines.erase(mLines.begin() + textSelection.startY + 1);
-//				} else {
-//					mLines.at(textSelection.startY + 1) = line.substr(removeIndex);
-//				}
-//			} else {
-//				mLines.erase(mLines.begin() + textSelection.startY + 1);
-//			}
-//		}
 	}
 
 	std::cout << "Deleted selection in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
