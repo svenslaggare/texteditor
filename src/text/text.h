@@ -13,6 +13,28 @@ using Char = char16_t;
 using String = std::u16string;
 
 /**
+ * Represents a text selection
+ */
+struct TextSelection {
+	std::size_t startX = 0;
+	std::size_t startY = 0;
+	std::size_t endX = 0;
+	std::size_t endY = 0;
+
+	/**
+	 * Set the selection to the given single character
+	 * @param x The x coordinate
+	 * @param y The y coordinate
+	 */
+	void setSingle(std::size_t x, std::size_t y);
+
+	/**
+	 * Indicates if the selection only covers a single character
+	 */
+	bool isSingle() const;
+};
+
+/**
  * Represents text
  */
 class Text {
@@ -91,4 +113,10 @@ public:
 	 * @param mode How to delete the line
 	 */
 	DeleteLineDiff deleteLine(std::size_t lineNumber, DeleteLineMode mode);
+
+	/**
+	 * Deletes the given text selection
+	 * @param textSelection The text selection
+	 */
+	void deleteSelection(const TextSelection& textSelection);
 };

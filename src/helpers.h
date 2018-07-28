@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <chrono>
+#include "text/text.h"
 
 using TimePoint = std::chrono::time_point<std::chrono::system_clock>;
 
@@ -45,6 +46,12 @@ namespace Helpers {
 	T readFileAsText(const std::string& fileName) {
 		return FileTextReader<T>().read(fileName);
 	}
+
+	/**
+	 * Converts the given String type to std::string
+	 * @param str The string
+	 */
+	std::string toString(const String& str);
 
 	/*
 	 * Returns the current time

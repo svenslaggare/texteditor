@@ -120,6 +120,8 @@ std::pair<std::size_t, std::int64_t> TextView::getLineAndOffset(int offsetX) con
 }
 
 void TextView::moveCaretX(std::int64_t diff) {
+	mShowSelection = false;
+
 	auto viewPort = getTextViewPort();
 	const auto charWidth = mFont.getAdvanceX('A');
 	mInputState.caretPositionX += diff;
@@ -162,6 +164,7 @@ void TextView::moveCaretX(std::int64_t diff) {
 }
 
 void TextView::moveCaretY(std::int64_t diff) {
+	mShowSelection = false;
 	mViewMoved = true;
 
 	auto viewPort = getTextViewPort();
@@ -285,6 +288,15 @@ void TextView::updateEditing(const WindowState& windowState) {
 		}
 	};
 
+	auto deleteSelection = [&]() {
+		mText.deleteSelection(mInputState.selection);
+		updateFormattedText(getTextViewPort());
+		mInputState.caretPositionX = (std::size_t)mInputState.selection.startX;
+		mInputState.caretPositionY = (std::size_t)mInputState.selection.startY;
+		mInputState.selection.setSingle((std::size_t)mInputState.caretPositionX, (std::size_t)mInputState.caretPositionY);
+		mShowSelection = false;
+	};
+
 	bool isShiftDown = mInputManager.isShiftDown();
 	bool isAltDown = mInputManager.isAltDown();
 
@@ -311,22 +323,30 @@ void TextView::updateEditing(const WindowState& windowState) {
 	}
 
 	if (mInputManager.isKeyPressed(GLFW_KEY_BACKSPACE)) {
-		auto lineAndOffset = getLineAndOffset(-1);
-		if (lineAndOffset.second >= 0) {
-			mText.deleteAt(lineAndOffset.first, (std::size_t)lineAndOffset.second);
-			updateFormattedText(getTextViewPort());
-			moveCaretX(-1);
+		if (mInputState.selection.isSingle() || !mShowSelection) {
+			auto lineAndOffset = getLineAndOffset(-1);
+			if (lineAndOffset.second >= 0) {
+				mText.deleteAt(lineAndOffset.first, (std::size_t) lineAndOffset.second);
+				updateFormattedText(getTextViewPort());
+				moveCaretX(-1);
+			} else {
+				deleteLine(Text::DeleteLineMode::Start);
+			}
 		} else {
-			deleteLine(Text::DeleteLineMode::Start);
+			deleteSelection();
 		}
 	}
 
 	if (mInputManager.isKeyPressed(GLFW_KEY_DELETE)) {
-		auto lineAndOffset = getLineAndOffset();
-		if (lineAndOffset.second < (std::int64_t)currentLineLength()) {
-			mText.deleteAt(lineAndOffset.first, (std::size_t)lineAndOffset.second);
+		if (mInputState.selection.isSingle() || !mShowSelection) {
+			auto lineAndOffset = getLineAndOffset();
+			if (lineAndOffset.second < (std::int64_t)currentLineLength()) {
+				mText.deleteAt(lineAndOffset.first, (std::size_t)lineAndOffset.second);
+			} else {
+				deleteLine(Text::DeleteLineMode::End);
+			}
 		} else {
-			deleteLine(Text::DeleteLineMode::End);
+			deleteSelection();
 		}
 	}
 
@@ -347,7 +367,7 @@ std::size_t TextView::getCharIndexFromScreenPosition(std::size_t lineIndex, floa
 			auto advanceX = mRenderStyle.getAdvanceX(mFont, character);
 
 			if (screenPositionX >= currentCharOffset && screenPositionX <= currentCharOffset + advanceX) {
-				break;
+				return currentCharIndex;
 			}
 
 			currentCharOffset += advanceX;
@@ -387,6 +407,7 @@ void TextView::updateMouseMovement(const WindowState& windowState) {
 		return std::make_pair(textX, textY);
 	};
 
+
 	if (windowState.isLeftMouseButtonPressed()) {
 		updateFormattedText(getTextViewPort());
 
@@ -394,33 +415,36 @@ void TextView::updateMouseMovement(const WindowState& windowState) {
 		mInputState.caretPositionX = mouseTextPosition.first;
 		mInputState.caretPositionY = mouseTextPosition.second;
 //		mViewMoved = true;
+
+		if (!mSelectionStarted) {
+			mShowSelection = false;
+		}
+
+		std::cout << "clicked" << std::endl;
 	}
 
 	if (glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
 		auto mouseTextPosition = getMouseTextPosition();
 
 		if (!mSelectionStarted) {
-			mPotentialSelectionStartX = mouseTextPosition.first;
-			mPotentialSelectionStartY = mouseTextPosition.second;
+			mPotentialSelection.startX = (std::size_t)mouseTextPosition.first;
+			mPotentialSelection.startY = (std::size_t)mouseTextPosition.second;
 		} else {
-			mPotentialSelectionEndX = mouseTextPosition.first;
-			mPotentialSelectionEndY = mouseTextPosition.second;
+			mPotentialSelection.endX = (std::size_t)mouseTextPosition.first;
+			mPotentialSelection.endY = (std::size_t)mouseTextPosition.second;
 
-			mInputState.selectionStartX = mPotentialSelectionStartX;
-			mInputState.selectionStartY = mPotentialSelectionStartY;
-			mInputState.selectionEndX = mPotentialSelectionEndX;
-			mInputState.selectionEndY = mPotentialSelectionEndY;
+			mInputState.selection = mPotentialSelection;
 
-			if (mInputState.selectionEndY < mInputState.selectionStartY) {
-				std::swap(mInputState.selectionStartX, mInputState.selectionEndX);
-				std::swap(mInputState.selectionStartY, mInputState.selectionEndY);
+			if (mInputState.selection.endY < mInputState.selection.startY) {
+				std::swap(mInputState.selection.startX, mInputState.selection.endX);
+				std::swap(mInputState.selection.startY, mInputState.selection.endY);
 			}
 
 			if (mPerformFormattingType == PerformFormattingType::Partial) {
 				auto* formattedText = (PartialFormattedText*)mFormattedText.get();
 
 				bool needUpdate = false;
-				for (std::int64_t lineIndex = mInputState.selectionStartY; lineIndex <= mInputState.selectionEndY; lineIndex++) {
+				for (std::size_t lineIndex = mInputState.selection.startY; lineIndex <= mInputState.selection.endY; lineIndex++) {
 					needUpdate |= !formattedText->hasLine((std::size_t)lineIndex);
 					if (needUpdate) {
 						break;
@@ -435,9 +459,10 @@ void TextView::updateMouseMovement(const WindowState& windowState) {
 		}
 	}
 
-	if (mInputManager.isMouseButtonHoldDown(GLFW_MOUSE_BUTTON_LEFT, 10)) {
+	if (mInputManager.isMouseDragMove(GLFW_MOUSE_BUTTON_LEFT)) {
 		if (!mSelectionStarted) {
 			mSelectionStarted = true;
+			mShowSelection = true;
 			std::cout << "selection started" << std::endl;
 		}
 	} else if (mSelectionStarted) {
@@ -445,9 +470,9 @@ void TextView::updateMouseMovement(const WindowState& windowState) {
 
 		std::cout
 			<< "selection ended: "
-	  		<< mInputState.selectionStartX << ", " << mInputState.selectionStartY
+	  		<< mInputState.selection.startX << ", " << mInputState.selection.startY
 			<< " -> "
-	  		<< mInputState.selectionEndX << ", " << mInputState.selectionEndY
+	  		<< mInputState.selection.endX << ", " << mInputState.selection.endY
 			<< std::endl;
 	}
 }
@@ -580,9 +605,9 @@ PartialFormattedText TextView::performPartialFormatting(const RenderViewPort& vi
 		}
 	}
 
-	if (mInputState.selectionStartY != mInputState.selectionEndY) {
-		for (std::int64_t lineIndex = mInputState.selectionStartY; lineIndex <= mInputState.selectionEndY; lineIndex++) {
-			formatLine((std::size_t)lineIndex);
+	if (mInputState.selection.startY != mInputState.selection.endY) {
+		for (std::size_t lineIndex = mInputState.selection.startY; lineIndex <= mInputState.selection.endY; lineIndex++) {
+			formatLine(lineIndex);
 		}
 	}
 
@@ -621,27 +646,29 @@ void TextView::render(const WindowState& windowState, TextRender& textRender) {
 		drawPosition,
 		lineNumberSpacing);
 
-	if (mDrawCaret) {
-		textRender.renderCaret(
+	if (mShowSelection) {
+		mTextSelectionRender.render(
+			windowState,
 			mFont,
-			mRenderStyle,
 			mTextMetrics,
-			viewPort,
 			*formattedText,
-			{ lineNumberSpacing + mRenderStyle.sideSpacing, mRenderStyle.topSpacing },
+			{
+				mInputState.viewPosition.x + lineNumberSpacing + mRenderStyle.sideSpacing,
+				mInputState.viewPosition.y + mRenderStyle.topSpacing
+			},
 			mInputState);
+	} else {
+		if (mDrawCaret) {
+			textRender.renderCaret(
+				mFont,
+				mRenderStyle,
+				mTextMetrics,
+				viewPort,
+				*formattedText,
+				{ lineNumberSpacing + mRenderStyle.sideSpacing, mRenderStyle.topSpacing },
+				mInputState);
+		}
 	}
-
-	mTextSelectionRender.render(
-		windowState,
-		mFont,
-		mTextMetrics,
-		*formattedText,
-		{
-			mInputState.viewPosition.x + lineNumberSpacing + mRenderStyle.sideSpacing,
-			mInputState.viewPosition.y + mRenderStyle.topSpacing
-		},
-		mInputState);
 
 //	std::cout
 //		<< "Render time: " << (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count() / 1E3)

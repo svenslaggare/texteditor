@@ -50,9 +50,9 @@ void TextSelectionRender::render(const WindowState& windowState,
 								 const BaseFormattedText& formattedText,
 								 glm::vec2 offset,
 								 const InputState& inputState) {
-	if (inputState.selectionStartX == inputState.selectionEndY && inputState.selectionStartY == inputState.selectionEndY) {
-		return;
-	}
+//	if (inputState.selection.isSingle()) {
+//		return;
+//	}
 
 	glUseProgram(mSelectionShaderProgram);
 
@@ -62,19 +62,19 @@ void TextSelectionRender::render(const WindowState& windowState,
 	glBindVertexArray(mSelectionVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, mSelectionVBO);
 
-	for (auto selectionLineIndex = (std::size_t)inputState.selectionStartY; selectionLineIndex <= (std::size_t)inputState.selectionEndY; selectionLineIndex++) {
+	for (auto selectionLineIndex = inputState.selection.startY; selectionLineIndex <= inputState.selection.endY; selectionLineIndex++) {
 		auto& line = formattedText.getLine(selectionLineIndex);
 
 		std::size_t selectionLineCharStartIndex = 0;
 		std::size_t selectionLineCharEndIndex = line.length();
 		bool isLastLine = false;
 
-		if (selectionLineIndex == (std::size_t)inputState.selectionStartY) {
-			selectionLineCharStartIndex = (std::size_t)inputState.selectionStartX;
+		if (selectionLineIndex == inputState.selection.startY) {
+			selectionLineCharStartIndex = inputState.selection.startX;
 		}
 
-		if (selectionLineIndex == (std::size_t)(inputState.selectionEndY)) {
-			selectionLineCharEndIndex = (std::size_t)inputState.selectionEndX;
+		if (selectionLineIndex == (inputState.selection.endY)) {
+			selectionLineCharEndIndex = inputState.selection.endX;
 			isLastLine = true;
 		}
 

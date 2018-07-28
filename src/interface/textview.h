@@ -27,10 +27,7 @@ struct InputState {
 	std::int64_t caretPositionX = 0;
 	std::int64_t caretPositionY = 0;
 
-	std::int64_t selectionStartX = 0;
-	std::int64_t selectionStartY = 0;
-	std::int64_t selectionEndX = 0;
-	std::int64_t selectionEndY = 0;
+	TextSelection selection;
 };
 
 /**
@@ -83,8 +80,8 @@ private:
 
 	std::size_t mTextVersion = 0;
 	Text& mText;
-
 	std::unique_ptr<BaseFormattedText> mFormattedText;
+
 	RenderViewPort mLastViewPort;
 	bool mViewMoved = false;
 
@@ -93,10 +90,8 @@ private:
 
 	TextSelectionRender mTextSelectionRender;
 	bool mSelectionStarted = false;
-	std::int64_t mPotentialSelectionStartX;
-	std::int64_t mPotentialSelectionStartY;
-	std::int64_t mPotentialSelectionEndX;
-	std::int64_t mPotentialSelectionEndY;
+	TextSelection mPotentialSelection;
+	bool mShowSelection = false;
 
 	/**
 	 * Returns the current line the caret is at

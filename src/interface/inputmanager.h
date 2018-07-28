@@ -25,6 +25,12 @@ private:
 
 	std::unordered_map<int, TimePoint> mMouseLastDown;
 	std::unordered_map<int, int> mMousePreviousState;
+
+	double mLastMoveMouseX = 0.0;
+	double mLastMoveMouseY = 0.0;
+
+	bool mIsLeftMouseButtonDragMove = false;
+	bool mIsRightMouseButtonDragMove = false;
 public:
 	/**
 	 * Creates a new input manager
@@ -60,6 +66,12 @@ public:
 	 * @param timeMs The time in milliseconds
 	 */
 	bool isMouseButtonHoldDown(int button, int timeMs);
+
+	/**
+	 * Indicates if the given mouse button is drag moved
+	 * @param button The button
+	 */
+	bool isMouseDragMove(int button);
 
 	/**
 	 * Updates the input manager

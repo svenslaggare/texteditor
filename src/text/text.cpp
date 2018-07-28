@@ -3,6 +3,17 @@
 #include "text.h"
 #include "../helpers.h"
 
+void TextSelection::setSingle(std::size_t x, std::size_t y) {
+	startX = x;
+	startY = y;
+	endX = x;
+	endY = y;
+}
+
+bool TextSelection::isSingle() const {
+	return startX == endX && startY == endY;
+}
+
 Text::Text(String text) {
 	String line;
 	for (auto c : text) {
@@ -108,4 +119,36 @@ Text::DeleteLineDiff Text::deleteLine(std::size_t lineNumber, DeleteLineMode mod
 
 	std::cout << "Deleted line in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
 	return diff;
+}
+
+void Text::deleteSelection(const TextSelection& textSelection) {
+	auto startTime = Helpers::timeNow();
+	mVersion++;
+
+	if (textSelection.startY == textSelection.endY) {
+		auto& line = mLines.at(textSelection.startY);
+		mLines.at(textSelection.startY) = line.substr(0, textSelection.startX) + line.substr(std::min(textSelection.endX + 1, line.size()));
+	} else {
+		for (std::size_t lineIndex = textSelection.startY; lineIndex <= textSelection.endY; lineIndex++) {
+			bool isFirst = lineIndex == textSelection.startY;
+			bool isLast = lineIndex == textSelection.endY;
+
+			if (isFirst) {
+				mLines.at(textSelection.startY) = mLines.at(textSelection.startY).substr(0, textSelection.startX);
+			} else if (isLast) {
+				auto& line = mLines.at(textSelection.startY + 1);
+				auto removeIndex = std::min(textSelection.endX + 1, line.size());
+
+				if (removeIndex == line.size()) {
+					mLines.erase(mLines.begin() + textSelection.startY + 1);
+				} else {
+					mLines.at(textSelection.startY + 1) = line.substr(removeIndex);
+				}
+			} else {
+				mLines.erase(mLines.begin() + textSelection.startY + 1);
+			}
+		}
+	}
+
+	std::cout << "Deleted selection in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
 }

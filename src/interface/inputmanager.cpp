@@ -78,6 +78,31 @@ bool InputManager::isMouseButtonHoldDown(int button, int timeMs) {
 	return false;
 }
 
+bool InputManager::isMouseDragMove(int button) {
+	double mouseX;
+	double mouseY;
+	glfwGetCursorPos(mWindow, &mouseX, &mouseY);
+
+	bool isDragMove = (std::abs(mouseX - mLastMoveMouseX) > 1E-4 || std::abs(mouseY - mLastMoveMouseY) > 1E-4)
+		   				&& glfwGetMouseButton(mWindow, button) == GLFW_PRESS;
+
+	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+		if (isDragMove) {
+			mIsLeftMouseButtonDragMove = isDragMove;
+		} else {
+			isDragMove = mIsLeftMouseButtonDragMove;
+		}
+	} else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+		if (isDragMove) {
+			mIsRightMouseButtonDragMove = isDragMove;
+		} else {
+			isDragMove = mIsRightMouseButtonDragMove;
+		}
+	}
+
+	return isDragMove;
+}
+
 void InputManager::postUpdate() {
 	for (auto& key : mValidKeys) {
 		mPreviousState[key] = glfwGetKey(mWindow, key);
@@ -85,4 +110,14 @@ void InputManager::postUpdate() {
 
 	mMousePreviousState[GLFW_MOUSE_BUTTON_LEFT] = glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_LEFT);
 	mMousePreviousState[GLFW_MOUSE_BUTTON_RIGHT] = glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_RIGHT);
+
+	if (mIsLeftMouseButtonDragMove && mMousePreviousState[GLFW_MOUSE_BUTTON_LEFT] == GLFW_RELEASE) {
+		mIsLeftMouseButtonDragMove = false;
+	}
+
+	if (mIsRightMouseButtonDragMove && mMousePreviousState[GLFW_MOUSE_BUTTON_RIGHT] == GLFW_RELEASE) {
+		mIsRightMouseButtonDragMove = false;
+	}
+
+	glfwGetCursorPos(mWindow, &mLastMoveMouseX, &mLastMoveMouseY);
 }

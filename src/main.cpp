@@ -80,11 +80,11 @@ int main(int argc, char* argv[]) {
 	glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods) {
 		auto& windowState = getWindowState(window);
 
-		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
 			windowState.leftMouseButtonPressed();
 		}
 
-		if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+		if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
 			windowState.rightMouseButtonPressed();
 		}
 	});
