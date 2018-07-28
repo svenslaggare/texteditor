@@ -24,12 +24,23 @@ public:
 	/**
 	 * Calculates the X position of the given index at the given line
 	 * @param text The text
-	 * @param lineNumber The line number in the text
+	 * @param lineIndex The line index
 	 * @param offset The offset within the line
 	 */
 	float calculatePositionX(const BaseFormattedText& text,
-							 std::size_t lineNumber,
+							 std::size_t lineIndex,
 							 std::size_t offset) const;
+
+	/**
+	 * Returns the index of the character that the given screen position points to
+	 * @param text The text
+	 * @param lineIndex The line index
+	 * @param screenPositionX The X screen position
+	 */
+	std::size_t getCharIndexFromScreenPosition(const BaseFormattedText& text,
+											   std::size_t lineIndex,
+											   float screenPositionX) const;
+
 
 	/**
 	 * Returns the width of the given line

@@ -131,17 +131,16 @@ private:
 	void moveCaretX(std::int64_t diff);
 
 	/**
+	 * Clamps the view position y
+	 * @param caretScreenPositionY The y position of the caret on the screen
+	 */
+	void clampViewPositionY(float caretScreenPositionY);
+
+	/**
 	 * Moves the caret in the y position by the given amount
 	 * @param diff The amount to move
 	 */
 	void moveCaretY(std::int64_t diff);
-
-	/**
-	 * Returns the index of the character that the given screen position points to
-	 * @param lineIndex The line index
-	 * @param screenPositionX The X screen position
-	 */
-	std::size_t getCharIndexFromScreenPosition(std::size_t lineIndex, float screenPositionX) const;
 
 	/**
 	 * Updates the input
@@ -156,10 +155,27 @@ private:
 	void updateEditing(const WindowState& windowState);
 
 	/**
+	 * Moves the view by the given amount in the y direction
+	 * @param diff The diff
+	 */
+	void moveViewY(float diff);
+
+	/**
 	 * Updates the view movement
 	 * @param windowState The window state
 	 */
 	void updateViewMovement(const WindowState& windowState);
+
+	/**
+	 * Returns the position of the mouse in the text
+	 */
+	std::pair<std::int64_t, std::int64_t> getMouseTextPosition();
+
+	/**
+	 * Updates text selection
+	 * @param windowState The window state
+	 */
+	void updateTextSelection(const WindowState& windowState);
 
 	/**
 	 * Updates the mouse movement
@@ -187,6 +203,18 @@ private:
 	 * @param viewPort The view port
 	 */
 	void updateFormattedText(const RenderViewPort& viewPort);
+
+	/**
+	 * Formats the given line for the given partial formatting
+	 * @param textFormatter The text formatter
+	 * @param viewPort The view port
+	 * @param formattedText The formatted text
+	 * @param lineIndex The line index
+	 */
+	void formatLinePartialMode(const RenderViewPort& viewPort,
+							   TextFormatter& textFormatter,
+							   PartialFormattedText& formattedText,
+							   std::size_t lineIndex);
 
 	/**
 	 * Performs formatting on the view port

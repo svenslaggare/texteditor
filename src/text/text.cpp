@@ -15,18 +15,22 @@ bool TextSelection::isSingle() const {
 }
 
 Text::Text(String text) {
-	String line;
-	for (auto c : text) {
-		if (c == '\n') {
-			mLines.push_back(std::move(line));
-			line = {};
-		} else {
-			line += c;
+	if (!text.empty()) {
+		String line;
+		for (auto c : text) {
+			if (c == '\n') {
+				mLines.push_back(std::move(line));
+				line = {};
+			} else {
+				line += c;
+			}
 		}
-	}
 
-	if (!line.empty()) {
-		mLines.push_back(std::move(line));
+		if (!line.empty()) {
+			mLines.push_back(std::move(line));
+		}
+	} else {
+		mLines.emplace_back();
 	}
 }
 
@@ -129,25 +133,44 @@ void Text::deleteSelection(const TextSelection& textSelection) {
 		auto& line = mLines.at(textSelection.startY);
 		mLines.at(textSelection.startY) = line.substr(0, textSelection.startX) + line.substr(std::min(textSelection.endX + 1, line.size()));
 	} else {
-		for (std::size_t lineIndex = textSelection.startY; lineIndex <= textSelection.endY; lineIndex++) {
-			bool isFirst = lineIndex == textSelection.startY;
-			bool isLast = lineIndex == textSelection.endY;
+		std::size_t deleteLineStartIndex = textSelection.startY + 1;
+		std::size_t deleteLineEndIndex = textSelection.endY;
 
-			if (isFirst) {
-				mLines.at(textSelection.startY) = mLines.at(textSelection.startY).substr(0, textSelection.startX);
-			} else if (isLast) {
-				auto& line = mLines.at(textSelection.startY + 1);
-				auto removeIndex = std::min(textSelection.endX + 1, line.size());
-
-				if (removeIndex == line.size()) {
-					mLines.erase(mLines.begin() + textSelection.startY + 1);
-				} else {
-					mLines.at(textSelection.startY + 1) = line.substr(removeIndex);
-				}
-			} else {
-				mLines.erase(mLines.begin() + textSelection.startY + 1);
-			}
+		auto& lastLine = mLines.at(textSelection.endY);
+		auto lastLineRemoveIndex = std::min(textSelection.endX + 1, lastLine.size());
+		bool deleteLastLine = false;
+		if (lastLineRemoveIndex == lastLine.size()) {
+			deleteLastLine = true;
+		} else {
+			deleteLineEndIndex--;
 		}
+
+		mLines.at(textSelection.startY) = mLines.at(textSelection.startY).substr(0, textSelection.startX);
+		if (!deleteLastLine) {
+			mLines.at(textSelection.endY) = lastLine.substr(lastLineRemoveIndex);
+		}
+
+		mLines.erase(mLines.begin() + deleteLineStartIndex, mLines.begin() + deleteLineEndIndex + 1);
+
+//		for (std::size_t lineIndex = textSelection.startY; lineIndex <= textSelection.endY; lineIndex++) {
+//			bool isFirst = lineIndex == textSelection.startY;
+//			bool isLast = lineIndex == textSelection.endY;
+//
+//			if (isFirst) {
+//				mLines.at(textSelection.startY) = mLines.at(textSelection.startY).substr(0, textSelection.startX);
+//			} else if (isLast) {
+//				auto& line = mLines.at(textSelection.startY + 1);
+//				auto removeIndex = std::min(textSelection.endX + 1, line.size());
+//
+//				if (removeIndex == line.size()) {
+//					mLines.erase(mLines.begin() + textSelection.startY + 1);
+//				} else {
+//					mLines.at(textSelection.startY + 1) = line.substr(removeIndex);
+//				}
+//			} else {
+//				mLines.erase(mLines.begin() + textSelection.startY + 1);
+//			}
+//		}
 	}
 
 	std::cout << "Deleted selection in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
