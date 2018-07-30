@@ -92,6 +92,7 @@ namespace {
 		"#define",
 		"#define",
 		"#ifdef",
+		"#infdef",
 		"#endif",
 		"#else",
 	} };

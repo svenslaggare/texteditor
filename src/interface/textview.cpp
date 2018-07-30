@@ -176,6 +176,11 @@ void TextView::clampViewPositionY(float caretScreenPositionY) {
 		mInputState.viewPosition.y = 0;
 	}
 
+	auto maxViewHeight = std::ceil((numLines() * mFont.lineHeight() - viewPort.height) / mFont.lineHeight()) * mFont.lineHeight();
+	if (mInputState.viewPosition.y < -maxViewHeight) {
+		mInputState.viewPosition.y = -maxViewHeight;
+	}
+
 	auto contentHeight = numLines() * lineHeight;
 	if (contentHeight < viewPort.height) {
 		mInputState.viewPosition.y = 0;
@@ -193,6 +198,7 @@ void TextView::moveCaretY(std::int64_t diff) {
 
 	if (mInputState.caretPositionY >= (std::int64_t)numLines()) {
 		mInputState.caretPositionY = (std::int64_t)numLines() - 1;
+		diff = 0;
 	}
 
 	if (mInputState.caretPositionY < 0) {
