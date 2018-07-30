@@ -6,6 +6,25 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -g")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g")
 
+include(ExternalProject)
+
+ExternalProject_Add(
+    glm
+
+    URL "https://github.com/g-truc/glm/releases/download/0.9.9.0/glm-0.9.9.0.zip"
+
+    PREFIX ${PROJECT_BINARY_DIR}/external/glm
+    DOWNLOAD_DIR ${PROJECT_BINARY_DIR}/external/download/glm
+
+    TEST_COMMAND ""
+    UPDATE_COMMAND ""
+    PATCH_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+)
+
+set(GLM_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/external/glm/src/glm)
+
 find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -51,7 +70,8 @@ set(SOURCE_FILES
 
 set(EXECUTABLE texteditor)
 add_executable(${EXECUTABLE} ${SOURCE_FILES} src/main.cpp)
+add_dependencies(${EXECUTABLE} glm)
 
-target_link_libraries(${EXECUTABLE} ${OPENGL_LIBRARY} ${GLFW3_LIBRARY} ${GLEW_LIBRARY} SOIL freetype)
+target_link_libraries(${EXECUTABLE} ${OPENGL_LIBRARY} ${GLFW3_LIBRARY} ${GLEW_LIBRARY} freetype glfw)
 target_include_directories(${EXECUTABLE} PRIVATE /usr/include/freetype2)
-target_include_directories(${EXECUTABLE} PRIVATE /home/antjans/Dev/glm)
+target_include_directories(${EXECUTABLE} PRIVATE ${GLM_INCLUDE_DIRS})
