@@ -674,28 +674,29 @@ void TextView::render(const WindowState& windowState, TextRender& textRender) {
 	updateFormattedText(viewPort);
 	auto formattedText = mFormattedText.get();
 
-//	textRender.renderLineNumbers(
-//		mFont,
-//		mRenderStyle,
-//		viewPort,
-//		formattedText,
-//		drawPosition);
-//
-//	textRender.render(
-//		mFont,
-//		mRenderStyle,
-//		viewPort,
-//		formattedText,
-//		drawPosition + glm::vec2(lineNumberSpacing, 0.0f));
+	textRender.renderLineNumbers(
+		mFont,
+		mRenderStyle,
+		viewPort,
+		*formattedText,
+		drawPosition);
 
-	//
 	textRender.render(
 		mFont,
 		mRenderStyle,
 		viewPort,
 		*formattedText,
-		drawPosition,
-		lineNumberSpacing);
+		drawPosition + glm::vec2(lineNumberSpacing, 0.0f),
+		0.0f);
+
+	//
+	// textRender.render(
+	// 	mFont,
+	// 	mRenderStyle,
+	// 	viewPort,
+	// 	*formattedText,
+	// 	drawPosition,
+	// 	lineNumberSpacing);
 
 	if (mShowSelection) {
 		mTextSelectionRender.render(

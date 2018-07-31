@@ -188,30 +188,30 @@ void TextRender::render(const Font& font,
 															  glm::vec2& drawPosition) {
 		auto& line = text.getLine((std::size_t)lineIndex);
 
-		// Start by drawing the line number
-		float currentLineNumberSpacing = 0.0f;
-		if (!line.isContinuation) {
-			auto lineNumber = numericToString<String>(line.number + 1);
-			for (auto& character : lineNumber) {
-				setCharacterVertices(
-					vertices,
-					offset,
-					font,
-					character,
-					drawPosition.x,
-					drawPosition.y,
-					renderStyle.lineNumberColor);
+		// // Start by drawing the line number
+		// float currentLineNumberSpacing = 0.0f;
+		// if (!line.isContinuation) {
+		// 	auto lineNumber = numericToString<String>(line.number + 1);
+		// 	for (auto& character : lineNumber) {
+		// 		setCharacterVertices(
+		// 			vertices,
+		// 			offset,
+		// 			font,
+		// 			character,
+		// 			drawPosition.x,
+		// 			drawPosition.y,
+		// 			renderStyle.lineNumberColor);
 
-				auto advanceX = renderStyle.getAdvanceX(font, character);
-				drawPosition.x += advanceX;
-				currentLineNumberSpacing += advanceX;
-				drawCharacter();
-			}
-		}
+		// 		auto advanceX = renderStyle.getAdvanceX(font, character);
+		// 		drawPosition.x += advanceX;
+		// 		currentLineNumberSpacing += advanceX;
+		// 		drawCharacter();
+		// 	}
+		// }
 
-		// Then the text on the line
-		auto actualLineNumberSpacing = lineNumberSpacing - currentLineNumberSpacing;
-		drawPosition.x += actualLineNumberSpacing;
+		// // Then the text on the line
+		// auto actualLineNumberSpacing = lineNumberSpacing - currentLineNumberSpacing;
+		// drawPosition.x += actualLineNumberSpacing;
 
 		for (auto& token : line.tokens) {
 			auto color = renderStyle.getColor(token);
@@ -240,6 +240,9 @@ void TextRender::renderLineNumbers(const Font& font,
 								   const RenderViewPort& viewPort,
 								   const BaseFormattedText& text,
 								   glm::vec2 position) {
+	auto maxLineNumber = numericToString<String>(text.numLines() + 1);
+	auto lineNumberSpacing = maxLineNumber.size() * renderStyle.getAdvanceX(font, convertFromChar('0'));
+	
 	renderView(font, text.numLines(), viewPort, position, [&](GLfloat* vertices,
 															  std::size_t& offset,
 															  std::function<void()> drawCharacter,
@@ -249,8 +252,16 @@ void TextRender::renderLineNumbers(const Font& font,
 		auto& line = text.getLine((std::size_t)lineIndex);
 
 		if (!line.isContinuation) {
+			// drawPosition.x += lineNumberSpacing;
 			auto lineNumber = numericToString<String>(line.number + 1);
+			while (lineNumber.size() < maxLineNumber.size()) {
+				lineNumber.insert(lineNumber.begin(), convertFromChar(' '));
+			}
+
 			for (auto& character : lineNumber) {
+			// for (auto it = lineNumber.rbegin(); it != lineNumber.rend(); ++it) {
+				// auto& character = *it;
+
 				setCharacterVertices(
 					vertices,
 					offset,

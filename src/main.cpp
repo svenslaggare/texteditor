@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
 	setProjection(textProgram, windowState);
 
 //	auto fontName = "/usr/share/fonts/truetype/freefont/FreeMono.ttf";
-	auto fontName = "/usr/share/fonts/truetype/noto/NotoMono-Regular.ttf";
+	auto fontName = "fonts/NotoMono-Regular.ttf";
 
 //	Font font(fontName, 28);
 	Font font(fontName, 16);
@@ -117,9 +117,9 @@ int main(int argc, char* argv[]) {
 
 //	Text text(Helpers::readFileAsText<String>("data/lorem.txt"));
 //	Text text(Helpers::readFileAsText<String>("data/lorem2.txt"));
-	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
+	// Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
 //	Text text(Helpers::readFileAsText<String>("data/test.cpp"));
-//	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
+	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
 //	Text text(Helpers::readFileAsText<String>("/home/antjans/curve.py"));
 //	Text text({});
 
