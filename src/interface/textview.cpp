@@ -253,6 +253,16 @@ void TextView::updateViewMovement(const WindowState& windowState) {
 		moveCaretY(pageMoveSpeed);
 	}
 
+	if (mInputManager.isKeyPressed(GLFW_KEY_HOME)) {
+		mDrawCaret = true;
+		mLastCaretUpdate = Helpers::timeNow();
+		moveCaretY(-mInputState.caretPositionY);
+	} else if (mInputManager.isKeyPressed(GLFW_KEY_END)) {
+		mDrawCaret = true;
+		mLastCaretUpdate = Helpers::timeNow();
+		moveCaretY((std::int64_t)numLines() - mInputState.caretPositionY);
+	}
+
 	int caretPositionDiffY = 0;
 	if (mInputManager.isKeyPressed(GLFW_KEY_UP)) {
 		caretPositionDiffY = -1;
@@ -330,6 +340,19 @@ void TextView::updateEditing(const WindowState& windowState) {
 		updateFormattedText(getTextViewPort());
 	};
 
+	auto replaceSelection = [&](Char current) {
+		deleteSelection();
+		insertCharacter(current);
+	};
+
+	auto doInsertCharacter = [&](Char current) {
+		if (!mInputState.selection.isSingle() && mShowSelection) {
+			replaceSelection(current);
+		} else {
+			insertCharacter(current);
+		}
+	};
+
 	bool isShiftDown = mInputManager.isShiftDown();
 	bool isAltDown = mInputManager.isAltDown();
 
@@ -337,21 +360,21 @@ void TextView::updateEditing(const WindowState& windowState) {
 		if (mInputManager.isKeyPressed(command.key)) {
 			if (isShiftDown) {
 				if (command.shiftMode != '\0') {
-					insertCharacter(command.shiftMode);
+					doInsertCharacter(command.shiftMode);
 				}
 			} else if (isAltDown) {
 				if (command.altMode != '\0') {
-					insertCharacter(command.altMode);
+					doInsertCharacter(command.altMode);
 				}
 			} else {
-				insertCharacter(command.normalMode);
+				doInsertCharacter(command.normalMode);
 			}
 		}
 	}
 
 	if (mCharacterInputType == CharacterInputType::Native) {
 		for (auto& codePoint : windowState.inputCharacters()) {
-			insertCharacter(convertCodePointToChar(codePoint));
+			doInsertCharacter(convertCodePointToChar(codePoint));
 		}
 	}
 

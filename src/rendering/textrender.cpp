@@ -252,16 +252,13 @@ void TextRender::renderLineNumbers(const Font& font,
 		auto& line = text.getLine((std::size_t)lineIndex);
 
 		if (!line.isContinuation) {
-			// drawPosition.x += lineNumberSpacing;
 			auto lineNumber = numericToString<String>(line.number + 1);
-			while (lineNumber.size() < maxLineNumber.size()) {
-				lineNumber.insert(lineNumber.begin(), convertFromChar(' '));
+			auto whitespaceSpacing = renderStyle.getAdvanceX(font, convertFromChar(' '));
+			for (std::size_t i = 0; i < maxLineNumber.size() - lineNumber.size(); i++) {
+				drawPosition.x += whitespaceSpacing;
 			}
 
 			for (auto& character : lineNumber) {
-			// for (auto it = lineNumber.rbegin(); it != lineNumber.rend(); ++it) {
-				// auto& character = *it;
-
 				setCharacterVertices(
 					vertices,
 					offset,
