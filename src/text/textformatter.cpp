@@ -5,7 +5,6 @@
 #include "../rendering/renderstyle.h"
 #include "../rendering/renderviewport.h"
 #include "../helpers.h"
-#include "../external/bloom_filter.hpp"
 
 #include <iostream>
 #include <unordered_set>
@@ -28,7 +27,6 @@ namespace {
 	class KeywordList {
 	private:
 		std::unordered_set<String> mKeywords;
-//		bloom_filter mKeywordsBloomFilter;
 		std::size_t mMaxLength = 0;
 	public:
 		explicit KeywordList(const std::unordered_set<std::string>& keywords) {
@@ -38,7 +36,6 @@ namespace {
 
 			for (auto& keyword : mKeywords) {
 				mMaxLength = std::max(mMaxLength, keyword.size());
-//				mKeywordsBloomFilter.insert(keyword);
 			}
 		}
 
@@ -215,10 +212,19 @@ namespace {
 					addChar(current, advanceX);
 					break;
 				case '/':
-					addChar(current, advanceX);
 					if (prevChar == '/') {
+						// Remove '/' from last token
+ 						currentToken.text.erase(currentToken.text.begin() + currentToken.text.size() - 1, currentToken.text.end());
+
+						newToken(TokenType::Text, true);
+						for (int i = 0; i < 2; i++) {
+							addChar(current, advanceX);
+						}
+
 						state = State::Comment;
 						currentToken.type = TokenType::Comment;
+					} else {
+						addChar(current, advanceX);
 					}
 					break;
 				case ' ':

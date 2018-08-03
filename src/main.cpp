@@ -99,12 +99,9 @@ int main(int argc, char* argv[]) {
 	textProgram.setParameters({ ShaderParameter::textureParameter("inputTexture", 0) });
 	setProjection(textProgram, windowState);
 
-//	auto fontName = "/usr/share/fonts/truetype/freefont/FreeMono.ttf";
 	auto fontName = "fonts/NotoMono-Regular.ttf";
-
-//	Font font(fontName, 28);
 	Font font(fontName, 16);
-//	Font font(fontName, 8);
+
 	TextRender textRender(textProgram.id());
 
 	glEnable(GL_BLEND);
@@ -117,9 +114,9 @@ int main(int argc, char* argv[]) {
 
 //	Text text(Helpers::readFileAsText<String>("data/lorem.txt"));
 //	Text text(Helpers::readFileAsText<String>("data/lorem2.txt"));
-	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
+	// Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
 //	Text text(Helpers::readFileAsText<String>("data/test.cpp"));
-	// Text text(Helpers::readFileAsText<String>("src/main.cpp"));
+	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
 //	Text text({});
 
 	auto startTime = Helpers::timeNow();
