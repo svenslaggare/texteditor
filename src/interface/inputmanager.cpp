@@ -53,6 +53,10 @@ bool InputManager::isKeyPressed(int key) {
 	return false;
 }
 
+bool InputManager::isControlDown() {
+	return isKeyDown(GLFW_KEY_LEFT_CONTROL) || isKeyDown(GLFW_KEY_RIGHT_CONTROL);
+}
+
 bool InputManager::isShiftDown() {
 	return isKeyDown(GLFW_KEY_LEFT_SHIFT) || isKeyDown(GLFW_KEY_RIGHT_SHIFT);
 }

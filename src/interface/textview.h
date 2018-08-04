@@ -30,14 +30,18 @@ struct InputState {
 	TextSelection selection;
 };
 
+using KeyboardCommandFunction = std::function<void ()>;
+
 /**
  * Represents a keyboard command
  */
 struct KeyboardCommand {
 	int key;
-	Char normalMode; 		//When no modifier key is pressed
-	Char shiftMode;  		//When shift is being pressed
-	Char altMode;			//When alt is being pressed
+
+	KeyboardCommandFunction normalMode =  {}; 		//When no modifier key is pressed
+	KeyboardCommandFunction controlMode = {};  		//When control is being pressed
+	KeyboardCommandFunction shiftMode = {};  		//When shift is being pressed
+	KeyboardCommandFunction altMode = {};			//When alt is being pressed
 };
 
 /**
@@ -131,10 +135,10 @@ private:
 	void moveCaretX(std::int64_t diff);
 
 	/**
-	 * Clamps the view position y
-	 * @param caretScreenPositionY The y position of the caret on the screen
+	 * Sets the caret in the x position to the given value
+	 * @param position The new value
 	 */
-	void clampViewPositionY(float caretScreenPositionY);
+	void setCaretX(std::int64_t position);
 
 	/**
 	 * Moves the caret in the y position by the given amount
@@ -143,10 +147,65 @@ private:
 	void moveCaretY(std::int64_t diff);
 
 	/**
+	 * Clamps the view position y
+	 * @param caretScreenPositionY The y position of the caret on the screen
+	 */
+	void clampViewPositionY(float caretScreenPositionY);
+
+	/**
 	 * Updates the input
 	 * @param windowState The window state
 	 */
 	void updateInput(const WindowState& windowState);
+
+	/**
+	 * Inserts the given character
+	 * @param character The character
+	 */
+	void insertCharacter(Char character);
+
+	/**
+	 * The action for insertion
+	 * @param character The character to insert
+	 */
+	void insertAction(Char character);
+
+	/**
+	 * Inserts a new line
+	 */
+	void insertLine();
+
+	/**
+	 * Pastes from the clipboard
+	 */
+	void paste();
+
+	/**
+	 * Deletes the current line
+	 * @param mode How to delete the line
+	 */
+	void deleteLine(Text::DeleteLineMode mode);
+
+	/**
+	 * Deletes the current selection
+	 */
+	void deleteSelection();
+
+	/**
+	 * The action for the backspace button
+	 */
+	void backspaceAction();
+
+	/**
+	 * The action for the delete button
+	 */
+	void deleteAction();
+
+	/**
+	 * Replaces the current selection with the given character
+	 * @param character The character
+	 */
+	void replaceSelection(Char character);
 
 	/**
 	 * Updates the editing
@@ -238,6 +297,16 @@ public:
 			 const RenderViewPort& viewPort,
 			 const RenderStyle& renderStyle,
 			 Text& text);
+
+	/**
+	 * Returns the text
+	 */
+	Text& text();
+
+	/**
+	 * Updates the formatted text
+	 */
+	void updateFormattedText();
 
 	/**
 	 * Updates the text view

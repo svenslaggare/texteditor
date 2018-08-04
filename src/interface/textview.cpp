@@ -43,34 +43,58 @@ TextView::TextView(GLFWwindow* window,
 	  mViewPort(viewPort),
 	  mInputManager(window),
 	  mText(text) {
-	if (mCharacterInputType == CharacterInputType::Custom) {
-		for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; key++) {
-			KeyboardCommand command;
-			command.key = key;
-			command.normalMode = (Char)('a' + (key - GLFW_KEY_A));
-			command.shiftMode = (Char)std::toupper(command.normalMode);
-			command.altMode = '\0';
-			mKeyboardCommands.push_back(command);
+	auto createInsertCharacterCommand = [&](int key, Char normalMode, Char shiftMode, Char altMode) {
+		KeyboardCommand command;
+		command.key = key;
+
+		command.normalMode = [&, normalMode]() {
+			insertAction(normalMode);
+		};
+
+		if (shiftMode != '\0') {
+			command.shiftMode = [&, shiftMode]() {
+				insertAction(shiftMode);
+			};
 		}
 
-		mKeyboardCommands.push_back({ GLFW_KEY_0, '0', '=', '}' });
-		mKeyboardCommands.push_back({ GLFW_KEY_1, '1', '!', '\0' });
-		mKeyboardCommands.push_back({ GLFW_KEY_2, '2', '"', '@' });
-		mKeyboardCommands.push_back({ GLFW_KEY_3, '3', '#', '\0' });
-		mKeyboardCommands.push_back({ GLFW_KEY_4, '4', '\0', '$' });
-		mKeyboardCommands.push_back({ GLFW_KEY_5, '5', '%', '\0' });
-		mKeyboardCommands.push_back({ GLFW_KEY_6, '6', '&', '\0' });
-		mKeyboardCommands.push_back({ GLFW_KEY_7, '7', '/', '{' });
-		mKeyboardCommands.push_back({ GLFW_KEY_8, '8', '(', '[' });
-		mKeyboardCommands.push_back({ GLFW_KEY_MINUS, '+', '?', '\\' });
+		if (shiftMode != '\0') {
+			command.altMode = [&, altMode]() {
+				insertAction(altMode);
+			};
+		}
+		
+		mKeyboardCommands.push_back(std::move(command));
+	};
 
-		mKeyboardCommands.push_back({ GLFW_KEY_COMMA, ',', ';', '\0' });
-		mKeyboardCommands.push_back({ GLFW_KEY_PERIOD, '.', ':', '\0' });
-		mKeyboardCommands.push_back({ GLFW_KEY_SPACE, ' ', '\0', '\0' });
-		mKeyboardCommands.push_back({ GLFW_KEY_SLASH, '-', '_', '\0' });
+	if (mCharacterInputType == CharacterInputType::Custom) {
+		for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; key++) {
+			auto character = (Char)('a' + (key - GLFW_KEY_A));
+			createInsertCharacterCommand(key, character, (Char)std::toupper(character), '\0');
+		}
+
+		createInsertCharacterCommand(GLFW_KEY_0, '0', '=', '}');
+		createInsertCharacterCommand(GLFW_KEY_1, '1', '!', '\0');
+		createInsertCharacterCommand(GLFW_KEY_2, '2', '"', '@');
+		createInsertCharacterCommand(GLFW_KEY_3, '3', '#', '\0');
+		createInsertCharacterCommand(GLFW_KEY_4, '4', '\0', '$');
+		createInsertCharacterCommand(GLFW_KEY_5, '5', '%', '\0');
+		createInsertCharacterCommand(GLFW_KEY_6, '6', '&', '\0');
+		createInsertCharacterCommand(GLFW_KEY_7, '7', '/', '{');
+		createInsertCharacterCommand(GLFW_KEY_8, '8', '(', '[');
+		createInsertCharacterCommand(GLFW_KEY_MINUS, '+', '?', '\\');
+
+		createInsertCharacterCommand(GLFW_KEY_COMMA, ',', ';', '\0');
+		createInsertCharacterCommand(GLFW_KEY_PERIOD, '.', ':', '\0');
+		createInsertCharacterCommand(GLFW_KEY_SPACE, ' ', '\0', '\0');
+		createInsertCharacterCommand(GLFW_KEY_SLASH, '-', '_', '\0');
 	}
 
-	mKeyboardCommands.push_back({ GLFW_KEY_TAB, '\t', '\0', '\0' });
+	createInsertCharacterCommand(GLFW_KEY_TAB, '\t', '\0', '\0');
+
+	mKeyboardCommands.emplace_back(KeyboardCommand { GLFW_KEY_BACKSPACE, [&]() { backspaceAction(); }, {}, {}, {} });
+	mKeyboardCommands.emplace_back(KeyboardCommand { GLFW_KEY_DELETE, [&]() { deleteAction(); }, {}, {}, {} });
+	mKeyboardCommands.emplace_back(KeyboardCommand { GLFW_KEY_ENTER, [&]() { insertLine(); }, {}, {}, {} });
+	mKeyboardCommands.emplace_back(KeyboardCommand { GLFW_KEY_V, {}, [&]() { paste(); }, {}, {} });
 }
 
 const LineTokens& TextView::currentLine() const {
@@ -161,6 +185,12 @@ void TextView::moveCaretX(std::int64_t diff) {
 	if (caretScreenPositionX > mInputState.viewPosition.x) {
 		mInputState.viewPosition.x -= diff * charWidth;
 	}
+}
+
+void TextView::setCaretX(std::int64_t position) {
+	mViewMoved = true;
+	mInputState.caretPositionX = position;
+	mInputState.viewPosition.x = 0;
 }
 
 void TextView::clampViewPositionY(float caretScreenPositionY) {
@@ -294,124 +324,141 @@ void TextView::updateViewMovement(const WindowState& windowState) {
 	}
 }
 
-void TextView::updateEditing(const WindowState& windowState) {
-	auto setCaretX = [&](std::int64_t position) {
-		mViewMoved = true;
-		mInputState.caretPositionX = position;
-		mInputState.viewPosition.x = 0;
-	};
+void TextView::insertCharacter(Char character) {
+	auto lineAndOffset = getLineAndOffset();
+	mText.insertAt(lineAndOffset.first, (std::size_t)lineAndOffset.second, character);
+	updateFormattedText(getTextViewPort());
+	moveCaretX(1);
+}
 
-	auto insertCharacter = [&](Char current) {
+void TextView::insertAction(Char character) {
+	if (!mInputState.selection.isSingle() && mShowSelection) {
+		replaceSelection(character);
+	} else {
+		insertCharacter(character);
+	}
+}
+
+void TextView::insertLine() {
+	auto lineAndOffset = getLineAndOffset();
+	mText.splitLine(lineAndOffset.first, (std::size_t)lineAndOffset.second);
+	updateFormattedText(getTextViewPort());
+	moveCaretY(1);
+	setCaretX(0);
+}
+
+void TextView::paste() {
+	if (const char* text = glfwGetClipboardString(mWindow)) {
 		auto lineAndOffset = getLineAndOffset();
-		mText.insertAt(lineAndOffset.first, (std::size_t)lineAndOffset.second, current);
-		updateFormattedText(getTextViewPort());
-		moveCaretX(1);
-	};
 
-	auto deleteLine = [&](Text::DeleteLineMode mode) {
-		if (mode == Text::DeleteLineMode::Start && mInputState.caretPositionY == 0) {
-			return;
-		}
-
-		auto diff = mText.deleteLine(currentLineNumber(), mode);
-		if (mode == Text::DeleteLineMode::Start) {
-			mInputState.caretPositionX = diff.caretX;
+		auto stringText = Helpers::fromString<String>(text);
+		auto charIndex = (std::size_t)lineAndOffset.second;
+		auto numInserted = 0;
+		for (auto& character : stringText) {
+			mText.insertAt(lineAndOffset.first, charIndex, character);
+			charIndex++;
+			numInserted++;
 		}
 
 		updateFormattedText(getTextViewPort());
+		moveCaretX(numInserted);
+	}
+}
 
-		if (mode == Text::DeleteLineMode::Start) {
-			moveCaretY(-1);
-		}
-	};
+void TextView::deleteLine(Text::DeleteLineMode mode) {
+	if (mode == Text::DeleteLineMode::Start && mInputState.caretPositionY == 0) {
+		return;
+	}
 
-	auto deleteSelection = [&]() {
-		mText.deleteSelection(mInputState.selection);
-		mInputState.caretPositionX = (std::size_t)mInputState.selection.startX;
-		mInputState.caretPositionY = (std::size_t)mInputState.selection.startY;
-		mInputState.selection.setSingle((std::size_t)mInputState.caretPositionX, (std::size_t)mInputState.caretPositionY);
+	auto diff = mText.deleteLine(currentLineNumber(), mode);
+	if (mode == Text::DeleteLineMode::Start) {
+		mInputState.caretPositionX = diff.caretX;
+	}
 
-		mShowSelection = false;
+	updateFormattedText(getTextViewPort());
 
-		auto caretScreenPositionY = -mInputState.caretPositionY * mFont.lineHeight();
-		clampViewPositionY(caretScreenPositionY);
+	if (mode == Text::DeleteLineMode::Start) {
+		moveCaretY(-1);
+	}
+}
 
-		mViewMoved = true;
-		updateFormattedText(getTextViewPort());
-	};
+void TextView::deleteSelection() {
+	mText.deleteSelection(mInputState.selection);
+	mInputState.caretPositionX = (std::size_t)mInputState.selection.startX;
+	mInputState.caretPositionY = (std::size_t)mInputState.selection.startY;
+	mInputState.selection.setSingle((std::size_t)mInputState.caretPositionX, (std::size_t)mInputState.caretPositionY);
 
-	auto replaceSelection = [&](Char current) {
-		deleteSelection();
-		insertCharacter(current);
-	};
+	mShowSelection = false;
 
-	auto doInsertCharacter = [&](Char current) {
-		if (!mInputState.selection.isSingle() && mShowSelection) {
-			replaceSelection(current);
+	auto caretScreenPositionY = -mInputState.caretPositionY * mFont.lineHeight();
+	clampViewPositionY(caretScreenPositionY);
+
+	mViewMoved = true;
+	updateFormattedText(getTextViewPort());
+}
+
+void TextView::backspaceAction() {
+	if (mInputState.selection.isSingle() || !mShowSelection) {
+		auto lineAndOffset = getLineAndOffset(-1);
+		if (lineAndOffset.second >= 0) {
+			mText.deleteAt(lineAndOffset.first, (std::size_t)lineAndOffset.second);
+			updateFormattedText(getTextViewPort());
+			moveCaretX(-1);
 		} else {
-			insertCharacter(current);
+			deleteLine(Text::DeleteLineMode::Start);
 		}
-	};
+	} else {
+		deleteSelection();
+	}
+}
 
+void TextView::deleteAction() {
+	if (mInputState.selection.isSingle() || !mShowSelection) {
+		auto lineAndOffset = getLineAndOffset();
+		if (lineAndOffset.second < (std::int64_t)currentLineLength()) {
+			mText.deleteAt(lineAndOffset.first, (std::size_t)lineAndOffset.second);
+		} else {
+			deleteLine(Text::DeleteLineMode::End);
+		}
+	} else {
+		deleteSelection();
+	}
+}
+
+void TextView::replaceSelection(Char character) {
+	deleteSelection();
+	insertCharacter(character);
+}
+
+void TextView::updateEditing(const WindowState& windowState) {
+	bool isControlDown = mInputManager.isControlDown();
 	bool isShiftDown = mInputManager.isShiftDown();
 	bool isAltDown = mInputManager.isAltDown();
 
 	for (auto& command : mKeyboardCommands) {
 		if (mInputManager.isKeyPressed(command.key)) {
-			if (isShiftDown) {
-				if (command.shiftMode != '\0') {
-					doInsertCharacter(command.shiftMode);
+			if (isControlDown) {
+				if (command.controlMode) {
+					command.controlMode();
+				}
+			} else if (isShiftDown) {
+				if (command.shiftMode) {
+					command.shiftMode();
 				}
 			} else if (isAltDown) {
-				if (command.altMode != '\0') {
-					doInsertCharacter(command.altMode);
+				if (command.altMode) {
+					command.altMode();
 				}
 			} else {
-				doInsertCharacter(command.normalMode);
+				command.normalMode();
 			}
 		}
 	}
 
 	if (mCharacterInputType == CharacterInputType::Native) {
 		for (auto& codePoint : windowState.inputCharacters()) {
-			doInsertCharacter(convertCodePointToChar(codePoint));
+			insertAction(convertCodePointToChar(codePoint));
 		}
-	}
-
-	if (mInputManager.isKeyPressed(GLFW_KEY_BACKSPACE)) {
-		if (mInputState.selection.isSingle() || !mShowSelection) {
-			auto lineAndOffset = getLineAndOffset(-1);
-			if (lineAndOffset.second >= 0) {
-				mText.deleteAt(lineAndOffset.first, (std::size_t)lineAndOffset.second);
-				updateFormattedText(getTextViewPort());
-				moveCaretX(-1);
-			} else {
-				deleteLine(Text::DeleteLineMode::Start);
-			}
-		} else {
-			deleteSelection();
-		}
-	}
-
-	if (mInputManager.isKeyPressed(GLFW_KEY_DELETE)) {
-		if (mInputState.selection.isSingle() || !mShowSelection) {
-			auto lineAndOffset = getLineAndOffset();
-			if (lineAndOffset.second < (std::int64_t)currentLineLength()) {
-				mText.deleteAt(lineAndOffset.first, (std::size_t)lineAndOffset.second);
-			} else {
-				deleteLine(Text::DeleteLineMode::End);
-			}
-		} else {
-			deleteSelection();
-		}
-	}
-
-	if (mInputManager.isKeyPressed(GLFW_KEY_ENTER)) {
-		auto lineAndOffset = getLineAndOffset();
-		mText.splitLine(lineAndOffset.first, (std::size_t)lineAndOffset.second);
-		updateFormattedText(getTextViewPort());
-		moveCaretY(1);
-		setCaretX(0);
 	}
 }
 
@@ -545,6 +592,10 @@ void TextView::updateInput(const WindowState& windowState) {
 	mInputManager.postUpdate();
 }
 
+Text& TextView::text() {
+	return mText;
+}
+
 void TextView::update(const WindowState& windowState) {
 	auto timeNow = Helpers::timeNow();
 	if (Helpers::durationMilliseconds(timeNow, mLastCaretUpdate) >= 500) {
@@ -636,6 +687,10 @@ void TextView::updateFormattedText(const RenderViewPort& viewPort) {
 			}
 		}
 	}
+}
+
+void TextView::updateFormattedText() {
+	updateFormattedText(getTextViewPort());
 }
 
 void TextView::formatLinePartialMode(const RenderViewPort& viewPort,

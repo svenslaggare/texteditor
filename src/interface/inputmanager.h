@@ -51,6 +51,11 @@ public:
 	bool isKeyPressed(int key);
 
 	/**
+	 * Indicates if the control key is pressed
+	 */
+	bool isControlDown();
+
+	/**
 	 * Indicates if the shift key is pressed
 	 */
 	bool isShiftDown();
