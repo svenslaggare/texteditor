@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
 
 //	Text text(Helpers::readFileAsText<String>("data/lorem.txt"));
 //	Text text(Helpers::readFileAsText<String>("data/lorem2.txt"));
-	// Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
+//	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
 //	Text text(Helpers::readFileAsText<String>("data/test.cpp"));
 	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
 //	Text text({});
@@ -155,8 +155,11 @@ int main(int argc, char* argv[]) {
 		codeTextView.render(windowState, textRender);
 
 		// Draw frame buffer to screen
-//		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-//		frameBufferRender.render(frameBuffer->textureColorBuffer());
+		/*
+		 * glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		 *
+		 * frameBufferRender.render(frameBuffer->textureColorBuffer());
+		 * */
 
 		// Swap
 		glfwSwapBuffers(window);

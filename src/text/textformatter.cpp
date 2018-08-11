@@ -5,9 +5,16 @@
 #include "../rendering/renderstyle.h"
 #include "../rendering/renderviewport.h"
 #include "../helpers.h"
+#include "../external/tsl/array_set.h"
 
 #include <iostream>
 #include <unordered_set>
+
+#include "../external/tsl/array_set.h"
+
+LineTokens::LineTokens() {
+
+}
 
 void LineTokens::addToken(Token token) {
 	tokens.push_back(std::move(token));
@@ -23,18 +30,27 @@ std::size_t LineTokens::length() const {
 	return count;
 }
 
+String LineTokens::toString() const {
+	String line;
+
+	for (auto& token : tokens) {
+		line += token.text;
+	}
+
+	return line;
+}
+
 namespace {
 	class KeywordList {
 	private:
-		std::unordered_set<String> mKeywords;
+//		std::unordered_set<String> mKeywords;
+		tsl::array_set<Char> mKeywords;
 		std::size_t mMaxLength = 0;
 	public:
 		explicit KeywordList(const std::unordered_set<std::string>& keywords) {
 			for (auto& keyword : keywords) {
-				mKeywords.insert(Helpers::fromString<String>(keyword));
-			}
-
-			for (auto& keyword : mKeywords) {
+				auto keywordStr = Helpers::fromString<String>(keyword);
+				mKeywords.insert(keywordStr);
 				mMaxLength = std::max(mMaxLength, keyword.size());
 			}
 		}
@@ -97,7 +113,8 @@ namespace {
 	enum class State {
 		Text,
 		String,
-		Comment
+		Comment,
+		BlockComment,
 	};
 
 	struct FormatterStateMachine {
@@ -108,6 +125,7 @@ namespace {
 		FormattedText& formattedText;
 
 		std::size_t lineNumber = 0;
+		std::size_t blockCommentStart = 0;
 
 		State state = State::Text;
 		bool isWhitespace = false;
@@ -140,6 +158,10 @@ namespace {
 
 		void createNewLine(bool resetState = true, bool continueWithLine = false) {
 			if (mode == FormatMode::Code) {
+				if (state == State::BlockComment) {
+					lineTokens.reformatStartSearch = (std::int64_t)blockCommentStart - (std::int64_t)lineNumber;
+				}
+
 				tryMakeKeyword();
 				lineTokens.addToken(std::move(currentToken));
 
@@ -235,11 +257,27 @@ namespace {
 				case ',':
 				case '(':
 				case ')':
-				case '*':
 				case '&':
 					newToken(TokenType::Text, true);
 					addChar(current, advanceX);
 					newToken(TokenType::Text, true);
+					break;
+				case '*':
+					if (prevChar == '/') {
+						// Remove '/' from last token
+						currentToken.text.erase(currentToken.text.begin() + currentToken.text.size() - 1, currentToken.text.end());
+
+						newToken(TokenType::Text, true);
+						addChar(prevChar, advanceX);
+						addChar(current, advanceX);
+						state = State::BlockComment;
+						currentToken.type = TokenType::Comment;
+						blockCommentStart = lineNumber;
+					} else {
+						newToken(TokenType::Text, true);
+						addChar(current, advanceX);
+						newToken(TokenType::Text, true);
+					}
 					break;
 				default:
 					if (isWhitespace) {
@@ -294,6 +332,32 @@ namespace {
 			}
 		}
 
+		void handleBlockComment(Char current, float advanceX) {
+			switch (current) {
+				case '\n':
+					createNewLine(false, false);
+					break;
+				case '\t':
+					handleTab();
+					break;
+				case '/':
+					if (prevChar == '*') {
+						lineTokens.reformatStartSearch = (std::int64_t)blockCommentStart - (std::int64_t)lineNumber;
+						formattedText.lines()[blockCommentStart].reformatAmount = (std::int64_t)lineNumber - (std::int64_t)blockCommentStart;
+
+						addChar(current, advanceX);
+						newToken(TokenType::Text);
+						state = State::Text;
+					} else {
+						addChar(current, advanceX);
+					}
+					break;
+				default:
+					addChar(current, advanceX);
+					break;
+			}
+		}
+
 		void handleCodeMode(Char current, float advanceX) {
 			switch (state) {
 				case State::Text:
@@ -304,6 +368,9 @@ namespace {
 					break;
 				case State::Comment:
 					handleComment(current, advanceX);
+					break;
+				case State::BlockComment:
+					handleBlockComment(current, advanceX);
 					break;
 			}
 		}
@@ -343,6 +410,10 @@ namespace {
 
 std::size_t FormattedText::numLines() const {
 	return mLines.size();
+}
+
+std::vector<LineTokens>& FormattedText::lines() {
+	return mLines;
 }
 
 const LineTokens& FormattedText::getLine(std::size_t index) const {
@@ -399,6 +470,29 @@ void TextFormatter::formatLine(const Font& font,
 	formattedLine = formattedText.getLine(0);
 }
 
+void TextFormatter::formatLines(const Font& font,
+								const RenderStyle& renderStyle,
+								const RenderViewPort& viewPort,
+								const std::vector<const String*>& lines,
+								std::vector<LineTokens>& formattedLines) {
+	FormattedText formattedText;
+	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedText);
+
+	for (auto& line : lines) {
+		for (auto current : *line) {
+			stateMachine.process(current);
+		}
+
+		stateMachine.process('\n');
+
+		if (!stateMachine.lineTokens.tokens.empty()) {
+			stateMachine.createNewLine();
+		}
+	}
+
+	formattedLines = std::move(formattedText.lines());
+}
+
 void TextFormatter::format(const Font& font,
 						   const RenderStyle& renderStyle,
 						   const RenderViewPort& viewPort,
@@ -406,8 +500,12 @@ void TextFormatter::format(const Font& font,
 						   FormattedText& formattedText) {
 	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedText);
 
-	text.forEach([&](std::size_t i, Char current) {
-		stateMachine.process(current);
+	text.forEachLine([&](const String& line) {
+		for (auto& current : line) {
+			stateMachine.process(current);
+		}
+
+		stateMachine.process('\n');
 	});
 
 	if (!stateMachine.lineTokens.tokens.empty()) {

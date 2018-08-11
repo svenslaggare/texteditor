@@ -71,6 +71,12 @@ public:
 	void forEach(std::function<void (std::size_t, Char)> apply) const;
 
 	/**
+	 * Applies the given function to each line in the given text
+	 * @param apply The function to apply
+	 */
+	void forEachLine(std::function<void (const String&)> apply) const;
+
+	/**
 	 * Indicates if the text has changed
 	 * @param version The version to check for. If changed, updates version
 	 */
@@ -83,6 +89,14 @@ public:
 	 * @param character The character
 	 */
 	void insertAt(std::size_t lineNumber, std::size_t index, Char character);
+
+	/**
+	 * Inserts the given string at the given index at the given line
+	 * @param lineNumber The line to insert at
+	 * @param index The index
+	 * @param str The string to insert
+	 */
+	void insertAt(std::size_t lineNumber, std::size_t index, const String& str);
 
 	/**
 	 * Deletes the character at the given index at the given line
@@ -115,8 +129,16 @@ public:
 	DeleteLineDiff deleteLine(std::size_t lineNumber, DeleteLineMode mode);
 
 	/**
+	 * Data created when deleted selection
+	 */
+	struct DeleteSelectionData {
+		std::size_t startDeleteLineIndex = 0;
+		std::size_t endDeleteLineIndex = 0;
+	};
+
+	/**
 	 * Deletes the given text selection
 	 * @param textSelection The text selection
 	 */
-	void deleteSelection(const TextSelection& textSelection);
+	DeleteSelectionData deleteSelection(const TextSelection& textSelection);
 };

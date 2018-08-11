@@ -107,3 +107,14 @@ namespace Helpers {
 	 */
 	double durationMilliseconds(TimePoint x, TimePoint y);
 }
+
+/**
+ * Represents a timing class
+ */
+struct Timing {
+	TimePoint startTime = Helpers::timeNow();
+	std::string before;
+
+	Timing(const std::string& before = "");
+	~Timing();
+};

@@ -49,7 +49,8 @@ struct KeyboardCommand {
  */
 enum class PerformFormattingType {
 	Full,
-	Partial
+	Partial,
+	Incremental
 };
 
 /**
@@ -67,11 +68,12 @@ class TextView {
 private:
 	GLFWwindow* mWindow;
 
-	PerformFormattingType mPerformFormattingType = PerformFormattingType::Partial;
+	PerformFormattingType mPerformFormattingType = PerformFormattingType::Incremental;
 	CharacterInputType mCharacterInputType = CharacterInputType::Native;
 
 	const Font& mFont;
 	FormatMode mFormatMode;
+	TextFormatter mTextFormatter;
 	const RenderStyle& mRenderStyle;
 	TextMetrics mTextMetrics;
 
@@ -192,6 +194,13 @@ private:
 	void deleteSelection();
 
 	/**
+	 * Deletes the given character
+	 * @param lineIndex The line index
+	 * @param charIndex The char index
+	 */
+	void deleteCharacter(std::size_t lineIndex, std::size_t charIndex);
+
+	/**
 	 * The action for the backspace button
 	 */
 	void backspaceAction();
@@ -265,15 +274,26 @@ private:
 
 	/**
 	 * Formats the given line for the given partial formatting
-	 * @param textFormatter The text formatter
 	 * @param viewPort The view port
 	 * @param formattedText The formatted text
 	 * @param lineIndex The line index
 	 */
-	void formatLinePartialMode(const RenderViewPort& viewPort,
-							   TextFormatter& textFormatter,
-							   PartialFormattedText& formattedText,
-							   std::size_t lineIndex);
+	void formatLinePartialMode(const RenderViewPort& viewPort, PartialFormattedText& formattedText, std::size_t lineIndex);
+
+	/**
+	 * Reformats the given line index
+	 * @param lineIndex The index of the line
+	 * @param formattedText The formatted text. If null, uses mFormattedText
+	 */
+	void reformatLine(std::size_t lineIndex, FormattedText* formattedText = nullptr);
+
+	/**
+	 * Reformats the given lines
+	 * @param startLineIndex The index of the first line
+	 * @param endLineIndex The index of the last line
+	 * @param formattedText The formatted text. If null, uses mFormattedText
+	 */
+	void reformatLines(std::size_t startLineIndex, std::size_t endLineIndex, FormattedText* formattedText = nullptr);
 
 	/**
 	 * Performs formatting on the view port
@@ -302,11 +322,6 @@ public:
 	 * Returns the text
 	 */
 	Text& text();
-
-	/**
-	 * Updates the formatted text
-	 */
-	void updateFormattedText();
 
 	/**
 	 * Updates the text view

@@ -1,10 +1,10 @@
 #pragma once
+#include "text.h"
 
 #include <string>
 #include <vector>
 #include <iostream>
 #include <unordered_map>
-#include "text.h"
 
 class Font;
 struct RenderViewPort;
@@ -15,7 +15,7 @@ class Text;
 /**
  * The type of a token
  */
-enum class TokenType {
+enum class TokenType : std::uint8_t {
 	Text,
 	Keyword,
 	String,
@@ -37,8 +37,11 @@ struct LineTokens {
 	std::size_t number = 0;
 	std::vector<Token> tokens;
 	std::size_t offsetFromTextLine = 0;
-
 	bool isContinuation = false;
+	std::int64_t reformatAmount = 0;
+	std::int64_t reformatStartSearch = 0;
+
+	LineTokens();
 
 	/**
 	 * Adds the given token
@@ -50,6 +53,11 @@ struct LineTokens {
 	 * Returns the number of characters on the line
 	 */
 	std::size_t length() const;
+
+	/**
+	 * Returns a string representation of the current line
+	 */
+	String toString() const;
 };
 
 /**
@@ -82,6 +90,11 @@ public:
 	 * Returns the number of lines
 	 */
 	std::size_t numLines() const override;
+
+	/**
+	 * Returns the underlying lines
+	 */
+	std::vector<LineTokens>& lines();
 
 	/**
 	 * Returns the tokens at the given line
@@ -169,6 +182,20 @@ public:
 					const RenderViewPort& viewPort,
 					const String& line,
 					LineTokens& formattedLine);
+
+	/**
+	 * Formats the given lines
+	 * @param font The font
+	 * @param viewPort The view port to render to
+	 * @param renderStyle The render style
+	 * @param lines The liens to format
+	 * @param formattedLines The formatted lines
+	 */
+	void formatLines(const Font& font,
+					 const RenderStyle& renderStyle,
+					 const RenderViewPort& viewPort,
+					 const std::vector<const String*>& lines,
+					 std::vector<LineTokens>& formattedLines);
 
 	/**
 	 * Formats the given text using the given font

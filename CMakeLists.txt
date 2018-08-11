@@ -6,24 +6,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -g")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g")
 
-include(ExternalProject)
-
-ExternalProject_Add(
-    glm
-
-    URL "https://github.com/g-truc/glm/releases/download/0.9.9.0/glm-0.9.9.0.zip"
-
-    PREFIX ${PROJECT_BINARY_DIR}/external/glm
-    DOWNLOAD_DIR ${PROJECT_BINARY_DIR}/external/download/glm
-
-    TEST_COMMAND ""
-    UPDATE_COMMAND ""
-    PATCH_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-)
-
-set(GLM_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/external/glm/src/glm)
+include(cmake/external.cmake)
 
 find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
@@ -59,6 +42,10 @@ set(SOURCE_FILES
     src/rendering/texturerender.cpp
     src/rendering/texturerender.h
     src/external/bloom_filter.hpp
+    src/external/tsl/array_growth_policy.h
+    src/external/tsl/array_hash.h
+    src/external/tsl/array_map.h
+    src/external/tsl/array_set.h
     src/rendering/textselectionrender.cpp
     src/rendering/textselectionrender.h
     src/rendering/textmetrics.cpp

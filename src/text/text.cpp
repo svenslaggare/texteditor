@@ -47,6 +47,12 @@ void Text::forEach(std::function<void(std::size_t, Char)> apply) const {
 	}
 }
 
+void Text::forEachLine(std::function<void(const String&)> apply) const {
+	for (auto& line : mLines) {
+		apply(line);
+	}
+}
+
 std::size_t Text::numLines() const {
 	return mLines.size();
 }
@@ -77,6 +83,17 @@ void Text::insertAt(std::size_t lineNumber, std::size_t index, Char character) {
 	line.insert(line.begin() + index, character);
 
 	std::cout << "Inserted character in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
+}
+
+void Text::insertAt(std::size_t lineNumber, std::size_t index, const String& str) {
+	auto startTime = Helpers::timeNow();
+	mVersion++;
+	auto& line = mLines.at(lineNumber);
+	auto maxIndex = (std::size_t)std::max((std::int64_t)line.size(), 0L);
+	index = std::min(index, maxIndex);
+	line.insert(index, str);
+
+	std::cout << "Inserted string in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
 }
 
 void Text::deleteAt(std::size_t lineNumber, std::size_t index) {
@@ -125,13 +142,16 @@ Text::DeleteLineDiff Text::deleteLine(std::size_t lineNumber, DeleteLineMode mod
 	return diff;
 }
 
-void Text::deleteSelection(const TextSelection& textSelection) {
+Text::DeleteSelectionData Text::deleteSelection(const TextSelection& textSelection) {
 	auto startTime = Helpers::timeNow();
 	mVersion++;
+	DeleteSelectionData deleteSelectionData;
 
 	if (textSelection.startY == textSelection.endY) {
 		auto& line = mLines.at(textSelection.startY);
 		mLines.at(textSelection.startY) = line.substr(0, textSelection.startX) + line.substr(std::min(textSelection.endX + 1, line.size()));
+		deleteSelectionData.startDeleteLineIndex = textSelection.startY;
+		deleteSelectionData.endDeleteLineIndex = textSelection.endY;
 	} else {
 		std::size_t deleteLineStartIndex = textSelection.startY + 1;
 		std::size_t deleteLineEndIndex = textSelection.endY;
@@ -150,8 +170,13 @@ void Text::deleteSelection(const TextSelection& textSelection) {
 			mLines.at(textSelection.endY) = lastLine.substr(lastLineRemoveIndex);
 		}
 
+		deleteSelectionData.startDeleteLineIndex = deleteLineStartIndex;
+		deleteSelectionData.endDeleteLineIndex = deleteLineEndIndex;
+
 		mLines.erase(mLines.begin() + deleteLineStartIndex, mLines.begin() + deleteLineEndIndex + 1);
 	}
 
 	std::cout << "Deleted selection in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
+
+	return deleteSelectionData;
 }

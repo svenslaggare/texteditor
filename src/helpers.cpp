@@ -2,6 +2,7 @@
 #include <fstream>
 #include <codecvt>
 #include <locale>
+#include <iostream>
 
 std::string Helpers::readFileAsUTF8Text(const std::string& fileName) {
 	std::ifstream fileStream(fileName);
@@ -37,4 +38,13 @@ long Helpers::durationMicroseconds(TimePoint x, TimePoint y) {
 
 double Helpers::durationMilliseconds(TimePoint x, TimePoint y) {
 	return durationMicroseconds(x, y) / 1E3;
+}
+
+Timing::Timing(const std::string& before)
+	: before(before) {
+
+}
+
+Timing::~Timing() {
+	std::cout << before << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
 }
