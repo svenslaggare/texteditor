@@ -119,6 +119,14 @@ void Text::splitLine(std::size_t lineNumber, std::size_t index) {
 	std::cout << "Split line in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
 }
 
+void Text::insertLine(std::size_t lineNumber, const String& line) {
+	auto startTime = Helpers::timeNow();
+	mVersion++;
+
+	mLines.insert(mLines.begin() + lineNumber + 1, line);
+	std::cout << "Insert line in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
+}
+
 Text::DeleteLineDiff Text::deleteLine(std::size_t lineNumber, DeleteLineMode mode) {
 	auto startTime = Helpers::timeNow();
 	mVersion++;

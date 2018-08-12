@@ -144,6 +144,13 @@ std::pair<std::size_t, std::int64_t> TextView::getLineAndOffset(int offsetX) con
 }
 
 void TextView::moveCaretX(std::int64_t diff) {
+	std::int64_t diffSign = 0;
+	if (diff > 0) {
+		diffSign = 1;
+	} else if (diff < 0) {
+		diffSign = -1;
+	}
+
 	mShowSelection = false;
 
 	auto viewPort = getTextViewPort();
@@ -177,7 +184,7 @@ void TextView::moveCaretX(std::int64_t diff) {
 		}
 	}
 
-	auto caretScreenPositionX = -std::max(mInputState.caretPositionX + diff, 0L) * charWidth;
+	auto caretScreenPositionX = -std::max(mInputState.caretPositionX + diffSign, 0L) * charWidth;
 	if (caretScreenPositionX <= mInputState.viewPosition.x - viewPort.width + charWidth) {
 		mInputState.viewPosition.x -= diff * charWidth;
 	}
@@ -365,21 +372,40 @@ void TextView::insertLine() {
 }
 
 void TextView::paste() {
-	if (const char* text = glfwGetClipboardString(mWindow)) {
+	if (const char* rawPasteText = glfwGetClipboardString(mWindow)) {
 		auto lineAndOffset = getLineAndOffset();
 
-		auto stringText = Helpers::fromString<String>(text);
-		auto charIndex = (std::size_t)lineAndOffset.second + stringText.size();
-		auto numInserted = stringText.size();
-		mText.insertAt(lineAndOffset.first, charIndex, stringText);
+		auto stringPasteText = Helpers::fromString<String>(rawPasteText);
+		Text pasteText(stringPasteText);
+
+		auto diffCaretX = stringPasteText.size();
+		auto diffCaretY = 0;
+
+		if (pasteText.numLines() > 1) {
+			mText.insertAt(lineAndOffset.first, (std::size_t)lineAndOffset.second, pasteText.getLine(0));
+			for (std::size_t i = 1; i < pasteText.numLines(); i++) {
+				mText.insertLine(lineAndOffset.first + i - 1, pasteText.getLine(i));
+			}
+
+			diffCaretX = pasteText.getLine(pasteText.numLines() - 1).size();
+			diffCaretY = pasteText.numLines() - 1;
+		} else {
+			mText.insertAt(lineAndOffset.first, (std::size_t)lineAndOffset.second, stringPasteText);
+		}
 
 		if (mPerformFormattingType == PerformFormattingType::Incremental) {
-			((IncrementalFormattedText*)mFormattedText.get())->paste(getIncrementalFormattingInputState());
+			((IncrementalFormattedText*)mFormattedText.get())->paste(
+				getIncrementalFormattingInputState(),
+				pasteText.numLines());
 		} else {
 			updateFormattedText(getTextViewPort());
 		}
 
-		moveCaretX(numInserted);
+		if (diffCaretY > 0) {
+			moveCaretY(diffCaretY);
+		}
+
+		moveCaretX(diffCaretX);
 	}
 }
 

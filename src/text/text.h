@@ -112,6 +112,13 @@ public:
 	 */
 	void splitLine(std::size_t lineNumber, std::size_t index);
 
+	/**
+	 * Inserts a line after the given line
+	 * @param lineNumber The number of the line
+	 * @param line The line
+	 */
+	void insertLine(std::size_t lineNumber, const String& line);
+
 	enum class DeleteLineMode {
 		Start,
 		End

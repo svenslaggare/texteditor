@@ -92,8 +92,9 @@ public:
 	/**
 	 * Pastes from the clipboard
 	 * @param inputState The input state
+	 * @param numLines The number of lines pasted
 	 */
-	void paste(const InputState& inputState);
+	void paste(const InputState& inputState, std::size_t numLines);
 
 	/**
 	 * Deletes the current line

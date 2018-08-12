@@ -137,8 +137,21 @@ void IncrementalFormattedText::insertLine(const InputState& inputState) {
 	mText.hasChanged(mTextVersion);
 }
 
-void IncrementalFormattedText::paste(const InputState& inputState) {
-	reformatLine(inputState.lineIndex);
+void IncrementalFormattedText::paste(const InputState& inputState, std::size_t numLines) {
+	if (numLines > 1) {
+		for (std::size_t i = 0; i < numLines - 1; i++) {
+			mFormattedLines.insert(mFormattedLines.begin() + inputState.lineIndex + i, FormattedLine {});
+		}
+
+		reformatLines(inputState.lineIndex, inputState.lineIndex + numLines - 1);
+
+		for (std::size_t i = inputState.lineIndex; i < mFormattedLines.size(); i++) {
+			mFormattedLines[i].number = i;
+		}
+	} else {
+		reformatLine(inputState.lineIndex);
+	}
+
 	mText.hasChanged(mTextVersion);
 }
 
