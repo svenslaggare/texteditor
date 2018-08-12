@@ -29,7 +29,7 @@ private:
 
 	Text& mText;
 	std::size_t& mTextVersion;
-	FormattedText mFormattedText;
+	FormattedLines mFormattedLines;
 
 	/**
 	 * Reformats the given line index

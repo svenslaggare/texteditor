@@ -87,12 +87,12 @@ FormatterStateMachine::FormatterStateMachine(FormatMode mode,
 											 const Font& font,
 											 const RenderStyle& renderStyle,
 											 const RenderViewPort& viewPort,
-											 FormattedText& formattedText)
+											 FormattedLines& formattedLines)
 	: mMode(mode),
 	  mFont(font),
 	  mRenderStyle(renderStyle),
 	  mViewPort(viewPort),
-	  mFormattedText(formattedText) {
+	  mFormattedLines(formattedLines) {
 
 }
 
@@ -146,7 +146,7 @@ void FormatterStateMachine::createNewLine(bool resetState, bool continueWithLine
 		offsetFromTextLine = mCurrentFormattedLine.offsetFromTextLine + mCurrentFormattedLine.length();
 	}
 
-	mFormattedText.addLine(std::move(mCurrentFormattedLine));
+	mFormattedLines.push_back(std::move(mCurrentFormattedLine));
 	mCurrentFormattedLine = {};
 	mCurrentFormattedLine.offsetFromTextLine = offsetFromTextLine;
 	mCurrentFormattedLine.isContinuation = continueWithLine;
@@ -289,8 +289,8 @@ void FormatterStateMachine::handleComment(Char current, float advanceX) {
 
 void FormatterStateMachine::handleBlockComment(Char current, float advanceX) {
 	auto updateStartFormatInformation = [&]() {
-		if (!mFormattedText.lines().empty()) {
-			mFormattedText.lines()[mBlockCommentStart].reformatAmount =	(std::int64_t) mLineNumber - (std::int64_t) mBlockCommentStart;
+		if (!mFormattedLines.empty()) {
+			mFormattedLines[mBlockCommentStart].reformatAmount =	(std::int64_t) mLineNumber - (std::int64_t) mBlockCommentStart;
 		}
 	};
 
@@ -379,8 +379,8 @@ void TextFormatter::formatLine(const Font& font,
 							   const RenderViewPort& viewPort,
 							   const String& line,
 							   FormattedLine& formattedLine) {
-	FormattedText formattedText;
-	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedText);
+	FormattedLines formattedLines;
+	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedLines);
 
 	for (auto current : line) {
 		stateMachine.process(current);
@@ -392,16 +392,15 @@ void TextFormatter::formatLine(const Font& font,
 		stateMachine.createNewLine();
 	}
 
-	formattedLine = formattedText.getLine(0);
+	formattedLine = std::move(formattedLines.front());
 }
 
 void TextFormatter::formatLines(const Font& font,
 								const RenderStyle& renderStyle,
 								const RenderViewPort& viewPort,
 								const std::vector<const String*>& lines,
-								std::vector<FormattedLine>& formattedLines) {
-	FormattedText formattedText;
-	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedText);
+								FormattedLines& formattedLines) {
+	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedLines);
 
 	for (auto& line : lines) {
 		for (auto current : *line) {
@@ -414,16 +413,14 @@ void TextFormatter::formatLines(const Font& font,
 	if (!stateMachine.currentFormattedLine().tokens.empty()) {
 		stateMachine.createNewLine();
 	}
-
-	formattedLines = std::move(formattedText.lines());
 }
 
 void TextFormatter::format(const Font& font,
 						   const RenderStyle& renderStyle,
 						   const RenderViewPort& viewPort,
 						   const Text& text,
-						   FormattedText& formattedText) {
-	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedText);
+						   FormattedLines& formattedLines) {
+	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedLines);
 
 	text.forEachLine([&](const String& line) {
 		for (auto& current : line) {

@@ -28,6 +28,8 @@ enum class State {
 	BlockComment,
 };
 
+using FormattedLines = std::vector<FormattedLine>;
+
 /**
  * The internal formatter state machine
  */
@@ -37,7 +39,7 @@ private:
 	const Font& mFont;
 	const RenderStyle& mRenderStyle;
 	const RenderViewPort& mViewPort;
-	FormattedText& mFormattedText;
+	FormattedLines& mFormattedLines;
 
 	std::size_t mLineNumber = 0;
 	std::size_t mBlockCommentStart = 0;
@@ -70,7 +72,7 @@ public:
 						  const Font& font,
 						  const RenderStyle& renderStyle,
 						  const RenderViewPort& viewPort,
-						  FormattedText& formattedText);
+						  FormattedLines& formattedLines);
 
 	State state() const;
 	const FormattedLine& currentFormattedLine() const;
@@ -119,7 +121,7 @@ public:
 					 const RenderStyle& renderStyle,
 					 const RenderViewPort& viewPort,
 					 const std::vector<const String*>& lines,
-					 std::vector<FormattedLine>& formattedLines);
+					 FormattedLines& formattedLines);
 
 	/**
 	 * Formats the given text using the given font
@@ -127,11 +129,11 @@ public:
 	 * @param viewPort The view port to render to
 	 * @param renderStyle The render style
  	 * @param text The text
-	 * @param lines The lines
+ 	 * @param formattedLines The formatted lines
 	 */
 	void format(const Font& font,
 				const RenderStyle& renderStyle,
 				const RenderViewPort& viewPort,
 				const Text& text,
-				FormattedText& formattedText);
+				FormattedLines& formattedLines);
 };

@@ -666,15 +666,15 @@ namespace {
 	void formattedBenchmark(const Font& font, FormatMode formatMode, const RenderStyle& renderStyle, const RenderViewPort& viewPort, const Text& text) {
 		TextFormatter textFormatter(formatMode);
 		for (int i = 0; i < 3; i++) {
-			FormattedText formattedText;
-			textFormatter.format(font, renderStyle, viewPort, text, formattedText);
+			FormattedLines formattedLines;
+			textFormatter.format(font, renderStyle, viewPort, text, formattedLines);
 		}
 
 		int n = 10;
 		auto t0 = Helpers::timeNow();
 		for (int i = 0; i < n; i++) {
-			FormattedText formattedText;
-			textFormatter.format(font, renderStyle, viewPort, text, formattedText);
+			FormattedLines formattedLines;
+			textFormatter.format(font, renderStyle, viewPort, text, formattedLines);
 		}
 
 		std::cout
@@ -700,7 +700,7 @@ void TextView::updateFormattedText(const RenderViewPort& viewPort) {
 			case PerformFormattingType::Full: {
 				auto t0 = Helpers::timeNow();
 				auto formattedText = std::make_unique<FormattedText>();
-				mTextFormatter.format(mFont, mRenderStyle, viewPort, mText, *formattedText);
+				mTextFormatter.format(mFont, mRenderStyle, viewPort, mText, formattedText->lines());
 				mFormattedText = std::move(formattedText);
 				std::cout
 					<< "Formatted text (lines = " << numLines() << ") in "

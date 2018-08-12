@@ -14,15 +14,15 @@ IncrementalFormattedText::IncrementalFormattedText(const Font& font,
 	  mTextFormatter(formatMode),
 	  mText(text),
 	  mTextVersion(textVersion) {
-	mTextFormatter.format(mFont, mRenderStyle, mViewPort, mText, mFormattedText);
+	mTextFormatter.format(mFont, mRenderStyle, mViewPort, mText, mFormattedLines);
 }
 
 std::size_t IncrementalFormattedText::numLines() const {
-	return mFormattedText.numLines();
+	return mFormattedLines.size();
 }
 
 const FormattedLine& IncrementalFormattedText::getLine(std::size_t index) const {
-	return mFormattedText.getLine(index);
+	return mFormattedLines[index];
 }
 
 namespace {
@@ -52,20 +52,20 @@ void IncrementalFormattedText::reformatLine(std::size_t lineIndex) {
 //	formattedLine.number = lineIndex;
 //	mFormattedText.lines()[lineIndex] = std::move(formattedLine);
 
-	auto& currentFormattedLine = mFormattedText.getLine(lineIndex);
-	auto& startSearchLine = mFormattedText.getLine((std::size_t)(lineIndex + currentFormattedLine.reformatStartSearch));
+	auto& currentFormattedLine = mFormattedLines[lineIndex];
+	auto& startSearchLine = mFormattedLines[(std::size_t)(lineIndex + currentFormattedLine.reformatStartSearch)];
 
 	auto reformatStart = startSearchLine.number;
 	auto reformatEnd = startSearchLine.number + startSearchLine.reformatAmount;
 
 	if (reformatStart == reformatEnd) {
-		FormattedText formattedText;
-		FormatterStateMachine stateMachine(mFormatMode, mFont, mRenderStyle, mViewPort, formattedText);
+		FormattedLines formattedLines;
+		FormatterStateMachine stateMachine(mFormatMode, mFont, mRenderStyle, mViewPort, formattedLines);
 
 		processLine(stateMachine, mText.getLine(lineIndex));
 
 		std::size_t numFormattedLines = 1;
-		if (formattedText.getLine(0).mayRequireSearch && stateMachine.state() != State::Text) {
+		if (formattedLines[0].mayRequireSearch && stateMachine.state() != State::Text) {
 			std::cout << "reformatLine: mult" << std::endl;
 			formatUntilStateRestored(stateMachine, mText, lineIndex + 1, numFormattedLines);
 		} else {
@@ -77,9 +77,9 @@ void IncrementalFormattedText::reformatLine(std::size_t lineIndex) {
 		}
 
 		for (std::size_t i = 0; i < numFormattedLines; i++) {
-			auto formattedLine = formattedText.getLine(i);
+			auto formattedLine = formattedLines[i];
 			formattedLine.number = lineIndex + i;
-			mFormattedText.lines()[lineIndex + i] = std::move(formattedLine);
+			mFormattedLines[lineIndex + i] = std::move(formattedLine);
 		}
 	} else {
 		reformatLines(reformatStart, reformatEnd);
@@ -102,8 +102,8 @@ void IncrementalFormattedText::reformatLines(std::size_t startLineIndex, std::si
 //		mFormattedText.lines()[startLineIndex + i] = std::move(formattedLine);
 //	}
 
-	FormattedText formattedText;
-	FormatterStateMachine stateMachine(mFormatMode, mFont, mRenderStyle, mViewPort, formattedText);
+	FormattedLines formattedLines;
+	FormatterStateMachine stateMachine(mFormatMode, mFont, mRenderStyle, mViewPort, formattedLines);
 
 	std::size_t numFormattedLines = 0;
 	bool continueFormatting = false;
@@ -127,9 +127,9 @@ void IncrementalFormattedText::reformatLines(std::size_t startLineIndex, std::si
 	}
 
 	for (std::size_t i = 0; i < numFormattedLines; i++) {
-		auto formattedLine = formattedText.getLine(i);
+		auto formattedLine = formattedLines[i];
 		formattedLine.number = startLineIndex + i;
-		mFormattedText.lines()[startLineIndex + i] = std::move(formattedLine);
+		mFormattedLines[startLineIndex + i] = std::move(formattedLine);
 	}
 }
 
@@ -145,11 +145,11 @@ void IncrementalFormattedText::insertCharacter(const InputState& inputState) {
 void IncrementalFormattedText::insertLine(const InputState& inputState) {
 	FormattedLine newFormattedLine;
 	mTextFormatter.formatLine(mFont, mRenderStyle, mViewPort, mText.getLine(inputState.lineIndex + 1), newFormattedLine);
-	mFormattedText.lines().insert(mFormattedText.lines().begin() + inputState.lineIndex + 1, newFormattedLine);
+	mFormattedLines.insert(mFormattedLines.begin() + inputState.lineIndex + 1, newFormattedLine);
 	reformatLine(inputState.lineIndex);
 
-	for (std::size_t i = inputState.lineIndex; i < mFormattedText.lines().size(); i++) {
-		mFormattedText.lines()[i].number = i;
+	for (std::size_t i = inputState.lineIndex; i < mFormattedLines.size(); i++) {
+		mFormattedLines[i].number = i;
 	}
 
 	mText.hasChanged(mTextVersion);
@@ -164,22 +164,22 @@ void IncrementalFormattedText::deleteLine(const InputState& inputState, Text::De
 	auto lineNumber = inputState.lineIndex;
 
 	if (mode == Text::DeleteLineMode::Start) {
-		mFormattedText.lines().erase(mFormattedText.lines().begin() + lineNumber);
+		mFormattedLines.erase(mFormattedLines.begin() + lineNumber);
 
 		if (lineNumber > 0) {
 			reformatLine(lineNumber - 1);
 		}
 
-		for (std::size_t i = lineNumber - 1; i < mFormattedText.lines().size(); i++) {
-			mFormattedText.lines()[i].number = i;
+		for (std::size_t i = lineNumber - 1; i < mFormattedLines.size(); i++) {
+			mFormattedLines[i].number = i;
 		}
 	} else {
-		if (lineNumber + 1 < mFormattedText.lines().size()) {
-			mFormattedText.lines().erase(mFormattedText.lines().begin() + lineNumber + 1);
+		if (lineNumber + 1 < mFormattedLines.size()) {
+			mFormattedLines.erase(mFormattedLines.begin() + lineNumber + 1);
 			reformatLine(lineNumber);
 
-			for (std::size_t i = lineNumber; i < mFormattedText.lines().size(); i++) {
-				mFormattedText.lines()[i].number = i;
+			for (std::size_t i = lineNumber; i < mFormattedLines.size(); i++) {
+				mFormattedLines[i].number = i;
 			}
 		}
 	}
@@ -191,15 +191,15 @@ void IncrementalFormattedText::deleteSelection(const InputState& inputState, con
 	if (textSelection.startY == textSelection.endY) {
 		reformatLine(textSelection.startY);
 	} else {
-		mFormattedText.lines().erase(
-			mFormattedText.lines().begin() + deleteData.startDeleteLineIndex,
-			mFormattedText.lines().begin() + deleteData.endDeleteLineIndex + 1);
+		mFormattedLines.erase(
+			mFormattedLines.begin() + deleteData.startDeleteLineIndex,
+			mFormattedLines.begin() + deleteData.endDeleteLineIndex + 1);
 
 		reformatLine(textSelection.startY);
 		reformatLine(textSelection.startY + 1);
 
-		for (std::size_t i = textSelection.startY; i < mFormattedText.lines().size(); i++) {
-			mFormattedText.lines()[i].number = i;
+		for (std::size_t i = textSelection.startY; i < mFormattedLines.size(); i++) {
+			mFormattedLines[i].number = i;
 		}
 	}
 
