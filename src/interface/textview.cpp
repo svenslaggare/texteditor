@@ -9,6 +9,7 @@
 #include "../windowstate.h"
 #include "../rendering/glhelpers.h"
 #include "../rendering/shadercompiler.h"
+#include "../text/incrementalformattedtext.h"
 
 #include <chrono>
 #include <iostream>
@@ -325,24 +326,17 @@ void TextView::updateViewMovement(const WindowState& windowState) {
 	}
 }
 
+IncrementalFormattedText::InputState TextView::getIncrementalFormattingInputState() {
+	auto lineAndOffset = getLineAndOffset();
+	return { lineAndOffset.first, (std::size_t)lineAndOffset.second };
+}
+
 void TextView::insertCharacter(Char character) {
 	auto lineAndOffset = getLineAndOffset();
 	mText.insertAt(lineAndOffset.first, (std::size_t)lineAndOffset.second, character);
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
-		auto& currentFormattedLine = mFormattedText->getLine(lineAndOffset.first);
-		auto& startSearchLine = mFormattedText->getLine((std::size_t)(lineAndOffset.first + currentFormattedLine.reformatStartSearch));
-
-		auto reformatStart = startSearchLine.number;
-		auto reformatEnd = startSearchLine.number + startSearchLine.reformatAmount;
-
-		if (reformatStart == reformatEnd) {
-			reformatLine(lineAndOffset.first);
-		} else {
-			reformatLines(reformatStart, reformatEnd);
-		}
-
-		mText.hasChanged(mTextVersion);
+		((IncrementalFormattedText*)mFormattedText.get())->insertCharacter(getIncrementalFormattingInputState());
 	} else {
 		updateFormattedText(getTextViewPort());
 	}
@@ -363,19 +357,7 @@ void TextView::insertLine() {
 	mText.splitLine(lineAndOffset.first, (std::size_t)lineAndOffset.second);
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
-		auto formattedText = (FormattedText*)mFormattedText.get();
-
-		reformatLine(lineAndOffset.first, formattedText);
-
-		LineTokens newLineTokens;
-		mTextFormatter.formatLine(mFont, mRenderStyle, getTextViewPort(), mText.getLine(lineAndOffset.first + 1), newLineTokens);
-		formattedText->lines().insert(formattedText->lines().begin() + lineAndOffset.first + 1, newLineTokens);
-
-		for (std::size_t i = lineAndOffset.first; i < formattedText->lines().size(); i++) {
-			formattedText->lines()[i].number = i;
-		}
-
-		mText.hasChanged(mTextVersion);
+		((IncrementalFormattedText*)mFormattedText.get())->insertLine(getIncrementalFormattingInputState());
 	} else {
 		updateFormattedText(getTextViewPort());
 	}
@@ -394,8 +376,7 @@ void TextView::paste() {
 		mText.insertAt(lineAndOffset.first, charIndex, stringText);
 
 		if (mPerformFormattingType == PerformFormattingType::Incremental) {
-			reformatLine(lineAndOffset.first);
-			mText.hasChanged(mTextVersion);
+			((IncrementalFormattedText*)mFormattedText.get())->paste(getIncrementalFormattingInputState());
 		} else {
 			updateFormattedText(getTextViewPort());
 		}
@@ -415,31 +396,7 @@ void TextView::deleteLine(Text::DeleteLineMode mode) {
 	}
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
-		auto formattedText = (FormattedText*)mFormattedText.get();
-		auto lineNumber = currentLineNumber();
-
-		if (mode == Text::DeleteLineMode::Start) {
-			if (lineNumber > 0) {
-				reformatLine(lineNumber - 1, formattedText);
-			}
-
-			formattedText->lines().erase(formattedText->lines().begin() + lineNumber);
-
-			for (std::size_t i = lineNumber - 1; i < formattedText->lines().size(); i++) {
-				formattedText->lines()[i].number = i;
-			}
-		} else {
-			if (lineNumber + 1 < formattedText->lines().size()) {
-				reformatLine(lineNumber, formattedText);
-				formattedText->lines().erase(formattedText->lines().begin() + lineNumber + 1);
-
-				for (std::size_t i = lineNumber; i < formattedText->lines().size(); i++) {
-					formattedText->lines()[i].number = i;
-				}
-			}
-		}
-
-		mText.hasChanged(mTextVersion);
+		((IncrementalFormattedText*)mFormattedText.get())->deleteLine(getIncrementalFormattingInputState(), mode);
 	} else {
 		updateFormattedText(getTextViewPort());
 	}
@@ -450,6 +407,7 @@ void TextView::deleteLine(Text::DeleteLineMode mode) {
 }
 
 void TextView::deleteSelection() {
+	auto textSelection = mInputState.selection;
 	auto deleteData = mText.deleteSelection(mInputState.selection);
 	mInputState.caretPositionX = (std::size_t)mInputState.selection.startX;
 	mInputState.caretPositionY = (std::size_t)mInputState.selection.startY;
@@ -463,24 +421,10 @@ void TextView::deleteSelection() {
 	mViewMoved = true;
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
-		auto formattedText = (FormattedText*) mFormattedText.get();
-
-		if (mInputState.selection.startY == mInputState.selection.endY) {
-			reformatLine(mInputState.selection.startY);
-		} else {
-			formattedText->lines().erase(
-				formattedText->lines().begin() + deleteData.startDeleteLineIndex,
-				formattedText->lines().begin() + deleteData.endDeleteLineIndex + 1);
-
-			reformatLine(mInputState.selection.startY);
-			reformatLine(mInputState.selection.startY + 1);
-
-			for (std::size_t i = mInputState.selection.startY; i < formattedText->lines().size(); i++) {
-				formattedText->lines()[i].number = i;
-			}
-		}
-
-		mText.hasChanged(mTextVersion);
+		((IncrementalFormattedText*)mFormattedText.get())->deleteSelection(
+			getIncrementalFormattingInputState(),
+			textSelection,
+			deleteData);
 	} else {
 		updateFormattedText(getTextViewPort());
 	}
@@ -490,20 +434,7 @@ void TextView::deleteCharacter(std::size_t lineIndex, std::size_t charIndex) {
 	mText.deleteAt(lineIndex, charIndex);
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
-//		reformatLine(lineIndex);
-		auto& currentFormattedLine = mFormattedText->getLine(lineIndex);
-		auto& startSearchLine = mFormattedText->getLine((std::size_t)(lineIndex + currentFormattedLine.reformatStartSearch));
-
-		auto reformatStart = startSearchLine.number;
-		auto reformatEnd = startSearchLine.number + startSearchLine.reformatAmount;
-
-		if (reformatStart == reformatEnd) {
-			reformatLine(lineIndex);
-		} else {
-			reformatLines(reformatStart, reformatEnd);
-		}
-
-		mText.hasChanged(mTextVersion);
+		((IncrementalFormattedText*)mFormattedText.get())->deleteCharacter(getIncrementalFormattingInputState());
 	} else {
 		updateFormattedText(getTextViewPort());
 	}
@@ -768,8 +699,7 @@ void TextView::updateFormattedText(const RenderViewPort& viewPort) {
 		mLastViewPort = viewPort;
 
 		switch (mPerformFormattingType) {
-			case PerformFormattingType::Full:
-			case PerformFormattingType::Incremental: {
+			case PerformFormattingType::Full: {
 				auto t0 = Helpers::timeNow();
 				auto formattedText = std::make_unique<FormattedText>();
 				mTextFormatter.format(mFont, mRenderStyle, viewPort, mText, *formattedText);
@@ -780,6 +710,17 @@ void TextView::updateFormattedText(const RenderViewPort& viewPort) {
 					<< std::endl;
 
 //				formattedBenchmark(mFont, mFormatMode, mRenderStyle, viewPort, mText);
+
+				mInputState.caretPositionY = std::min(mInputState.caretPositionY, (std::int64_t) numLines() - 1);
+				break;
+			}
+			case PerformFormattingType::Incremental: {
+				auto t0 = Helpers::timeNow();
+				mFormattedText = std::make_unique<IncrementalFormattedText>(mFont, mRenderStyle, mViewPort, mText, mTextVersion, mFormatMode);
+				std::cout
+					<< "Formatted text (lines = " << numLines() << ") in "
+					<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) << " ms"
+					<< std::endl;
 
 				mInputState.caretPositionY = std::min(mInputState.caretPositionY, (std::int64_t) numLines() - 1);
 				break;

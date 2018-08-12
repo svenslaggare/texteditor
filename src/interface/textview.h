@@ -5,6 +5,7 @@
 #include "../rendering/renderviewport.h"
 #include "../rendering/textmetrics.h"
 #include "../rendering/textselectionrender.h"
+#include "../text/incrementalformattedtext.h"
 
 #include <string>
 #include <memory>
@@ -159,6 +160,11 @@ private:
 	 * @param windowState The window state
 	 */
 	void updateInput(const WindowState& windowState);
+
+	/**
+	 * Returns the input state for incremental formatting
+	 */
+	IncrementalFormattedText::InputState getIncrementalFormattingInputState();
 
 	/**
 	 * Inserts the given character

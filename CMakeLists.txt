@@ -51,7 +51,9 @@ set(SOURCE_FILES
     src/rendering/textmetrics.cpp
     src/rendering/textmetrics.h
     src/rendering/shaderprogram.h
-    src/rendering/shaderprogram.cpp)
+    src/rendering/shaderprogram.cpp
+    src/text/incrementalformattedtext.cpp
+    src/text/incrementalformattedtext.h)
 
 #add_compile_options(-O3 -march=native -mtune=native)
 
