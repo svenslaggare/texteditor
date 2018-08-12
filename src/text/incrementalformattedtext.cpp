@@ -47,11 +47,6 @@ namespace {
 }
 
 void IncrementalFormattedText::reformatLine(std::size_t lineIndex) {
-//	FormattedLine formattedLine;
-//	mTextFormatter.formatLine(mFont, mRenderStyle, mViewPort, mText.getLine(lineIndex), formattedLine);
-//	formattedLine.number = lineIndex;
-//	mFormattedText.lines()[lineIndex] = std::move(formattedLine);
-
 	auto& currentFormattedLine = mFormattedLines[lineIndex];
 	auto& startSearchLine = mFormattedLines[(std::size_t)(lineIndex + currentFormattedLine.reformatStartSearch)];
 
@@ -88,19 +83,6 @@ void IncrementalFormattedText::reformatLine(std::size_t lineIndex) {
 
 void IncrementalFormattedText::reformatLines(std::size_t startLineIndex, std::size_t endLineIndex) {
 	std::cout << "reformatLines" << std::endl;
-//	std::vector<FormattedLine> formattedLines;
-//	std::vector<const String*> lines;
-//	for (std::size_t i = startLineIndex; i <= endLineIndex; i++) {
-//		lines.push_back(&mText.getLine(i));
-//	}
-//
-//	mTextFormatter.formatLines(mFont, mRenderStyle, mViewPort, lines, formattedLines);
-//
-//	for (std::size_t i = 0; i <= endLineIndex - startLineIndex; i++) {
-//		auto& formattedLine = formattedLines[i];
-//		formattedLine.number = startLineIndex + i;
-//		mFormattedText.lines()[startLineIndex + i] = std::move(formattedLine);
-//	}
 
 	FormattedLines formattedLines;
 	FormatterStateMachine stateMachine(mFormatMode, mFont, mRenderStyle, mViewPort, formattedLines);
