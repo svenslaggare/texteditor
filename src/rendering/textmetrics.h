@@ -1,7 +1,7 @@
 #pragma once
 #include <cstddef>
 
-struct LineTokens;
+struct FormattedLine;
 class Font;
 struct RenderStyle;
 class BaseFormattedText;
@@ -44,11 +44,11 @@ public:
 
 	/**
 	 * Returns the width of the given line
-	 * @param lineTokens The line tokens
+	 * @param formattedLine The formatted line
 	 * @param startCharIndex The start character index to use on the line
 	 * @param maxCharIndex The maximum character index to use on the line
 	 */
-	float getLineWidth(const LineTokens& lineTokens,
+	float getLineWidth(const FormattedLine& formattedLine,
 					   std::size_t startCharIndex = 0,
 					   std::size_t* maxCharIndex = nullptr) const;
 };

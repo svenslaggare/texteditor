@@ -46,10 +46,10 @@ std::size_t TextMetrics::getCharIndexFromScreenPosition(const BaseFormattedText&
 	return currentCharIndex;
 }
 
-float TextMetrics::getLineWidth(const LineTokens& lineTokens, size_t startCharIndex, size_t* maxCharIndex) const {
+float TextMetrics::getLineWidth(const FormattedLine& formattedLine, size_t startCharIndex, size_t* maxCharIndex) const {
 	float lineWidth = 0.0f;
 	std::size_t charIndex = 0;
-	for (auto& token : lineTokens.tokens) {
+	for (auto& token : formattedLine.tokens) {
 		for (auto character : token.text) {
 			auto advanceX = mRenderStyle.getAdvanceX(mFont, character);
 

@@ -8,8 +8,6 @@
 
 #include "../interface/textview.h"
 
-#include <glm/gtc/matrix_transform.hpp>
-
 TextSelectionRender::TextSelectionRender()
 	: mShaderProgram(Helpers::readFileAsUTF8Text("shaders/selectionVertex.glsl"), Helpers::readFileAsUTF8Text("shaders/selection.glsl")) {
 	glGenVertexArrays(1, &mVAO);

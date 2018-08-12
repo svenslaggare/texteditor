@@ -1,4 +1,6 @@
 #pragma once
+#include "../text/text.h"
+
 #include <string>
 
 #include <glm/vec2.hpp>
@@ -8,7 +10,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <functional>
-#include "../text/text.h"
 
 class Font;
 struct RenderStyle;

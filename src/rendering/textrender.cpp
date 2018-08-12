@@ -14,8 +14,6 @@
 #include <codecvt>
 #include <locale>
 
-#include <glm/vec3.hpp>
-
 namespace {
 	const std::size_t NUM_TRIANGLES = 6;
 	const std::size_t MAX_CHARACTERS = 200;

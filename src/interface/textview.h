@@ -10,7 +10,6 @@
 #include <string>
 #include <memory>
 #include <glm/vec2.hpp>
-#include <GL/glew.h>
 
 class Font;
 struct RenderStyle;
@@ -103,7 +102,7 @@ private:
 	/**
 	 * Returns the current line the caret is at
 	 */
-	const LineTokens& currentLine() const;
+	const FormattedLine& currentLine() const;
 
 	/**
 	 * Returns the current line number
@@ -285,21 +284,6 @@ private:
 	 * @param lineIndex The line index
 	 */
 	void formatLinePartialMode(const RenderViewPort& viewPort, PartialFormattedText& formattedText, std::size_t lineIndex);
-
-	/**
-	 * Reformats the given line index
-	 * @param lineIndex The index of the line
-	 * @param formattedText The formatted text. If null, uses mFormattedText
-	 */
-	void reformatLine(std::size_t lineIndex, FormattedText* formattedText = nullptr);
-
-	/**
-	 * Reformats the given lines
-	 * @param startLineIndex The index of the first line
-	 * @param endLineIndex The index of the last line
-	 * @param formattedText The formatted text. If null, uses mFormattedText
-	 */
-	void reformatLines(std::size_t startLineIndex, std::size_t endLineIndex, FormattedText* formattedText = nullptr);
 
 	/**
 	 * Performs formatting on the view port

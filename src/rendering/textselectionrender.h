@@ -1,7 +1,8 @@
 #pragma once
+#include "shaderprogram.h"
+
 #include <GL/glew.h>
 #include <glm/vec2.hpp>
-#include "shaderprogram.h"
 
 class WindowState;
 class Font;

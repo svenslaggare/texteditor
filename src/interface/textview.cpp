@@ -12,12 +12,10 @@
 #include "../text/incrementalformattedtext.h"
 
 #include <chrono>
-#include <iostream>
 #include <algorithm>
 #include <memory>
 #include <codecvt>
 #include <locale>
-#include <glm/gtc/matrix_transform.hpp>
 
 namespace {
 	std::string print(char16_t current) {
@@ -99,7 +97,7 @@ TextView::TextView(GLFWwindow* window,
 	mKeyboardCommands.emplace_back(KeyboardCommand { GLFW_KEY_V, {}, [&]() { paste(); }, {}, {} });
 }
 
-const LineTokens& TextView::currentLine() const {
+const FormattedLine& TextView::currentLine() const {
 	auto lineIndex = (std::size_t)mInputState.caretPositionY;
 	return mFormattedText->getLine(lineIndex);
 }
@@ -742,43 +740,10 @@ void TextView::updateFormattedText(const RenderViewPort& viewPort) {
 }
 
 void TextView::formatLinePartialMode(const RenderViewPort& viewPort, PartialFormattedText& formattedText, std::size_t lineIndex) {
-	LineTokens lineTokens;
-	mTextFormatter.formatLine(mFont, mRenderStyle, viewPort, mText.getLine(lineIndex), lineTokens);
-	lineTokens.number = lineIndex;
-	formattedText.addLine(lineIndex, lineTokens);
-}
-
-void TextView::reformatLine(std::size_t lineIndex, FormattedText* formattedText) {
-	LineTokens lineTokens;
-	mTextFormatter.formatLine(mFont, mRenderStyle, getTextViewPort(), mText.getLine(lineIndex), lineTokens);
-	lineTokens.number = lineIndex;
-
-	if (formattedText == nullptr) {
-		formattedText = (FormattedText*)mFormattedText.get();
-	}
-
-	formattedText->lines()[lineIndex] = std::move(lineTokens);
-}
-
-void TextView::reformatLines(std::size_t startLineIndex, std::size_t endLineIndex, FormattedText* formattedText) {
-	std::vector<LineTokens> formattedLines;
-	std::vector<const String*> lines;
-	for (std::size_t i = startLineIndex; i <= endLineIndex; i++) {
-		lines.push_back(&mText.getLine(i));
-		std::cout << Helpers::toString(*lines.back()) << std::endl;
-	}
-
-	mTextFormatter.formatLines(mFont, mRenderStyle, getTextViewPort(), lines, formattedLines);
-
-	if (formattedText == nullptr) {
-		formattedText = (FormattedText*)mFormattedText.get();
-	}
-
-	for (std::size_t i = 0; i <= endLineIndex - startLineIndex; i++) {
-		auto& formattedLine = formattedLines[i];
-		formattedLine.number = startLineIndex + i;
-		formattedText->lines()[startLineIndex + i] = std::move(formattedLine);
-	}
+	FormattedLine formattedLine;
+	mTextFormatter.formatLine(mFont, mRenderStyle, viewPort, mText.getLine(lineIndex), formattedLine);
+	formattedLine.number = lineIndex;
+	formattedText.addLine(lineIndex, formattedLine);
 }
 
 PartialFormattedText TextView::performPartialFormatting(const RenderViewPort& viewPort, glm::vec2 position) {

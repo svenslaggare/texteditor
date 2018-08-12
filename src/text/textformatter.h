@@ -1,152 +1,16 @@
 #pragma once
 #include "text.h"
+#include "formattedtext.h"
 
 #include <string>
 #include <vector>
 #include <iostream>
-#include <unordered_map>
 
 class Font;
 struct RenderViewPort;
 struct RenderStyle;
-class FormattedText;
+
 class Text;
-
-/**
- * The type of a token
- */
-enum class TokenType : std::uint8_t {
-	Text,
-	Keyword,
-	String,
-	Comment
-};
-
-/**
- * Represents a token
- */
-struct Token {
-	TokenType type = TokenType::Text;
-	String text;
-};
-
-/**
- * Represents the tokens for a text line
- */
-struct LineTokens {
-	std::size_t number = 0;
-	std::vector<Token> tokens;
-	std::size_t offsetFromTextLine = 0;
-	bool isContinuation = false;
-	std::int64_t reformatAmount = 0;
-	std::int64_t reformatStartSearch = 0;
-
-	LineTokens();
-
-	/**
-	 * Adds the given token
-	 * @param token The token
-	 */
-	void addToken(Token token);
-
-	/**
-	 * Returns the number of characters on the line
-	 */
-	std::size_t length() const;
-
-	/**
-	 * Returns a string representation of the current line
-	 */
-	String toString() const;
-};
-
-/**
- * Represents a base class for formatted text
- */
-class BaseFormattedText {
-public:
-	virtual ~BaseFormattedText() = default;
-
-	/**
-	 * Returns the number of lines
-	 */
-	virtual std::size_t numLines() const = 0;
-
-	/**
-	 * Returns the tokens at the given line
-	 * @param index The index
-	 */
-	virtual const LineTokens& getLine(std::size_t index) const = 0;
-};
-
-/**
- * Represents formatted text
- */
-class FormattedText : public BaseFormattedText {
-private:
-	std::vector<LineTokens> mLines;
-public:
-	/**
-	 * Returns the number of lines
-	 */
-	std::size_t numLines() const override;
-
-	/**
-	 * Returns the underlying lines
-	 */
-	std::vector<LineTokens>& lines();
-
-	/**
-	 * Returns the tokens at the given line
-	 * @param index The index
-	 */
-	const LineTokens& getLine(std::size_t index) const override;
-
-	/**
-	 * Adds the given line
-	 * @param tokens The tokens on the line
-	 */
-	void addLine(LineTokens tokens);
-};
-
-/**
- * Represents a partially formatted text
- */
-class PartialFormattedText : public BaseFormattedText {
-private:
-	std::size_t mTotalLines;
-	std::unordered_map<std::size_t, LineTokens> mLines;
-public:
-	/**
-	 * Returns the number of lines
-	 */
-	std::size_t numLines() const override;
-
-	/**
-	 * Sets the number of lines
-	 * @param count The total number of lines
-	 */
-	void setNumLines(std::size_t count);
-
-	/**
-	 * Returns the tokens at the given line
-	 * @param index The index
-	 */
-	const LineTokens& getLine(std::size_t index) const override;
-
-	/**
-	 * Adds the given line
-	 * @param index The index for the line
-	 * @param tokens The tokens on the line
-	 */
-	void addLine(std::size_t index, LineTokens tokens);
-
-	/**
-	 * Indicates if the given line exists
-	 * @param index The index
-	 */
-	bool hasLine(std::size_t index) const;
-};
 
 /**
  * The format mode
@@ -155,6 +19,66 @@ enum class FormatMode : std::uint8_t {
 	Text,
 	Code
 };
+
+
+enum class State {
+	Text,
+	String,
+	Comment,
+	BlockComment,
+};
+
+/**
+ * The internal formatter state machine
+ */
+class FormatterStateMachine {
+private:
+	FormatMode mMode;
+	const Font& mFont;
+	const RenderStyle& mRenderStyle;
+	const RenderViewPort& mViewPort;
+	FormattedText& mFormattedText;
+
+	std::size_t mLineNumber = 0;
+	std::size_t mBlockCommentStart = 0;
+
+	State mState = State::Text;
+	bool mIsWhitespace = false;
+	bool mIsEscaped = false;
+
+	FormattedLine mCurrentFormattedLine;
+	Token mCurrentToken;
+	float mCurrentWidth = 0.0f;
+
+	Char mPrevChar = '\0';
+
+	void tryMakeKeyword();
+	void newToken(TokenType type = TokenType::Text, bool makeKeyword = false);
+	void addChar(Char character, float advanceX);
+
+	void handleTab();
+
+	void handleText(Char current, float advanceX);
+	void handleString(Char current, float advanceX);
+	void handleComment(Char current, float advanceX);
+	void handleBlockComment(Char current, float advanceX);
+
+	void handleCodeMode(Char current, float advanceX);
+	void handleTextMode(Char current, float advanceX);
+public:
+	FormatterStateMachine(FormatMode mode,
+						  const Font& font,
+						  const RenderStyle& renderStyle,
+						  const RenderViewPort& viewPort,
+						  FormattedText& formattedText);
+
+	State state() const;
+	const FormattedLine& currentFormattedLine() const;
+
+	void createNewLine(bool resetState = true, bool continueWithLine = false);
+	void process(Char current);
+};
+
 
 /**
  * Represents a text formatter
@@ -181,7 +105,7 @@ public:
 					const RenderStyle& renderStyle,
 					const RenderViewPort& viewPort,
 					const String& line,
-					LineTokens& formattedLine);
+					FormattedLine& formattedLine);
 
 	/**
 	 * Formats the given lines
@@ -195,7 +119,7 @@ public:
 					 const RenderStyle& renderStyle,
 					 const RenderViewPort& viewPort,
 					 const std::vector<const String*>& lines,
-					 std::vector<LineTokens>& formattedLines);
+					 std::vector<FormattedLine>& formattedLines);
 
 	/**
 	 * Formats the given text using the given font

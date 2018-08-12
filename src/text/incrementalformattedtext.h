@@ -11,11 +11,20 @@ class RenderViewPort;
  * Represents an incremental formatted text
  */
 class IncrementalFormattedText : public BaseFormattedText {
+public:
+	/**
+	 * The current input state
+	 */
+	struct InputState {
+		std::size_t lineIndex;
+		std::size_t charIndex;
+	};
 private:
 	const Font& mFont;
 	const RenderStyle& mRenderStyle;
 	const RenderViewPort& mViewPort;
 
+	FormatMode mFormatMode;
 	TextFormatter mTextFormatter;
 
 	Text& mText;
@@ -34,6 +43,12 @@ private:
 	 * @param endLineIndex The index of the last line
 	 */
 	void reformatLines(std::size_t startLineIndex, std::size_t endLineIndex);
+
+	/**
+	 * Reformats for a character action
+	 * @param inputState The input state
+	 */
+	void reformatCharacterAction(const InputState& inputState);
 public:
 	/**
 	 * Creates a new incremental formatted text for the given text
@@ -50,13 +65,6 @@ public:
 									  Text& text,
 									  std::size_t& textVersion,
 									  FormatMode formatMode);
-	/**
-	 * The current input state
-	 */
-	struct InputState {
-		std::size_t lineIndex;
-		std::size_t charIndex;
-	};
 
 	/**
 	 * Returns the number of lines
@@ -64,10 +72,10 @@ public:
 	virtual std::size_t numLines() const override;
 
 	/**
-	 * Returns the tokens at the given line
+	 * Returns the formatting for the given line
 	 * @param index The index
 	 */
-	virtual const LineTokens& getLine(std::size_t index) const override;
+	virtual const FormattedLine& getLine(std::size_t index) const override;
 
 	/**
 	 * Inserts the given character
