@@ -336,12 +336,16 @@ IncrementalFormattedText::InputState TextView::getIncrementalFormattingInputStat
 	return { lineAndOffset.first, (std::size_t)lineAndOffset.second };
 }
 
+IncrementalFormattedText* TextView::incrementalFormattedText() {
+	return (IncrementalFormattedText*)mFormattedText.get();
+}
+
 void TextView::insertCharacter(Char character) {
 	auto lineAndOffset = getLineAndOffset();
 	mText.insertAt(lineAndOffset.first, (std::size_t)lineAndOffset.second, character);
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
-		((IncrementalFormattedText*)mFormattedText.get())->insertCharacter(getIncrementalFormattingInputState());
+		incrementalFormattedText()->insertCharacter(getIncrementalFormattingInputState());
 	} else {
 		updateFormattedText(getTextViewPort());
 	}
@@ -362,7 +366,7 @@ void TextView::insertLine() {
 	mText.splitLine(lineAndOffset.first, (std::size_t)lineAndOffset.second);
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
-		((IncrementalFormattedText*)mFormattedText.get())->insertLine(getIncrementalFormattingInputState());
+		incrementalFormattedText()->insertLine(getIncrementalFormattingInputState());
 	} else {
 		updateFormattedText(getTextViewPort());
 	}
@@ -382,11 +386,7 @@ void TextView::paste() {
 		auto diffCaretY = 0;
 
 		if (pasteText.numLines() > 1) {
-			mText.insertAt(lineAndOffset.first, (std::size_t)lineAndOffset.second, pasteText.getLine(0));
-			for (std::size_t i = 1; i < pasteText.numLines(); i++) {
-				mText.insertLine(lineAndOffset.first + i - 1, pasteText.getLine(i));
-			}
-
+			mText.insertText(lineAndOffset.first, (std::size_t)lineAndOffset.second, pasteText);
 			diffCaretX = pasteText.getLine(pasteText.numLines() - 1).size();
 			diffCaretY = pasteText.numLines() - 1;
 		} else {
@@ -394,7 +394,7 @@ void TextView::paste() {
 		}
 
 		if (mPerformFormattingType == PerformFormattingType::Incremental) {
-			((IncrementalFormattedText*)mFormattedText.get())->paste(
+			incrementalFormattedText()->paste(
 				getIncrementalFormattingInputState(),
 				pasteText.numLines());
 		} else {
@@ -420,7 +420,7 @@ void TextView::deleteLine(Text::DeleteLineMode mode) {
 	}
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
-		((IncrementalFormattedText*)mFormattedText.get())->deleteLine(getIncrementalFormattingInputState(), mode);
+		incrementalFormattedText()->deleteLine(getIncrementalFormattingInputState(), mode);
 	} else {
 		updateFormattedText(getTextViewPort());
 	}
@@ -445,7 +445,7 @@ void TextView::deleteSelection() {
 	mViewMoved = true;
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
-		((IncrementalFormattedText*)mFormattedText.get())->deleteSelection(
+		incrementalFormattedText()->deleteSelection(
 			getIncrementalFormattingInputState(),
 			textSelection,
 			deleteData);
@@ -458,7 +458,7 @@ void TextView::deleteCharacter(std::size_t lineIndex, std::size_t charIndex) {
 	mText.deleteAt(lineIndex, charIndex);
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
-		((IncrementalFormattedText*)mFormattedText.get())->deleteCharacter(getIncrementalFormattingInputState());
+		incrementalFormattedText()->deleteCharacter(getIncrementalFormattingInputState());
 	} else {
 		updateFormattedText(getTextViewPort());
 	}

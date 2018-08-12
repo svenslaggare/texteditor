@@ -84,40 +84,48 @@ public:
 
 	/**
 	 * Inserts the given character at the given index at the given line
-	 * @param lineNumber The line to insert at
-	 * @param index The index
+	 * @param lineIndex The line to insert at
+	 * @param charIndex The char index
 	 * @param character The character
 	 */
-	void insertAt(std::size_t lineNumber, std::size_t index, Char character);
+	void insertAt(std::size_t lineIndex, std::size_t charIndex, Char character);
 
 	/**
 	 * Inserts the given string at the given index at the given line
-	 * @param lineNumber The line to insert at
-	 * @param index The index
+	 * @param lineIndex The line to insert at
+	 * @param charIndex The char index
 	 * @param str The string to insert
 	 */
-	void insertAt(std::size_t lineNumber, std::size_t index, const String& str);
+	void insertAt(std::size_t lineIndex, std::size_t charIndex, const String& str);
+
+	/**
+	 * Inserts a line after the given line
+	 * @param lineIndex The number of the line
+	 * @param line The line
+	 */
+	void insertLine(std::size_t lineIndex, const String& line);
+
+	/**
+	 * Inserts the given text
+	 * @param lineIndex The line number to start inserting at
+	 * @param charIndex The char index to start inserting at
+	 * @param text The text
+	 */
+	void insertText(std::size_t lineIndex, std::size_t charIndex, const Text& text);
 
 	/**
 	 * Deletes the character at the given index at the given line
-	 * @param lineNumber The line to insert at
-	 * @param index The index
+	 * @param lineIndex The line to insert at
+	 * @param charIndex The index
 	 */
-	void deleteAt(std::size_t lineNumber, std::size_t index);
+	void deleteAt(std::size_t lineIndex, std::size_t charIndex);
 
 	/**
 	 * Splits the given line
 	 * @param lineNumber The line to split
-	 * @param index The index at the line to perform the split
+	 * @param charIndex The index at the line to perform the split
 	 */
-	void splitLine(std::size_t lineNumber, std::size_t index);
-
-	/**
-	 * Inserts a line after the given line
-	 * @param lineNumber The number of the line
-	 * @param line The line
-	 */
-	void insertLine(std::size_t lineNumber, const String& line);
+	void splitLine(std::size_t lineNumber, std::size_t charIndex);
 
 	enum class DeleteLineMode {
 		Start,

@@ -166,6 +166,11 @@ private:
 	IncrementalFormattedText::InputState getIncrementalFormattingInputState();
 
 	/**
+	 * Returns the incremented formatted text
+	 */
+	IncrementalFormattedText* incrementalFormattedText();
+
+	/**
 	 * Inserts the given character
 	 * @param character The character
 	 */

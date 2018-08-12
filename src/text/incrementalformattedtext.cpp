@@ -60,11 +60,11 @@ void IncrementalFormattedText::reformatLine(std::size_t lineIndex) {
 		processLine(stateMachine, mText.getLine(lineIndex));
 
 		std::size_t numFormattedLines = 1;
-		if (formattedLines[0].mayRequireSearch && stateMachine.state() != State::Text) {
-			std::cout << "reformatLine: mult" << std::endl;
+		if (formattedLines.front().mayRequireSearch && stateMachine.state() != State::Text) {
+//			std::cout << "reformatLine: mult" << std::endl;
 			formatUntilStateRestored(stateMachine, mText, lineIndex + 1, numFormattedLines);
 		} else {
-			std::cout << "reformatLine: single" << std::endl;
+//			std::cout << "reformatLine: single" << std::endl;
 		}
 
 		if (!stateMachine.currentFormattedLine().tokens.empty()) {
@@ -82,7 +82,7 @@ void IncrementalFormattedText::reformatLine(std::size_t lineIndex) {
 }
 
 void IncrementalFormattedText::reformatLines(std::size_t startLineIndex, std::size_t endLineIndex) {
-	std::cout << "reformatLines" << std::endl;
+//	std::cout << "reformatLines" << std::endl;
 
 	FormattedLines formattedLines;
 	FormatterStateMachine stateMachine(mFormatMode, mFont, mRenderStyle, mViewPort, formattedLines);
@@ -139,10 +139,7 @@ void IncrementalFormattedText::insertLine(const InputState& inputState) {
 
 void IncrementalFormattedText::paste(const InputState& inputState, std::size_t numLines) {
 	if (numLines > 1) {
-		for (std::size_t i = 0; i < numLines - 1; i++) {
-			mFormattedLines.insert(mFormattedLines.begin() + inputState.lineIndex + i, FormattedLine {});
-		}
-
+		mFormattedLines.insert(mFormattedLines.begin() + inputState.lineIndex, numLines - 1, FormattedLine {});
 		reformatLines(inputState.lineIndex, inputState.lineIndex + numLines - 1);
 
 		for (std::size_t i = inputState.lineIndex; i < mFormattedLines.size(); i++) {

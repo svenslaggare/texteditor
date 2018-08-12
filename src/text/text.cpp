@@ -74,64 +74,77 @@ bool Text::hasChanged(std::size_t& version) const {
 	return false;
 }
 
-void Text::insertAt(std::size_t lineNumber, std::size_t index, Char character) {
+void Text::insertAt(std::size_t lineIndex, std::size_t charIndex, Char character) {
 	auto startTime = Helpers::timeNow();
 	mVersion++;
-	auto& line = mLines.at(lineNumber);
+
+	auto& line = mLines.at(lineIndex);
 	auto maxIndex = (std::size_t)std::max((std::int64_t)line.size(), 0L);
-	index = std::min(index, maxIndex);
-	line.insert(line.begin() + index, character);
+	charIndex = std::min(charIndex, maxIndex);
+	line.insert(line.begin() + charIndex, character);
 
 	std::cout << "Inserted character in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
 }
 
-void Text::insertAt(std::size_t lineNumber, std::size_t index, const String& str) {
+void Text::insertAt(std::size_t lineIndex, std::size_t charIndex, const String& str) {
 	auto startTime = Helpers::timeNow();
 	mVersion++;
-	auto& line = mLines.at(lineNumber);
+
+	auto& line = mLines.at(lineIndex);
 	auto maxIndex = (std::size_t)std::max((std::int64_t)line.size(), 0L);
-	index = std::min(index, maxIndex);
-	line.insert(index, str);
+	charIndex = std::min(charIndex, maxIndex);
+	line.insert(charIndex, str);
 
 	std::cout << "Inserted string in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
 }
 
-void Text::deleteAt(std::size_t lineNumber, std::size_t index) {
+void Text::insertLine(std::size_t lineIndex, const String& line) {
 	auto startTime = Helpers::timeNow();
 	mVersion++;
-	auto& line = mLines.at(lineNumber);
+
+	mLines.insert(mLines.begin() + lineIndex + 1, line);
+	std::cout << "Insert line in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
+}
+
+void Text::insertText(std::size_t lineIndex, std::size_t charIndex, const Text& text) {
+	auto startTime = Helpers::timeNow();
+	mVersion++;
+
+	insertAt(lineIndex, charIndex, text.getLine(0));
+	mLines.insert(mLines.begin() + lineIndex + 1, text.mLines.begin() + 1, text.mLines.end());
+
+	std::cout << "Insert text in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
+}
+
+void Text::deleteAt(std::size_t lineIndex, std::size_t charIndex) {
+	auto startTime = Helpers::timeNow();
+	mVersion++;
+
+	auto& line = mLines.at(lineIndex);
 	auto maxIndex = (std::size_t)std::max((std::int64_t)line.size(), 0L);
-	index = std::min(index, maxIndex);
-	line.erase(line.begin() + index);
+	charIndex = std::min(charIndex, maxIndex);
+	line.erase(line.begin() + charIndex);
 
 	std::cout << "Deleted character in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
 }
 
-void Text::splitLine(std::size_t lineNumber, std::size_t index) {
+void Text::splitLine(std::size_t lineNumber, std::size_t charIndex) {
 	auto startTime = Helpers::timeNow();
 	mVersion++;
 
 	auto& line = mLines.at(lineNumber);
-	auto afterSplit = line.substr(index);
-	line.erase(line.begin() + index, line.end());
+	auto afterSplit = line.substr(charIndex);
+	line.erase(line.begin() + charIndex, line.end());
 	mLines.insert(mLines.begin() + lineNumber + 1, afterSplit);
 
 	std::cout << "Split line in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
 }
 
-void Text::insertLine(std::size_t lineNumber, const String& line) {
-	auto startTime = Helpers::timeNow();
-	mVersion++;
-
-	mLines.insert(mLines.begin() + lineNumber + 1, line);
-	std::cout << "Insert line in " << Helpers::durationMilliseconds(Helpers::timeNow(), startTime) << " ms" << std::endl;
-}
-
 Text::DeleteLineDiff Text::deleteLine(std::size_t lineNumber, DeleteLineMode mode) {
 	auto startTime = Helpers::timeNow();
 	mVersion++;
-	DeleteLineDiff diff;
 
+	DeleteLineDiff diff;
 	if (mode == DeleteLineMode::Start) {
 		if (lineNumber > 0) {
 			diff.caretX = mLines.at(lineNumber - 1).length();
@@ -153,8 +166,8 @@ Text::DeleteLineDiff Text::deleteLine(std::size_t lineNumber, DeleteLineMode mod
 Text::DeleteSelectionData Text::deleteSelection(const TextSelection& textSelection) {
 	auto startTime = Helpers::timeNow();
 	mVersion++;
-	DeleteSelectionData deleteSelectionData;
 
+	DeleteSelectionData deleteSelectionData;
 	if (textSelection.startY == textSelection.endY) {
 		auto& line = mLines.at(textSelection.startY);
 		mLines.at(textSelection.startY) = line.substr(0, textSelection.startX) + line.substr(std::min(textSelection.endX + 1, line.size()));
