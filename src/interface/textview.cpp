@@ -170,6 +170,7 @@ void TextView::moveCaretX(std::int64_t diff) {
 
 			if (numLines() > 0) {
 				mInputState.caretPositionX = (std::int64_t)currentLineLength();
+				diff = 2;
 			} else {
 				mInputState.caretPositionX = 0;
 			}
@@ -191,6 +192,15 @@ void TextView::moveCaretX(std::int64_t diff) {
 
 	if (caretScreenPositionX > mInputState.viewPosition.x) {
 		mInputState.viewPosition.x -= diff * charWidth;
+	}
+
+	if (mInputState.viewPosition.x > 0) {
+		mInputState.viewPosition.x = 0;
+	}
+
+	auto maxViewPositionX = std::max(currentLineWidth() - viewPort.width, 0.0f);
+	if (mInputState.viewPosition.x < -maxViewPositionX) {
+		mInputState.viewPosition.x = -maxViewPositionX;
 	}
 }
 
@@ -253,6 +263,10 @@ void TextView::moveCaretY(std::int64_t diff) {
 
 	clampViewPositionY(caretScreenPositionY);
 	mInputState.caretPositionX = std::min((std::size_t)mInputState.caretPositionX, currentLineLength());
+
+	if (currentLineWidth() > -viewPort.width) {
+		mInputState.viewPosition.x = 0;
+	}
 }
 
 void TextView::moveViewY(float diff) {
@@ -264,7 +278,7 @@ void TextView::moveViewY(float diff) {
 		mInputState.viewPosition.y = 0;
 	}
 
-	auto maxViewHeight = std::ceil((numLines() * mFont.lineHeight() - viewPort.height) / mFont.lineHeight()) * mFont.lineHeight();
+	auto maxViewHeight = std::ceil((numLines() * mFont.lineHeight() - viewPort.height) / mFont.lineHeight()) * mFont.lineHeight() + 200;
 	if (mInputState.viewPosition.y < -maxViewHeight) {
 		mInputState.viewPosition.y = -maxViewHeight;
 	}
@@ -406,6 +420,9 @@ void TextView::paste() {
 		}
 
 		moveCaretX(diffCaretX);
+//		for (std::size_t i = 0; i < diffCaretX; i++) {
+//			moveCaretX(1);
+//		}
 	}
 }
 
