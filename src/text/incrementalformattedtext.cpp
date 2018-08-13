@@ -82,7 +82,20 @@ void IncrementalFormattedText::reformatLine(std::size_t lineIndex) {
 }
 
 void IncrementalFormattedText::reformatLines(std::size_t startLineIndex, std::size_t endLineIndex) {
-//	std::cout << "reformatLines" << std::endl;
+	// The line before may include multi-line parsing, include if the reformatting if needed
+	if (startLineIndex >= 1) {
+		auto prevLineIndex = startLineIndex - 1;
+		auto& currentFormattedLine = mFormattedLines[prevLineIndex];
+		auto& startSearchLine = mFormattedLines[(std::size_t)(prevLineIndex + currentFormattedLine.reformatStartSearch)];
+
+		auto reformatStart = startSearchLine.number;
+		auto reformatEnd = startSearchLine.number + startSearchLine.reformatAmount;
+
+		if (reformatStart != reformatEnd) {
+			startLineIndex = std::min(startLineIndex, reformatStart);
+			endLineIndex = std::max(endLineIndex, reformatEnd);
+		}
+	}
 
 	FormattedLines formattedLines;
 	FormatterStateMachine stateMachine(mFormatMode, mFont, mRenderStyle, mViewPort, formattedLines);

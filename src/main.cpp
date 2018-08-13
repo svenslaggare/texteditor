@@ -115,8 +115,8 @@ int main(int argc, char* argv[]) {
 //	Text text(Helpers::readFileAsText<String>("data/lorem.txt"));
 //	Text text(Helpers::readFileAsText<String>("data/lorem2.txt"));
 //	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
-//	Text text(Helpers::readFileAsText<String>("data/test.cpp"));
-	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
+	Text text(Helpers::readFileAsText<String>("data/test.cpp"));
+//	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
 //	Text text({});
 
 	auto startTime = Helpers::timeNow();
