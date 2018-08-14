@@ -46,14 +46,20 @@ namespace {
 	}
 }
 
-void IncrementalFormattedText::reformatLine(std::size_t lineIndex) {
+std::pair<std::size_t, std::size_t> IncrementalFormattedText::findReformatSearchRegion(std::size_t lineIndex) {
 	auto& currentFormattedLine = mFormattedLines[lineIndex];
 	auto& startSearchLine = mFormattedLines[(std::size_t)(lineIndex + currentFormattedLine.reformatStartSearch)];
 
 	auto reformatStart = startSearchLine.number;
 	auto reformatEnd = startSearchLine.number + startSearchLine.reformatAmount;
 
-	if (reformatStart == reformatEnd) {
+	return std::make_pair(reformatStart, reformatEnd);
+}
+
+void IncrementalFormattedText::reformatLine(std::size_t lineIndex) {
+	auto reformatRegion = findReformatSearchRegion(lineIndex);
+
+	if (reformatRegion.first == reformatRegion.second) {
 		FormattedLines formattedLines;
 		FormatterStateMachine stateMachine(mFormatMode, mFont, mRenderStyle, mViewPort, formattedLines);
 
@@ -61,39 +67,32 @@ void IncrementalFormattedText::reformatLine(std::size_t lineIndex) {
 
 		std::size_t numFormattedLines = 1;
 		if (formattedLines.front().mayRequireSearch && stateMachine.state() != State::Text) {
-//			std::cout << "reformatLine: mult" << std::endl;
 			formatUntilStateRestored(stateMachine, mText, lineIndex + 1, numFormattedLines);
-		} else {
-//			std::cout << "reformatLine: single" << std::endl;
 		}
 
 		if (!stateMachine.currentFormattedLine().tokens.empty()) {
 			stateMachine.createNewLine();
 		}
 
+//		std::cout << numFormattedLines << std::endl;
 		for (std::size_t i = 0; i < numFormattedLines; i++) {
 			auto formattedLine = formattedLines[i];
 			formattedLine.number = lineIndex + i;
 			mFormattedLines[lineIndex + i] = std::move(formattedLine);
 		}
 	} else {
-		reformatLines(reformatStart, reformatEnd);
+		reformatLines(reformatRegion.first, reformatRegion.second);
 	}
 }
 
 void IncrementalFormattedText::reformatLines(std::size_t startLineIndex, std::size_t endLineIndex) {
-	// The line before may include multi-line parsing, include if the reformatting if needed
+	// The line before may include multi-line parsing, include in the reformatting if needed
 	if (startLineIndex >= 1) {
-		auto prevLineIndex = startLineIndex - 1;
-		auto& currentFormattedLine = mFormattedLines[prevLineIndex];
-		auto& startSearchLine = mFormattedLines[(std::size_t)(prevLineIndex + currentFormattedLine.reformatStartSearch)];
+		auto reformatRegion = findReformatSearchRegion(startLineIndex - 1);
 
-		auto reformatStart = startSearchLine.number;
-		auto reformatEnd = startSearchLine.number + startSearchLine.reformatAmount;
-
-		if (reformatStart != reformatEnd) {
-			startLineIndex = std::min(startLineIndex, reformatStart);
-			endLineIndex = std::max(endLineIndex, reformatEnd);
+		if (reformatRegion.first != reformatRegion.second) {
+			startLineIndex = std::min(startLineIndex, reformatRegion.first);
+			endLineIndex = std::max(endLineIndex, reformatRegion.second);
 		}
 	}
 
@@ -121,6 +120,7 @@ void IncrementalFormattedText::reformatLines(std::size_t startLineIndex, std::si
 		stateMachine.createNewLine();
 	}
 
+//	std::cout << numFormattedLines << std::endl;
 	for (std::size_t i = 0; i < numFormattedLines; i++) {
 		auto formattedLine = formattedLines[i];
 		formattedLine.number = startLineIndex + i;
@@ -134,10 +134,12 @@ void IncrementalFormattedText::reformatCharacterAction(const IncrementalFormatte
 }
 
 void IncrementalFormattedText::insertCharacter(const InputState& inputState) {
+	Timing timing("insertCharacter: ");
 	reformatCharacterAction(inputState);
 }
 
 void IncrementalFormattedText::insertLine(const InputState& inputState) {
+	Timing timing("insertLine: ");
 	FormattedLine newFormattedLine;
 	mTextFormatter.formatLine(mFont, mRenderStyle, mViewPort, mText.getLine(inputState.lineIndex + 1), newFormattedLine);
 	mFormattedLines.insert(mFormattedLines.begin() + inputState.lineIndex + 1, newFormattedLine);
@@ -151,6 +153,7 @@ void IncrementalFormattedText::insertLine(const InputState& inputState) {
 }
 
 void IncrementalFormattedText::paste(const InputState& inputState, std::size_t numLines) {
+	Timing timing("paste: ");
 	if (numLines > 1) {
 		mFormattedLines.insert(mFormattedLines.begin() + inputState.lineIndex, numLines - 1, FormattedLine {});
 		reformatLines(inputState.lineIndex, inputState.lineIndex + numLines - 1);
@@ -166,6 +169,7 @@ void IncrementalFormattedText::paste(const InputState& inputState, std::size_t n
 }
 
 void IncrementalFormattedText::deleteLine(const InputState& inputState, Text::DeleteLineMode mode) {
+	Timing timing("deleteLine: ");
 	auto lineNumber = inputState.lineIndex;
 
 	if (mode == Text::DeleteLineMode::Start) {
@@ -193,6 +197,7 @@ void IncrementalFormattedText::deleteLine(const InputState& inputState, Text::De
 }
 
 void IncrementalFormattedText::deleteSelection(const InputState& inputState, const TextSelection& textSelection, const Text::DeleteSelectionData& deleteData) {
+	Timing timing("deleteSelection: ");
 	if (textSelection.startY == textSelection.endY) {
 		reformatLine(textSelection.startY);
 	} else {
@@ -212,5 +217,6 @@ void IncrementalFormattedText::deleteSelection(const InputState& inputState, con
 }
 
 void IncrementalFormattedText::deleteCharacter(const InputState& inputState) {
+	Timing timing("deleteCharacter: ");
 	reformatCharacterAction(inputState);
 }

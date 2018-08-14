@@ -77,7 +77,7 @@ public:
 	State state() const;
 	const FormattedLine& currentFormattedLine() const;
 
-	void createNewLine(bool resetState = true, bool continueWithLine = false);
+	void createNewLine(bool resetState = true, bool continueWithLine = false, bool allowKeyword = true);
 	void process(Char current);
 };
 

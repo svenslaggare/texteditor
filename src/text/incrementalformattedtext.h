@@ -32,6 +32,12 @@ private:
 	FormattedLines mFormattedLines;
 
 	/**
+	 * Finds the reformat search region for the given line
+	 * @param lineIndex The line index
+	 */
+	std::pair<std::size_t, std::size_t> findReformatSearchRegion(std::size_t lineIndex);
+
+	/**
 	 * Reformats the given line index
 	 * @param lineIndex The index of the line
 	 */

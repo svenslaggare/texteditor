@@ -110,13 +110,16 @@ void FormatterStateMachine::tryMakeKeyword() {
 	}
 }
 
-void FormatterStateMachine::createNewLine(bool resetState, bool continueWithLine) {
+void FormatterStateMachine::createNewLine(bool resetState, bool continueWithLine, bool allowKeyword) {
 	if (mMode == FormatMode::Code) {
 		if (mState == State::BlockComment) {
 			mCurrentFormattedLine.reformatStartSearch = (std::int64_t)mBlockCommentStart - (std::int64_t)mLineNumber;
 		}
 
-		tryMakeKeyword();
+		if (allowKeyword) {
+			tryMakeKeyword();
+		}
+
 		mCurrentFormattedLine.addToken(std::move(mCurrentToken));
 
 		if (resetState) {
@@ -297,7 +300,7 @@ void FormatterStateMachine::handleBlockComment(Char current, float advanceX) {
 	switch (current) {
 		case '\n':
 			updateStartFormatInformation();
-			createNewLine(false, false);
+			createNewLine(false, false, false);
 			break;
 		case '\t':
 			handleTab();
