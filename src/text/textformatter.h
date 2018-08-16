@@ -32,68 +32,10 @@ enum class State {
 using FormattedLines = std::vector<FormattedLine>;
 
 /**
- * The internal formatter state machine
- */
-class FormatterStateMachine {
-private:
-	FormatMode mMode;
-	const Font& mFont;
-	const RenderStyle& mRenderStyle;
-	const RenderViewPort& mViewPort;
-	FormattedLines& mFormattedLines;
-
-	std::size_t mLineNumber = 0;
-	std::size_t mBlockCommentStartIndex = 0;
-
-	State mState = State::Text;
-	bool mIsWhitespace = false;
-	bool mIsEscaped = false;
-
-	FormattedLine mCurrentFormattedLine;
-	Token mCurrentToken;
-	float mCurrentWidth = 0.0f;
-
-	CircularBuffer<Char> mPrevCharBuffer;
-
-	String mLineCommentStart = u"//";
-	String mBlockCommentStart = u"/*";
-	String mBlockCommentEnd = u"*/";
-
-	String getPrevChars(std::size_t size);
-
-	void removeChars(std::size_t count);
-
-	void tryMakeKeyword();
-	void newToken(TokenType type = TokenType::Text, bool makeKeyword = false);
-	void addChar(Char character, float advanceX);
-
-	void handleTab();
-
-	void handleText(Char current, float advanceX);
-	void handleString(Char current, float advanceX);
-	void handleComment(Char current, float advanceX);
-	void handleBlockComment(Char current, float advanceX);
-
-	void handleCodeMode(Char current, float advanceX);
-	void handleTextMode(Char current, float advanceX);
-public:
-	FormatterStateMachine(FormatMode mode,
-						  const Font& font,
-						  const RenderStyle& renderStyle,
-						  const RenderViewPort& viewPort,
-						  FormattedLines& formattedLines);
-
-	State state() const;
-	const FormattedLine& currentFormattedLine() const;
-
-	void createNewLine(bool resetState = true, bool continueWithLine = false, bool allowKeyword = true);
-	void process(Char current);
-};
-
-/**
  * The rules formatting
  */
 class TextFormatterRules {
+public:
 	virtual ~TextFormatterRules() = default;
 
 	/**
@@ -119,17 +61,83 @@ class TextFormatterRules {
 };
 
 /**
+ * The internal formatter state machine
+ */
+class FormatterStateMachine {
+private:
+	FormatMode mMode;
+	const TextFormatterRules& mTextFormatterRules;
+
+	const Font& mFont;
+	const RenderStyle& mRenderStyle;
+	const RenderViewPort& mViewPort;
+	FormattedLines& mFormattedLines;
+
+	std::size_t mLineNumber = 0;
+	std::size_t mBlockCommentStartIndex = 0;
+
+	State mState = State::Text;
+	bool mIsWhitespace = false;
+	bool mIsEscaped = false;
+
+	FormattedLine mCurrentFormattedLine;
+	Token mCurrentToken;
+	float mCurrentWidth = 0.0f;
+
+	CircularBuffer<Char> mPrevCharBuffer;
+
+	String getPrevChars(std::size_t size);
+
+	void removeChars(std::size_t count);
+
+	bool isPrevCharsMatch(const String& string, Char current, String& prevChars);
+
+	void tryMakeKeyword();
+	void newToken(TokenType type = TokenType::Text, bool makeKeyword = false);
+	void addChar(Char character, float advanceX);
+
+	void handleTab();
+
+	void handleText(Char current, float advanceX);
+	void handleString(Char current, float advanceX);
+	void handleComment(Char current, float advanceX);
+	void handleBlockComment(Char current, float advanceX);
+
+	void handleCodeMode(Char current, float advanceX);
+	void handleTextMode(Char current, float advanceX);
+public:
+	FormatterStateMachine(FormatMode mode,
+						  const TextFormatterRules& textFormatterRules,
+						  const Font& font,
+						  const RenderStyle& renderStyle,
+						  const RenderViewPort& viewPort,
+						  FormattedLines& formattedLines);
+
+	State state() const;
+	const FormattedLine& currentFormattedLine() const;
+
+	void createNewLine(bool resetState = true, bool continueWithLine = false, bool allowKeyword = true);
+	void process(Char current);
+};
+
+/**
  * Represents a text formatter
  */
 class TextFormatter {
 private:
 	FormatMode mMode;
+	std::unique_ptr<TextFormatterRules> mRules;
 public:
 	/**
 	 * Creates a new text formatter
 	 * @param mode The format mode
 	 */
 	explicit TextFormatter(FormatMode mode = FormatMode::Code);
+
+	/**
+	 * Returns the formatting rules
+	 */
+	const TextFormatterRules& rules() const;
 
 	/**
 	 * Formats the given line

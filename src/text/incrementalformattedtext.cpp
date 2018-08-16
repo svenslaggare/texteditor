@@ -61,7 +61,7 @@ void IncrementalFormattedText::reformatLine(std::size_t lineIndex) {
 
 	if (reformatRegion.first == reformatRegion.second) {
 		FormattedLines formattedLines;
-		FormatterStateMachine stateMachine(mFormatMode, mFont, mRenderStyle, mViewPort, formattedLines);
+		FormatterStateMachine stateMachine(mFormatMode, mTextFormatter.rules(), mFont, mRenderStyle, mViewPort, formattedLines);
 
 		processLine(stateMachine, mText.getLine(lineIndex));
 
@@ -97,7 +97,7 @@ void IncrementalFormattedText::reformatLines(std::size_t startLineIndex, std::si
 	}
 
 	FormattedLines formattedLines;
-	FormatterStateMachine stateMachine(mFormatMode, mFont, mRenderStyle, mViewPort, formattedLines);
+	FormatterStateMachine stateMachine(mFormatMode, mTextFormatter.rules(), mFont, mRenderStyle, mViewPort, formattedLines);
 
 	std::size_t numFormattedLines = 0;
 	bool continueFormatting = false;

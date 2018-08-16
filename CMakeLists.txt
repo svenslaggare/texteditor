@@ -57,7 +57,9 @@ set(SOURCE_FILES
     src/text/formattedtext.cpp
     src/text/formattedtext.h
     src/text/formatters/cppformatter.cpp
-    src/text/formatters/cppformatter.h src/text/helpers.cpp src/text/helpers.h)
+    src/text/formatters/cppformatter.h
+    src/text/helpers.cpp
+    src/text/helpers.h)
 
 #add_compile_options(-O3 -march=native -mtune=native)
 

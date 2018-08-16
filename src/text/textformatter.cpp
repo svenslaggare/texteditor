@@ -11,84 +11,16 @@
 #include <unordered_set>
 
 #include "../external/tsl/array_set.h"
-
-namespace {
-	class KeywordList {
-	private:
-//		std::unordered_set<String> mKeywords;
-		tsl::array_set<Char> mKeywords;
-		std::size_t mMaxLength = 0;
-	public:
-		explicit KeywordList(const std::unordered_set<std::string>& keywords) {
-			for (auto& keyword : keywords) {
-				auto keywordStr = Helpers::fromString<String>(keyword);
-				mKeywords.insert(keywordStr);
-				mMaxLength = std::max(mMaxLength, keyword.size());
-			}
-		}
-
-		inline bool isKeyword(const String& str) const {
-			if (str.size() <= mMaxLength) {
-				return mKeywords.count(str) > 0;
-			}
-
-			return false;
-		}
-	};
-
-	const KeywordList keywords { {
-		"if",
-		"else",
-		"while",
-		"for",
-		"case",
-		"switch",
-		"break",
-		"default",
-		"return",
-		"assert",
-
-		"inline",
-		"static",
-
-		"struct",
-		"class",
-		"enum",
-		"namespace",
-
-		"public",
-		"private",
-
-		"auto",
-		"void",
-		"const",
-		"unsigned",
-		"char",
-		"int",
-		"short",
-		"long",
-		"float",
-		"double",
-		"bool",
-		"nullptr",
-
-		"#include",
-		"#if",
-		"#define",
-		"#define",
-		"#ifdef",
-		"#infdef",
-		"#endif",
-		"#else",
-	} };
-}
+#include "formatters/cppformatter.h"
 
 FormatterStateMachine::FormatterStateMachine(FormatMode mode,
+											 const TextFormatterRules& textFormatterRules,
 											 const Font& font,
 											 const RenderStyle& renderStyle,
 											 const RenderViewPort& viewPort,
 											 FormattedLines& formattedLines)
 	: mMode(mode),
+	  mTextFormatterRules(textFormatterRules),
 	  mFont(font),
 	  mRenderStyle(renderStyle),
 	  mViewPort(viewPort),
@@ -136,8 +68,19 @@ void FormatterStateMachine::removeChars(std::size_t count) {
 	}
 }
 
+bool FormatterStateMachine::isPrevCharsMatch(const String& string, Char current, String& prevChars) {
+	if (current == string.back()) {
+		prevChars = getPrevChars(string.size() - 1);
+		if (prevChars == string.substr(0, string.size() - 1)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void FormatterStateMachine::tryMakeKeyword() {
-	if (keywords.isKeyword(mCurrentToken.text)) {
+	if (mTextFormatterRules.isKeyword(mCurrentToken.text)) {
 		mCurrentToken.type = TokenType::Keyword;
 	}
 }
@@ -245,45 +188,42 @@ void FormatterStateMachine::handleText(Char current, float advanceX) {
 			newToken(TokenType::Text, true);
 			break;
 		default: {
-			if (current == mLineCommentStart.back()) {
-				auto prevChars = getPrevChars(mLineCommentStart.size() - 1);
-				if (prevChars == mLineCommentStart.substr(0, mLineCommentStart.size() - 1)) {
-					// Remove prevChars from last token
-					removeChars(prevChars.size());
+			String prevChars;
+			if (isPrevCharsMatch(mTextFormatterRules.lineCommentStart(), current, prevChars)) {
+				// Remove prevChars from last token
+				removeChars(prevChars.size());
 
-					newToken(TokenType::Text, true);
-					for (auto& prevCurrent : prevChars) {
-						addChar(prevCurrent, mRenderStyle.getAdvanceX(mFont, prevCurrent));
-					}
-					addChar(current, advanceX);
-
-					mState = State::Comment;
-					mCurrentToken.type = TokenType::Comment;
-					break;
+				newToken(TokenType::Text, true);
+				for (auto& prevCurrent : prevChars) {
+					addChar(prevCurrent, mRenderStyle.getAdvanceX(mFont, prevCurrent));
 				}
+				addChar(current, advanceX);
+
+				mState = State::Comment;
+				mCurrentToken.type = TokenType::Comment;
+				break;
 			}
 
-			if (current == mBlockCommentStart.back()) {
-				auto prevChars = getPrevChars(mBlockCommentStart.size() - 1);
-				if (prevChars == mBlockCommentStart.substr(0, mBlockCommentStart.size() - 1)) {
-					// Remove prevChars from last token
-					removeChars(prevChars.size());
+			if (isPrevCharsMatch(mTextFormatterRules.blockCommentStart(), current, prevChars)) {
+				// Remove prevChars from last token
+				removeChars(prevChars.size());
 
-					newToken(TokenType::Text, true);
-					for (auto& prevCurrent : prevChars) {
-						addChar(prevCurrent, mRenderStyle.getAdvanceX(mFont, prevCurrent));
-					}
-					addChar(current, advanceX);
-
-					mState = State::BlockComment;
-					mCurrentToken.type = TokenType::Comment;
-					mCurrentFormattedLine.mayRequireSearch = true;
-					mBlockCommentStartIndex = mLineNumber;
-				} else {
-					newToken(TokenType::Text, true);
-					addChar(current, advanceX);
-					newToken(TokenType::Text, true);
+				newToken(TokenType::Text, true);
+				for (auto& prevCurrent : prevChars) {
+					addChar(prevCurrent, mRenderStyle.getAdvanceX(mFont, prevCurrent));
 				}
+				addChar(current, advanceX);
+
+				mState = State::BlockComment;
+				mCurrentToken.type = TokenType::Comment;
+				mCurrentFormattedLine.mayRequireSearch = true;
+				mBlockCommentStartIndex = mLineNumber;
+
+				break;
+			} else if (current == mTextFormatterRules.blockCommentStart().back()) {
+				newToken(TokenType::Text, true);
+				addChar(current, advanceX);
+				newToken(TokenType::Text, true);
 
 				break;
 			}
@@ -357,18 +297,16 @@ void FormatterStateMachine::handleBlockComment(Char current, float advanceX) {
 			handleTab();
 			break;
 		default:
-			if (current == mBlockCommentEnd.back()) {
-				auto prevChars = getPrevChars(mBlockCommentEnd.size() - 1);
-				if (prevChars == mBlockCommentEnd.substr(0, mBlockCommentEnd.size() - 1)) {
-					updateStartFormatInformation();
-					mCurrentFormattedLine.reformatStartSearch = (std::int64_t)mBlockCommentStartIndex - (std::int64_t)mLineNumber;
-					mCurrentFormattedLine.mayRequireSearch = true;
+			String prevChars;
+			if (isPrevCharsMatch(mTextFormatterRules.blockCommentEnd(), current, prevChars)) {
+				updateStartFormatInformation();
+				mCurrentFormattedLine.reformatStartSearch = (std::int64_t)mBlockCommentStartIndex - (std::int64_t)mLineNumber;
+				mCurrentFormattedLine.mayRequireSearch = true;
 
-					addChar(current, advanceX);
-					newToken(TokenType::Text);
-					mState = State::Text;
-					break;
-				}
+				addChar(current, advanceX);
+				newToken(TokenType::Text);
+				mState = State::Text;
+				break;
 			}
 
 			addChar(current, advanceX);
@@ -425,8 +363,13 @@ void FormatterStateMachine::process(Char current) {
 }
 
 TextFormatter::TextFormatter(FormatMode mode)
-	: mMode(mode) {
+	: mMode(mode),
+	  mRules(std::make_unique<CppTextFormatterRules>()) {
 
+}
+
+const TextFormatterRules& TextFormatter::rules() const {
+	return *mRules;
 }
 
 void TextFormatter::formatLine(const Font& font,
@@ -435,7 +378,7 @@ void TextFormatter::formatLine(const Font& font,
 							   const String& line,
 							   FormattedLine& formattedLine) {
 	FormattedLines formattedLines;
-	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedLines);
+	FormatterStateMachine stateMachine(mMode, *mRules, font, renderStyle, viewPort, formattedLines);
 
 	for (auto current : line) {
 		stateMachine.process(current);
@@ -455,7 +398,7 @@ void TextFormatter::formatLines(const Font& font,
 								const RenderViewPort& viewPort,
 								const std::vector<const String*>& lines,
 								FormattedLines& formattedLines) {
-	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedLines);
+	FormatterStateMachine stateMachine(mMode, *mRules, font, renderStyle, viewPort, formattedLines);
 
 	for (auto& line : lines) {
 		for (auto current : *line) {
@@ -475,7 +418,7 @@ void TextFormatter::format(const Font& font,
 						   const RenderViewPort& viewPort,
 						   const Text& text,
 						   FormattedLines& formattedLines) {
-	FormatterStateMachine stateMachine(mMode, font, renderStyle, viewPort, formattedLines);
+	FormatterStateMachine stateMachine(mMode, *mRules, font, renderStyle, viewPort, formattedLines);
 
 	text.forEachLine([&](const String& line) {
 		for (auto& current : line) {

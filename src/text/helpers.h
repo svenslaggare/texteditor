@@ -2,6 +2,9 @@
 #include <vector>
 #include <functional>
 #include <iostream>
+#include <unordered_set>
+#include "../external/tsl/array_set.h"
+#include "text.h"
 
 /**
  * Represents a circular buffer
@@ -61,3 +64,25 @@ void CircularBuffer<T>::forEachElement(std::function<void(const T&)> apply, std:
 		}
 	}
 }
+
+/**
+ * Represents a keyword list
+ */
+class KeywordList {
+private:
+	tsl::array_set<Char> mKeywords;
+	std::size_t mMaxLength = 0;
+public:
+	/**
+	 * Creates a new keyword list
+	 * @param keywords The keywords
+	 */
+	explicit KeywordList(const std::unordered_set<std::string>& keywords);
+
+	/**
+	 * Indicates if the given string is a keyword
+	 * @param str The string
+	 * @return
+	 */
+	bool isKeyword(const String& str) const;
+};
