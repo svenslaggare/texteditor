@@ -12,6 +12,7 @@
 
 #include "../external/tsl/array_set.h"
 #include "formatters/cppformatter.h"
+#include "formatters/pythonformatter.h"
 
 FormatterStateMachine::FormatterStateMachine(FormatMode mode,
 											 const TextFormatterRules& textFormatterRules,
@@ -183,6 +184,7 @@ void FormatterStateMachine::handleText(Char current, float advanceX) {
 		case '(':
 		case ')':
 		case '&':
+		case ':':
 			newToken(TokenType::Text, true);
 			addChar(current, advanceX);
 			newToken(TokenType::Text, true);
@@ -364,7 +366,7 @@ void FormatterStateMachine::process(Char current) {
 
 TextFormatter::TextFormatter(FormatMode mode)
 	: mMode(mode),
-	  mRules(std::make_unique<CppTextFormatterRules>()) {
+	  mRules(std::make_unique<PythonTextFormatterRules>()) {
 
 }
 

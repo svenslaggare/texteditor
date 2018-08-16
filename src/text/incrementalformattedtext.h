@@ -84,6 +84,12 @@ public:
 	virtual const FormattedLine& getLine(std::size_t index) const override;
 
 	/**
+	 * Creates a state machine
+	 * @param formattedLines The formatted lines
+	 */
+	FormatterStateMachine createStateMachine(FormattedLines& formattedLines);
+
+	/**
 	 * Inserts the given character
 	 * @param inputState The input state
 	 */

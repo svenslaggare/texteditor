@@ -87,9 +87,7 @@ private:
 	CircularBuffer<Char> mPrevCharBuffer;
 
 	String getPrevChars(std::size_t size);
-
 	void removeChars(std::size_t count);
-
 	bool isPrevCharsMatch(const String& string, Char current, String& prevChars);
 
 	void tryMakeKeyword();

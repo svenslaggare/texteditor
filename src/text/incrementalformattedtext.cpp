@@ -25,6 +25,10 @@ const FormattedLine& IncrementalFormattedText::getLine(std::size_t index) const 
 	return mFormattedLines[index];
 }
 
+FormatterStateMachine IncrementalFormattedText::createStateMachine(FormattedLines& formattedLines) {
+	return FormatterStateMachine(mFormatMode, mTextFormatter.rules(), mFont, mRenderStyle, mViewPort, formattedLines);
+}
+
 namespace {
 	void processLine(FormatterStateMachine& stateMachine, const String& line) {
 		for (auto current : line) {
@@ -61,7 +65,7 @@ void IncrementalFormattedText::reformatLine(std::size_t lineIndex) {
 
 	if (reformatRegion.first == reformatRegion.second) {
 		FormattedLines formattedLines;
-		FormatterStateMachine stateMachine(mFormatMode, mTextFormatter.rules(), mFont, mRenderStyle, mViewPort, formattedLines);
+		auto stateMachine = createStateMachine(formattedLines);
 
 		processLine(stateMachine, mText.getLine(lineIndex));
 
@@ -97,7 +101,7 @@ void IncrementalFormattedText::reformatLines(std::size_t startLineIndex, std::si
 	}
 
 	FormattedLines formattedLines;
-	FormatterStateMachine stateMachine(mFormatMode, mTextFormatter.rules(), mFont, mRenderStyle, mViewPort, formattedLines);
+	auto stateMachine = createStateMachine(formattedLines);
 
 	std::size_t numFormattedLines = 0;
 	bool continueFormatting = false;

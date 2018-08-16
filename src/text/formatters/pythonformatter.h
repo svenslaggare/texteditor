@@ -2,17 +2,17 @@
 #include "../textformatter.h"
 
 /**
- * Defines C++ formatting rules
+ * Defines Python formatting rules
  */
-class CppTextFormatterRules : public TextFormatterRules {
+class PythonTextFormatterRules : public TextFormatterRules {
 private:
 	KeywordList mKeywords;
-	String mLineCommentStart = u"//";
-	String mBlockCommentStart = u"/*";
-	String mBlockCommentEnd = u"*/";
+	String mLineCommentStart = u"#";
+	String mBlockCommentStart = u"\"\"\"";
+	String mBlockCommentEnd = u"\"\"\"";
 public:
-	CppTextFormatterRules();
-	virtual ~CppTextFormatterRules() override = default;
+	PythonTextFormatterRules();
+	virtual ~PythonTextFormatterRules() override = default;
 
 	virtual bool isKeyword(const String& string) const override;
 

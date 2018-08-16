@@ -58,6 +58,8 @@ set(SOURCE_FILES
     src/text/formattedtext.h
     src/text/formatters/cppformatter.cpp
     src/text/formatters/cppformatter.h
+    src/text/formatters/pythonformatter.cpp
+    src/text/formatters/pythonformatter.h
     src/text/helpers.cpp
     src/text/helpers.h)
 
