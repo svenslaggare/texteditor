@@ -28,6 +28,7 @@
 #include "rendering/texturerender.h"
 #include "text/textformatter.h"
 #include "rendering/shaderprogram.h"
+#include "text/helpers.h"
 
 RenderViewPort getViewPort(const WindowState& windowState) {
 	return RenderViewPort { glm::vec2(0, 0), (float)windowState.width(), (float)windowState.height() };
@@ -114,9 +115,9 @@ int main(int argc, char* argv[]) {
 
 //	Text text(Helpers::readFileAsText<String>("data/lorem.txt"));
 //	Text text(Helpers::readFileAsText<String>("data/lorem2.txt"));
-//	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
+	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
 //	Text text(Helpers::readFileAsText<String>("data/test.cpp"));
-	Text text(Helpers::readFileAsText<String>("data/circle.py"));
+//	Text text(Helpers::readFileAsText<String>("data/circle.py"));
 //	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
 //	Text text({});
 

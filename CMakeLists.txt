@@ -53,7 +53,11 @@ set(SOURCE_FILES
     src/rendering/shaderprogram.h
     src/rendering/shaderprogram.cpp
     src/text/incrementalformattedtext.cpp
-    src/text/incrementalformattedtext.h src/text/formattedtext.cpp src/text/formattedtext.h)
+    src/text/incrementalformattedtext.h
+    src/text/formattedtext.cpp
+    src/text/formattedtext.h
+    src/text/formatters/cppformatter.cpp
+    src/text/formatters/cppformatter.h src/text/helpers.cpp src/text/helpers.h)
 
 #add_compile_options(-O3 -march=native -mtune=native)
 

@@ -92,7 +92,8 @@ FormatterStateMachine::FormatterStateMachine(FormatMode mode,
 	  mFont(font),
 	  mRenderStyle(renderStyle),
 	  mViewPort(viewPort),
-	  mFormattedLines(formattedLines) {
+	  mFormattedLines(formattedLines),
+	  mPrevCharBuffer(5) {
 
 }
 
@@ -104,6 +105,37 @@ const FormattedLine& FormatterStateMachine::currentFormattedLine() const {
 	return mCurrentFormattedLine;
 }
 
+void FormatterStateMachine::removeChars(std::size_t count) {
+	std::size_t toRemoveLeft = count;
+	Token* currentToken = &mCurrentToken;
+	auto currentTokenIterator = mCurrentFormattedLine.tokens.end();
+
+	while (toRemoveLeft > 0) {
+		auto thisRemoved = std::min(toRemoveLeft, currentToken->text.size());
+
+		if (thisRemoved > 0) {
+			currentToken->text.erase(
+				currentToken->text.begin() + currentToken->text.size() - thisRemoved,
+				currentToken->text.end());
+		}
+
+		toRemoveLeft -= thisRemoved;
+		if (toRemoveLeft > 0) {
+			if (currentTokenIterator == mCurrentFormattedLine.tokens.begin()) {
+				break;
+			}
+
+			if (currentTokenIterator == mCurrentFormattedLine.tokens.end()) {
+				currentTokenIterator = mCurrentFormattedLine.tokens.end() - 1;
+			} else {
+				currentTokenIterator--;
+			}
+
+			currentToken = &(*currentTokenIterator);
+		}
+	}
+}
+
 void FormatterStateMachine::tryMakeKeyword() {
 	if (keywords.isKeyword(mCurrentToken.text)) {
 		mCurrentToken.type = TokenType::Keyword;
@@ -113,7 +145,7 @@ void FormatterStateMachine::tryMakeKeyword() {
 void FormatterStateMachine::createNewLine(bool resetState, bool continueWithLine, bool allowKeyword) {
 	if (mMode == FormatMode::Code) {
 		if (mState == State::BlockComment) {
-			mCurrentFormattedLine.reformatStartSearch = (std::int64_t)mBlockCommentStart - (std::int64_t)mLineNumber;
+			mCurrentFormattedLine.reformatStartSearch = (std::int64_t)mBlockCommentStartIndex - (std::int64_t)mLineNumber;
 		}
 
 		if (allowKeyword) {
@@ -175,6 +207,15 @@ void FormatterStateMachine::handleTab() {
 	addChar('\t', mRenderStyle.getAdvanceX(mFont, '\t'));
 }
 
+String FormatterStateMachine::getPrevChars(std::size_t size) {
+	String prevChars;
+	mPrevCharBuffer.forEachElement([&](auto& value) {
+		prevChars += value;
+	}, size);
+
+	return prevChars;
+}
+
 void FormatterStateMachine::handleText(Char current, float advanceX) {
 	switch (current) {
 		case '\n':
@@ -190,22 +231,6 @@ void FormatterStateMachine::handleText(Char current, float advanceX) {
 			mState = State::String;
 			addChar(current, advanceX);
 			break;
-		case '/':
-			if (mPrevChar == '/') {
-				// Remove '/' from last token
-				mCurrentToken.text.erase(mCurrentToken.text.begin() + mCurrentToken.text.size() - 1, mCurrentToken.text.end());
-
-				newToken(TokenType::Text, true);
-				for (int i = 0; i < 2; i++) {
-					addChar(current, advanceX);
-				}
-
-				mState = State::Comment;
-				mCurrentToken.type = TokenType::Comment;
-			} else {
-				addChar(current, advanceX);
-			}
-			break;
 		case ' ':
 			newToken(TokenType::Text, true);
 			addChar(current, advanceX);
@@ -219,25 +244,50 @@ void FormatterStateMachine::handleText(Char current, float advanceX) {
 			addChar(current, advanceX);
 			newToken(TokenType::Text, true);
 			break;
-		case '*':
-			if (mPrevChar == '/') {
-				// Remove '/' from last token
-				mCurrentToken.text.erase(mCurrentToken.text.begin() + mCurrentToken.text.size() - 1, mCurrentToken.text.end());
+		default: {
+			if (current == mLineCommentStart.back()) {
+				auto prevChars = getPrevChars(mLineCommentStart.size() - 1);
+				if (prevChars == mLineCommentStart.substr(0, mLineCommentStart.size() - 1)) {
+					// Remove prevChars from last token
+					removeChars(prevChars.size());
 
-				newToken(TokenType::Text, true);
-				addChar(mPrevChar, advanceX);
-				addChar(current, advanceX);
-				mState = State::BlockComment;
-				mCurrentToken.type = TokenType::Comment;
-				mCurrentFormattedLine.mayRequireSearch = true;
-				mBlockCommentStart = mLineNumber;
-			} else {
-				newToken(TokenType::Text, true);
-				addChar(current, advanceX);
-				newToken(TokenType::Text, true);
+					newToken(TokenType::Text, true);
+					for (auto& prevCurrent : prevChars) {
+						addChar(prevCurrent, mRenderStyle.getAdvanceX(mFont, prevCurrent));
+					}
+					addChar(current, advanceX);
+
+					mState = State::Comment;
+					mCurrentToken.type = TokenType::Comment;
+					break;
+				}
 			}
-			break;
-		default:
+
+			if (current == mBlockCommentStart.back()) {
+				auto prevChars = getPrevChars(mBlockCommentStart.size() - 1);
+				if (prevChars == mBlockCommentStart.substr(0, mBlockCommentStart.size() - 1)) {
+					// Remove prevChars from last token
+					removeChars(prevChars.size());
+
+					newToken(TokenType::Text, true);
+					for (auto& prevCurrent : prevChars) {
+						addChar(prevCurrent, mRenderStyle.getAdvanceX(mFont, prevCurrent));
+					}
+					addChar(current, advanceX);
+
+					mState = State::BlockComment;
+					mCurrentToken.type = TokenType::Comment;
+					mCurrentFormattedLine.mayRequireSearch = true;
+					mBlockCommentStartIndex = mLineNumber;
+				} else {
+					newToken(TokenType::Text, true);
+					addChar(current, advanceX);
+					newToken(TokenType::Text, true);
+				}
+
+				break;
+			}
+
 			if (mIsWhitespace) {
 				newToken();
 				mIsWhitespace = false;
@@ -245,6 +295,7 @@ void FormatterStateMachine::handleText(Char current, float advanceX) {
 
 			addChar(current, advanceX);
 			break;
+		}
 	}
 }
 
@@ -293,7 +344,7 @@ void FormatterStateMachine::handleComment(Char current, float advanceX) {
 void FormatterStateMachine::handleBlockComment(Char current, float advanceX) {
 	auto updateStartFormatInformation = [&]() {
 		if (!mFormattedLines.empty()) {
-			mFormattedLines[mBlockCommentStart].reformatAmount =	(std::int64_t) mLineNumber - (std::int64_t) mBlockCommentStart;
+			mFormattedLines[mBlockCommentStartIndex].reformatAmount = (std::int64_t)mLineNumber - (std::int64_t)mBlockCommentStartIndex;
 		}
 	};
 
@@ -305,20 +356,21 @@ void FormatterStateMachine::handleBlockComment(Char current, float advanceX) {
 		case '\t':
 			handleTab();
 			break;
-		case '/':
-			if (mPrevChar == '*') {
-				updateStartFormatInformation();
-				mCurrentFormattedLine.reformatStartSearch = (std::int64_t)mBlockCommentStart - (std::int64_t)mLineNumber;
-				mCurrentFormattedLine.mayRequireSearch = true;
-
-				addChar(current, advanceX);
-				newToken(TokenType::Text);
-				mState = State::Text;
-			} else {
-				addChar(current, advanceX);
-			}
-			break;
 		default:
+			if (current == mBlockCommentEnd.back()) {
+				auto prevChars = getPrevChars(mBlockCommentEnd.size() - 1);
+				if (prevChars == mBlockCommentEnd.substr(0, mBlockCommentEnd.size() - 1)) {
+					updateStartFormatInformation();
+					mCurrentFormattedLine.reformatStartSearch = (std::int64_t)mBlockCommentStartIndex - (std::int64_t)mLineNumber;
+					mCurrentFormattedLine.mayRequireSearch = true;
+
+					addChar(current, advanceX);
+					newToken(TokenType::Text);
+					mState = State::Text;
+					break;
+				}
+			}
+
 			addChar(current, advanceX);
 			break;
 	}
@@ -369,7 +421,7 @@ void FormatterStateMachine::process(Char current) {
 			break;
 	}
 
-	mPrevChar = current;
+	mPrevCharBuffer.add(current);
 }
 
 TextFormatter::TextFormatter(FormatMode mode)

@@ -1,6 +1,7 @@
 #pragma once
 #include "text.h"
 #include "formattedtext.h"
+#include "helpers.h"
 
 #include <string>
 #include <vector>
@@ -42,7 +43,7 @@ private:
 	FormattedLines& mFormattedLines;
 
 	std::size_t mLineNumber = 0;
-	std::size_t mBlockCommentStart = 0;
+	std::size_t mBlockCommentStartIndex = 0;
 
 	State mState = State::Text;
 	bool mIsWhitespace = false;
@@ -52,7 +53,15 @@ private:
 	Token mCurrentToken;
 	float mCurrentWidth = 0.0f;
 
-	Char mPrevChar = '\0';
+	CircularBuffer<Char> mPrevCharBuffer;
+
+	String mLineCommentStart = u"//";
+	String mBlockCommentStart = u"/*";
+	String mBlockCommentEnd = u"*/";
+
+	String getPrevChars(std::size_t size);
+
+	void removeChars(std::size_t count);
 
 	void tryMakeKeyword();
 	void newToken(TokenType type = TokenType::Text, bool makeKeyword = false);
@@ -81,6 +90,33 @@ public:
 	void process(Char current);
 };
 
+/**
+ * The rules formatting
+ */
+class TextFormatterRules {
+	virtual ~TextFormatterRules() = default;
+
+	/**
+	 * Indicates if the given string is a keyword
+	 * @param string The string
+	 */
+	virtual bool isKeyword(const String& string) const = 0;
+
+	/**
+	 * The start of a line comment
+	 */
+	virtual const String& lineCommentStart() const = 0;
+
+	/**
+	 * The start of a block comment
+	 */
+	virtual const String& blockCommentStart() const = 0;
+
+	/**
+	 * The end of a block comment
+	 */
+	virtual const String& blockCommentEnd() const = 0;
+};
 
 /**
  * Represents a text formatter
