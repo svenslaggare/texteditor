@@ -29,6 +29,10 @@ FormatterStateMachine IncrementalFormattedText::createStateMachine(FormattedLine
 }
 
 namespace {
+	bool isNormalState(const FormatterStateMachine& stateMachine) {
+		return stateMachine.state() == State::Text || stateMachine.state() == State::Number;
+	}
+
 	void processLine(FormatterStateMachine& stateMachine, const String& line) {
 		for (auto current : line) {
 			stateMachine.process(current);
@@ -42,7 +46,7 @@ namespace {
 			processLine(stateMachine, text.getLine(i));
 			numFormattedLines++;
 
-			if (stateMachine.state() == State::Text) {
+			if (isNormalState(stateMachine)) {
 				break;
 			}
 		}
@@ -69,7 +73,7 @@ void IncrementalFormattedText::reformatLine(std::size_t lineIndex) {
 		processLine(stateMachine, mText.getLine(lineIndex));
 
 		std::size_t numFormattedLines = 1;
-		if (formattedLines.front().mayRequireSearch && stateMachine.state() != State::Text) {
+		if (formattedLines.front().mayRequireSearch && !isNormalState(stateMachine)) {
 			formatUntilStateRestored(stateMachine, mText, lineIndex + 1, numFormattedLines);
 		}
 
@@ -109,7 +113,7 @@ void IncrementalFormattedText::reformatLines(std::size_t startLineIndex, std::si
 		numFormattedLines++;
 
 		if (i == endLineIndex) {
-			if (stateMachine.state() != State::Text) {
+			if (!isNormalState(stateMachine)) {
 				continueFormatting = true;
 			}
 		}

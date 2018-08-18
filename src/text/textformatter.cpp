@@ -134,7 +134,10 @@ void FormatterStateMachine::newToken(TokenType type, bool makeKeyword) {
 		tryMakeKeyword();
 	}
 
-	mCurrentFormattedLine.addToken(std::move(mCurrentToken));
+	if (!(mCurrentToken.type == TokenType::Text && mCurrentToken.text.empty())) {
+		mCurrentFormattedLine.addToken(std::move(mCurrentToken));
+	}
+
 	mCurrentToken = {};
 	mCurrentToken.type = type;
 }
@@ -197,6 +200,14 @@ void FormatterStateMachine::handleText(Char current, float advanceX) {
 		newToken(TokenType::String);
 		mState = State::String;
 		addChar(current, advanceX);
+		return;
+	}
+
+	if (std::isdigit(current) && (mCurrentToken.text.empty() || mIsWhitespace)) {
+		newToken(TokenType::Number);
+		mState = State::Number;
+		addChar(current, advanceX);
+		mIsWhitespace = false;
 		return;
 	}
 
@@ -265,6 +276,18 @@ void FormatterStateMachine::handleString(Char current, float advanceX) {
 	}
 }
 
+void FormatterStateMachine::handleNumber(Char current, float advanceX) {
+	if (std::isdigit(current) || current == '.') {
+		addChar(current, advanceX);
+	} else if (current == '\n') {
+		createNewLine();
+	} else {
+		newToken();
+		mState = State::Text;
+		addChar(current, advanceX);
+	}
+}
+
 void FormatterStateMachine::handleComment(Char current, float advanceX) {
 	switch (current) {
 		case '\n':
@@ -319,6 +342,9 @@ void FormatterStateMachine::handleCodeMode(Char current, float advanceX) {
 			break;
 		case State::String:
 			handleString(current, advanceX);
+			break;
+		case State::Number:
+			handleNumber(current, advanceX);
 			break;
 		case State::Comment:
 			handleComment(current, advanceX);

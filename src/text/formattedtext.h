@@ -8,6 +8,7 @@
  */
 enum class TokenType : std::uint8_t {
 	Text,
+	Number,
 	Keyword,
 	String,
 	Comment

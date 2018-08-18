@@ -21,10 +21,10 @@ enum class FormatMode : std::uint8_t {
 	Code
 };
 
-
 enum class State {
 	Text,
 	String,
+	Number,
 	Comment,
 	BlockComment,
 };
@@ -109,6 +109,7 @@ private:
 
 	void handleText(Char current, float advanceX);
 	void handleString(Char current, float advanceX);
+	void handleNumber(Char current, float advanceX);
 	void handleComment(Char current, float advanceX);
 	void handleBlockComment(Char current, float advanceX);
 

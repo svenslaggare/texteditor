@@ -9,6 +9,8 @@ glm::vec3 RenderStyle::getColor(const Token& token) const {
 			return keywordColor;
 		case TokenType::String:
 			return stringColor;
+		case TokenType::Number:
+			return numberColor;
 		case TokenType::Text:
 			return textColor;
 		case TokenType::Comment:
