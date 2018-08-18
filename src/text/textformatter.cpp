@@ -222,11 +222,12 @@ void FormatterStateMachine::handleText(Char current, float advanceX) {
 				mBlockCommentStartIndex = mLineNumber;
 
 				break;
-			} else if (current == mTextFormatterRules.blockCommentStart().back()) {
+			}
+
+			if (current == '*') {
 				newToken(TokenType::Text, true);
 				addChar(current, advanceX);
 				newToken(TokenType::Text, true);
-
 				break;
 			}
 
@@ -366,7 +367,7 @@ void FormatterStateMachine::process(Char current) {
 
 TextFormatter::TextFormatter(FormatMode mode)
 	: mMode(mode),
-	  mRules(std::make_unique<PythonTextFormatterRules>()) {
+	  mRules(std::make_unique<CppTextFormatterRules>()) {
 
 }
 
