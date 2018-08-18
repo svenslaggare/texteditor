@@ -58,6 +58,12 @@ public:
 	 * The end of a block comment
 	 */
 	virtual const String& blockCommentEnd() const = 0;
+
+	/**
+	 * Indicates if the given char is a string delimiter
+	 * @param current The character 
+	 */
+	virtual bool isStringDelimiter(Char current) const = 0;
 };
 
 /**
@@ -79,6 +85,7 @@ private:
 	State mState = State::Text;
 	bool mIsWhitespace = false;
 	bool mIsEscaped = false;
+	Char mStringStartDelimiter;
 
 	FormattedLine mCurrentFormattedLine;
 	Token mCurrentToken;

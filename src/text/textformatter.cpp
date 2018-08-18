@@ -161,6 +161,47 @@ String FormatterStateMachine::getPrevChars(std::size_t size) {
 }
 
 void FormatterStateMachine::handleText(Char current, float advanceX) {
+	String prevChars;
+	if (isPrevCharsMatch(mTextFormatterRules.lineCommentStart(), current, prevChars)) {
+		// Remove prevChars from previous tokens
+		removeChars(prevChars.size());
+
+		newToken(TokenType::Text, true);
+		for (auto& prevCurrent : prevChars) {
+			addChar(prevCurrent, mRenderStyle.getAdvanceX(mFont, prevCurrent));
+		}
+		addChar(current, advanceX);
+
+		mState = State::Comment;
+		mCurrentToken.type = TokenType::Comment;
+		return;
+	}
+
+	if (isPrevCharsMatch(mTextFormatterRules.blockCommentStart(), current, prevChars)) {
+		// Remove prevChars from previous tokens
+		removeChars(prevChars.size());
+
+		newToken(TokenType::Text, true);
+		for (auto& prevCurrent : prevChars) {
+			addChar(prevCurrent, mRenderStyle.getAdvanceX(mFont, prevCurrent));
+		}
+		addChar(current, advanceX);
+
+		mState = State::BlockComment;
+		mCurrentToken.type = TokenType::Comment;
+		mCurrentFormattedLine.mayRequireSearch = true;
+		mBlockCommentStartIndex = mLineNumber;
+		return;
+	}
+
+	if (mTextFormatterRules.isStringDelimiter(current)) {
+		mStringStartDelimiter = current;
+		newToken(TokenType::String);
+		mState = State::String;
+		addChar(current, advanceX);
+		return;
+	}
+
 	switch (current) {
 		case '\n':
 			createNewLine();
@@ -169,11 +210,6 @@ void FormatterStateMachine::handleText(Char current, float advanceX) {
 			newToken(TokenType::Text, true);
 			handleTab();
 			mIsWhitespace = true;
-			break;
-		case '"':
-			newToken(TokenType::String);
-			mState = State::String;
-			addChar(current, advanceX);
 			break;
 		case ' ':
 			newToken(TokenType::Text, true);
@@ -185,52 +221,12 @@ void FormatterStateMachine::handleText(Char current, float advanceX) {
 		case ')':
 		case '&':
 		case ':':
+		case '*':
 			newToken(TokenType::Text, true);
 			addChar(current, advanceX);
 			newToken(TokenType::Text, true);
 			break;
-		default: {
-			String prevChars;
-			if (isPrevCharsMatch(mTextFormatterRules.lineCommentStart(), current, prevChars)) {
-				// Remove prevChars from last token
-				removeChars(prevChars.size());
-
-				newToken(TokenType::Text, true);
-				for (auto& prevCurrent : prevChars) {
-					addChar(prevCurrent, mRenderStyle.getAdvanceX(mFont, prevCurrent));
-				}
-				addChar(current, advanceX);
-
-				mState = State::Comment;
-				mCurrentToken.type = TokenType::Comment;
-				break;
-			}
-
-			if (isPrevCharsMatch(mTextFormatterRules.blockCommentStart(), current, prevChars)) {
-				// Remove prevChars from last token
-				removeChars(prevChars.size());
-
-				newToken(TokenType::Text, true);
-				for (auto& prevCurrent : prevChars) {
-					addChar(prevCurrent, mRenderStyle.getAdvanceX(mFont, prevCurrent));
-				}
-				addChar(current, advanceX);
-
-				mState = State::BlockComment;
-				mCurrentToken.type = TokenType::Comment;
-				mCurrentFormattedLine.mayRequireSearch = true;
-				mBlockCommentStartIndex = mLineNumber;
-
-				break;
-			}
-
-			if (current == '*') {
-				newToken(TokenType::Text, true);
-				addChar(current, advanceX);
-				newToken(TokenType::Text, true);
-				break;
-			}
-
+		default:
 			if (mIsWhitespace) {
 				newToken();
 				mIsWhitespace = false;
@@ -238,27 +234,28 @@ void FormatterStateMachine::handleText(Char current, float advanceX) {
 
 			addChar(current, advanceX);
 			break;
-		}
 	}
 }
 
 void FormatterStateMachine::handleString(Char current, float advanceX) {
+	if (current == mStringStartDelimiter) {
+		if (!mIsEscaped) {
+			mState = State::Text;
+			addChar(current, advanceX);
+			newToken();
+		} else {
+			addChar(current, advanceX);
+		}
+
+		return;
+	}
+
 	switch (current) {
 		case '\n':
 			createNewLine();
 			break;
 		case '\t':
 			handleTab();
-			break;
-		case '"':
-			if (!mIsEscaped) {
-				mState = State::Text;
-				addChar(current, advanceX);
-				newToken();
-			} else {
-				addChar(current, advanceX);
-			}
-
 			break;
 		case '\\':
 			addChar(current, advanceX);

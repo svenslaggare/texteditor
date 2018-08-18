@@ -763,6 +763,8 @@ void TextView::updateFormattedText(const RenderViewPort& viewPort) {
 					<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) << " ms"
 					<< std::endl;
 
+				formattedBenchmark(mFont, mFormatMode, mRenderStyle, viewPort, mText);
+
 				mInputState.caretPositionY = std::min(mInputState.caretPositionY, (std::int64_t) numLines() - 1);
 				break;
 			}

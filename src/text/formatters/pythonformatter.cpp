@@ -42,3 +42,7 @@ const String& PythonTextFormatterRules::blockCommentStart() const {
 const String& PythonTextFormatterRules::blockCommentEnd() const {
 	return mBlockCommentEnd;
 }
+
+bool PythonTextFormatterRules::isStringDelimiter(Char current) const {
+	return current == '"' || current == '\'';
+}

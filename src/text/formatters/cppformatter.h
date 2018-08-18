@@ -19,4 +19,5 @@ public:
 	virtual const String& lineCommentStart() const override;
 	virtual const String& blockCommentStart() const override;
 	virtual const String& blockCommentEnd() const override;
+	virtual bool isStringDelimiter(Char current) const override;
 };

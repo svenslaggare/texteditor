@@ -64,3 +64,7 @@ const String& CppTextFormatterRules::blockCommentStart() const {
 const String& CppTextFormatterRules::blockCommentEnd() const {
 	return mBlockCommentEnd;
 }
+
+bool CppTextFormatterRules::isStringDelimiter(Char current) const {
+	return current == '"' || current == '\'';
+}
