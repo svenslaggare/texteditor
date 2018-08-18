@@ -2,16 +2,15 @@
 #include "../helpers.h"
 
 IncrementalFormattedText::IncrementalFormattedText(const Font& font,
+												   TextFormatter& textFormatter,
 												   const RenderStyle& renderStyle,
 												   const RenderViewPort& viewPort,
 												   Text& text,
-												   std::size_t& textVersion,
-												   FormatMode formatMode)
+												   std::size_t& textVersion)
 	: mFont(font),
 	  mRenderStyle(renderStyle),
 	  mViewPort(viewPort),
-	  mFormatMode(formatMode),
-	  mTextFormatter(formatMode),
+	  mTextFormatter(textFormatter),
 	  mText(text),
 	  mTextVersion(textVersion) {
 	mTextFormatter.format(mFont, mRenderStyle, mViewPort, mText, mFormattedLines);
@@ -26,7 +25,7 @@ const FormattedLine& IncrementalFormattedText::getLine(std::size_t index) const 
 }
 
 FormatterStateMachine IncrementalFormattedText::createStateMachine(FormattedLines& formattedLines) {
-	return FormatterStateMachine(mFormatMode, mTextFormatter.rules(), mFont, mRenderStyle, mViewPort, formattedLines);
+	return mTextFormatter.createStateMachine(mFont, mRenderStyle, mViewPort, formattedLines);
 }
 
 namespace {

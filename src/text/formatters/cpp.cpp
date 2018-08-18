@@ -1,6 +1,6 @@
-#include "cppformatter.h"
+#include "cpp.h"
 
-CppTextFormatterRules::CppTextFormatterRules()
+CppFormatterRules::CppFormatterRules()
 	: mKeywords { {
 		  "if",
 		  "else",
@@ -49,22 +49,26 @@ CppTextFormatterRules::CppTextFormatterRules()
 
 }
 
-bool CppTextFormatterRules::isKeyword(const String& string) const {
+FormatMode CppFormatterRules::mode() const {
+	return FormatMode::Code;
+}
+
+bool CppFormatterRules::isKeyword(const String& string) const {
 	return mKeywords.isKeyword(string);
 }
 
-const String& CppTextFormatterRules::lineCommentStart() const {
+const String& CppFormatterRules::lineCommentStart() const {
 	return mLineCommentStart;
 }
 
-const String& CppTextFormatterRules::blockCommentStart() const {
+const String& CppFormatterRules::blockCommentStart() const {
 	return mBlockCommentStart;
 }
 
-const String& CppTextFormatterRules::blockCommentEnd() const {
+const String& CppFormatterRules::blockCommentEnd() const {
 	return mBlockCommentEnd;
 }
 
-bool CppTextFormatterRules::isStringDelimiter(Char current) const {
+bool CppFormatterRules::isStringDelimiter(Char current) const {
 	return current == '"' || current == '\'';
 }

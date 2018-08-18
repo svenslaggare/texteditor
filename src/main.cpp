@@ -29,6 +29,8 @@
 #include "text/textformatter.h"
 #include "rendering/shaderprogram.h"
 #include "text/helpers.h"
+#include "text/formatters/cpp.h"
+#include "text/formatters/python.h"
 
 RenderViewPort getViewPort(const WindowState& windowState) {
 	return RenderViewPort { glm::vec2(0, 0), (float)windowState.width(), (float)windowState.height() };
@@ -115,9 +117,9 @@ int main(int argc, char* argv[]) {
 
 //	Text text(Helpers::readFileAsText<String>("data/lorem.txt"));
 //	Text text(Helpers::readFileAsText<String>("data/lorem2.txt"));
-	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
+//	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
 //	Text text(Helpers::readFileAsText<String>("data/test.cpp"));
-//	Text text(Helpers::readFileAsText<String>("data/circle.py"));
+	Text text(Helpers::readFileAsText<String>("data/circle.py"));
 	// Text text(Helpers::readFileAsText<String>("src/main.cpp"));
 //	Text text({});
 
@@ -134,7 +136,14 @@ int main(int argc, char* argv[]) {
 	RenderStyle renderStyle;
 	auto renderViewPort = getViewPort(windowState);
 
-	TextView codeTextView(window, font, FormatMode::Code, renderViewPort, renderStyle, text);
+	TextView codeTextView(
+		window,
+		font,
+		std::make_unique<PythonFormatterRules>(),
+		renderViewPort,
+		renderStyle,
+		text);
+
 	TextureRender frameBufferRender(passthroughProgram.id());
 
 	while (!glfwWindowShouldClose(window)) {

@@ -72,7 +72,6 @@ private:
 	CharacterInputType mCharacterInputType = CharacterInputType::Native;
 
 	const Font& mFont;
-	FormatMode mFormatMode;
 	TextFormatter mTextFormatter;
 	const RenderStyle& mRenderStyle;
 	TextMetrics mTextMetrics;
@@ -301,14 +300,14 @@ public:
 	 * Creates a new text view
 	 * @param window The window
 	 * @param font The font
-	 * @param formatMode The format mode
+	 * @param rules The formatting rules
 	 * @param viewPort The view port
 	 * @param renderStyle The render style
 	 * @param text The text
 	 */
 	TextView(GLFWwindow* window,
 			 const Font& font,
-			 FormatMode formatMode,
+			 std::unique_ptr<FormatterRules> rules,
 			 const RenderViewPort& viewPort,
 			 const RenderStyle& renderStyle,
 			 Text& text);

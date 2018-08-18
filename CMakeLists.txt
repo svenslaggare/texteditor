@@ -56,10 +56,12 @@ set(SOURCE_FILES
     src/text/incrementalformattedtext.h
     src/text/formattedtext.cpp
     src/text/formattedtext.h
-    src/text/formatters/cppformatter.cpp
-    src/text/formatters/cppformatter.h
-    src/text/formatters/pythonformatter.cpp
-    src/text/formatters/pythonformatter.h
+    src/text/formatters/cpp.cpp
+    src/text/formatters/cpp.h
+    src/text/formatters/python.cpp
+    src/text/formatters/python.h
+    src/text/formatters/text.cpp
+    src/text/formatters/text.h
     src/text/helpers.cpp
     src/text/helpers.h)
 

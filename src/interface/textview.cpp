@@ -30,14 +30,13 @@ namespace {
 
 TextView::TextView(GLFWwindow* window,
 				   const Font& font,
-				   FormatMode formatMode,
+				   std::unique_ptr<FormatterRules> rules,
 				   const RenderViewPort& viewPort,
 				   const RenderStyle& renderStyle,
 				   Text& text)
 	: mWindow(window),
 	  mFont(font),
-	  mFormatMode(formatMode),
-	  mTextFormatter(mFormatMode),
+	  mTextFormatter(std::move(rules)),
 	  mRenderStyle(renderStyle),
 	  mTextMetrics(mFont, mRenderStyle),
 	  mViewPort(viewPort),
@@ -706,8 +705,7 @@ glm::vec2 TextView::getDrawPosition() const {
 }
 
 namespace {
-	void formattedBenchmark(const Font& font, FormatMode formatMode, const RenderStyle& renderStyle, const RenderViewPort& viewPort, const Text& text) {
-		TextFormatter textFormatter(formatMode);
+	void formattedBenchmark(const Font& font, TextFormatter& textFormatter, const RenderStyle& renderStyle, const RenderViewPort& viewPort, const Text& text) {
 		for (int i = 0; i < 3; i++) {
 			FormattedLines formattedLines;
 			textFormatter.format(font, renderStyle, viewPort, text, formattedLines);
@@ -757,13 +755,13 @@ void TextView::updateFormattedText(const RenderViewPort& viewPort) {
 			}
 			case PerformFormattingType::Incremental: {
 				auto t0 = Helpers::timeNow();
-				mFormattedText = std::make_unique<IncrementalFormattedText>(mFont, mRenderStyle, mViewPort, mText, mTextVersion, mFormatMode);
+				mFormattedText = std::make_unique<IncrementalFormattedText>(mFont, mTextFormatter, mRenderStyle, mViewPort, mText, mTextVersion);
 				std::cout
 					<< "Formatted text (lines = " << numLines() << ") in "
 					<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) << " ms"
 					<< std::endl;
 
-				formattedBenchmark(mFont, mFormatMode, mRenderStyle, viewPort, mText);
+//				formattedBenchmark(mFont, mTextFormatter, mRenderStyle, viewPort, mText);
 
 				mInputState.caretPositionY = std::min(mInputState.caretPositionY, (std::int64_t) numLines() - 1);
 				break;

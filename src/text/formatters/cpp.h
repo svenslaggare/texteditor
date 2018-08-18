@@ -4,15 +4,17 @@
 /**
  * Defines C++ formatting rules
  */
-class CppTextFormatterRules : public TextFormatterRules {
+class CppFormatterRules : public FormatterRules {
 private:
 	KeywordList mKeywords;
 	String mLineCommentStart = u"//";
 	String mBlockCommentStart = u"/*";
 	String mBlockCommentEnd = u"*/";
 public:
-	CppTextFormatterRules();
-	virtual ~CppTextFormatterRules() override = default;
+	CppFormatterRules();
+	virtual ~CppFormatterRules() override = default;
+
+	virtual FormatMode mode() const override;
 
 	virtual bool isKeyword(const String& string) const override;
 

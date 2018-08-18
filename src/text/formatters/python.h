@@ -4,15 +4,17 @@
 /**
  * Defines Python formatting rules
  */
-class PythonTextFormatterRules : public TextFormatterRules {
+class PythonFormatterRules : public FormatterRules {
 private:
 	KeywordList mKeywords;
 	String mLineCommentStart = u"#";
 	String mBlockCommentStart = u"\"\"\"";
 	String mBlockCommentEnd = u"\"\"\"";
 public:
-	PythonTextFormatterRules();
-	virtual ~PythonTextFormatterRules() override = default;
+	PythonFormatterRules();
+	virtual ~PythonFormatterRules() override = default;
+
+	virtual FormatMode mode() const override;
 
 	virtual bool isKeyword(const String& string) const override;
 

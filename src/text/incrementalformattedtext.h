@@ -25,7 +25,7 @@ private:
 	const RenderViewPort& mViewPort;
 
 	FormatMode mFormatMode;
-	TextFormatter mTextFormatter;
+	TextFormatter& mTextFormatter;
 
 	Text& mText;
 	std::size_t& mTextVersion;
@@ -59,6 +59,7 @@ public:
 	/**
 	 * Creates a new incremental formatted text for the given text
 	 * @param font The font
+	 * @param textFormatter The text formatter
 	 * @param renderStyle The render style
 	 * @param viewPort The view port
 	 * @param text The text
@@ -66,11 +67,11 @@ public:
 	 * @param formatMode The format mode
 	 */
 	explicit IncrementalFormattedText(const Font& font,
+									  TextFormatter& textFormatter,
 									  const RenderStyle& renderStyle,
 									  const RenderViewPort& viewPort,
 									  Text& text,
-									  std::size_t& textVersion,
-									  FormatMode formatMode);
+									  std::size_t& textVersion);
 
 	/**
 	 * Returns the number of lines

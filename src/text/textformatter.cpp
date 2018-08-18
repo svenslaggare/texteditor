@@ -11,17 +11,15 @@
 #include <unordered_set>
 
 #include "../external/tsl/array_set.h"
-#include "formatters/cppformatter.h"
-#include "formatters/pythonformatter.h"
+#include "formatters/cpp.h"
+#include "formatters/python.h"
 
-FormatterStateMachine::FormatterStateMachine(FormatMode mode,
-											 const TextFormatterRules& textFormatterRules,
+FormatterStateMachine::FormatterStateMachine(const FormatterRules& textFormatterRules,
 											 const Font& font,
 											 const RenderStyle& renderStyle,
 											 const RenderViewPort& viewPort,
 											 FormattedLines& formattedLines)
-	: mMode(mode),
-	  mTextFormatterRules(textFormatterRules),
+	: mRules(textFormatterRules),
 	  mFont(font),
 	  mRenderStyle(renderStyle),
 	  mViewPort(viewPort),
@@ -81,13 +79,13 @@ bool FormatterStateMachine::isPrevCharsMatch(const String& string, Char current,
 }
 
 void FormatterStateMachine::tryMakeKeyword() {
-	if (mTextFormatterRules.isKeyword(mCurrentToken.text)) {
+	if (mRules.isKeyword(mCurrentToken.text)) {
 		mCurrentToken.type = TokenType::Keyword;
 	}
 }
 
 void FormatterStateMachine::createNewLine(bool resetState, bool continueWithLine, bool allowKeyword) {
-	if (mMode == FormatMode::Code) {
+	if (mRules.mode() == FormatMode::Code) {
 		if (mState == State::BlockComment) {
 			mCurrentFormattedLine.reformatStartSearch = (std::int64_t)mBlockCommentStartIndex - (std::int64_t)mLineNumber;
 		}
@@ -162,7 +160,7 @@ String FormatterStateMachine::getPrevChars(std::size_t size) {
 
 void FormatterStateMachine::handleText(Char current, float advanceX) {
 	String prevChars;
-	if (isPrevCharsMatch(mTextFormatterRules.lineCommentStart(), current, prevChars)) {
+	if (isPrevCharsMatch(mRules.lineCommentStart(), current, prevChars)) {
 		// Remove prevChars from previous tokens
 		removeChars(prevChars.size());
 
@@ -177,7 +175,7 @@ void FormatterStateMachine::handleText(Char current, float advanceX) {
 		return;
 	}
 
-	if (isPrevCharsMatch(mTextFormatterRules.blockCommentStart(), current, prevChars)) {
+	if (isPrevCharsMatch(mRules.blockCommentStart(), current, prevChars)) {
 		// Remove prevChars from previous tokens
 		removeChars(prevChars.size());
 
@@ -194,7 +192,7 @@ void FormatterStateMachine::handleText(Char current, float advanceX) {
 		return;
 	}
 
-	if (mTextFormatterRules.isStringDelimiter(current)) {
+	if (mRules.isStringDelimiter(current)) {
 		mStringStartDelimiter = current;
 		newToken(TokenType::String);
 		mState = State::String;
@@ -298,7 +296,7 @@ void FormatterStateMachine::handleBlockComment(Char current, float advanceX) {
 			break;
 		default:
 			String prevChars;
-			if (isPrevCharsMatch(mTextFormatterRules.blockCommentEnd(), current, prevChars)) {
+			if (isPrevCharsMatch(mRules.blockCommentEnd(), current, prevChars)) {
 				updateStartFormatInformation();
 				mCurrentFormattedLine.reformatStartSearch = (std::int64_t)mBlockCommentStartIndex - (std::int64_t)mLineNumber;
 				mCurrentFormattedLine.mayRequireSearch = true;
@@ -350,7 +348,7 @@ void FormatterStateMachine::process(Char current) {
 		}
 	}
 
-	switch (mMode) {
+	switch (mRules.mode()) {
 		case FormatMode::Text:
 			handleTextMode(current, advanceX);
 			break;
@@ -362,14 +360,20 @@ void FormatterStateMachine::process(Char current) {
 	mPrevCharBuffer.add(current);
 }
 
-TextFormatter::TextFormatter(FormatMode mode)
-	: mMode(mode),
-	  mRules(std::make_unique<CppTextFormatterRules>()) {
+TextFormatter::TextFormatter(std::unique_ptr<FormatterRules> rules)
+	: mRules(std::move(rules)) {
 
 }
 
-const TextFormatterRules& TextFormatter::rules() const {
+const FormatterRules& TextFormatter::rules() const {
 	return *mRules;
+}
+
+FormatterStateMachine TextFormatter::createStateMachine(const Font& font,
+														const RenderStyle& renderStyle,
+														const RenderViewPort& viewPort,
+														FormattedLines& formattedLines) {
+	return FormatterStateMachine(rules(), font, renderStyle, viewPort, formattedLines);
 }
 
 void TextFormatter::formatLine(const Font& font,
@@ -378,7 +382,7 @@ void TextFormatter::formatLine(const Font& font,
 							   const String& line,
 							   FormattedLine& formattedLine) {
 	FormattedLines formattedLines;
-	FormatterStateMachine stateMachine(mMode, *mRules, font, renderStyle, viewPort, formattedLines);
+	FormatterStateMachine stateMachine(*mRules, font, renderStyle, viewPort, formattedLines);
 
 	for (auto current : line) {
 		stateMachine.process(current);
@@ -398,7 +402,7 @@ void TextFormatter::formatLines(const Font& font,
 								const RenderViewPort& viewPort,
 								const std::vector<const String*>& lines,
 								FormattedLines& formattedLines) {
-	FormatterStateMachine stateMachine(mMode, *mRules, font, renderStyle, viewPort, formattedLines);
+	FormatterStateMachine stateMachine(*mRules, font, renderStyle, viewPort, formattedLines);
 
 	for (auto& line : lines) {
 		for (auto current : *line) {
@@ -418,7 +422,7 @@ void TextFormatter::format(const Font& font,
 						   const RenderViewPort& viewPort,
 						   const Text& text,
 						   FormattedLines& formattedLines) {
-	FormatterStateMachine stateMachine(mMode, *mRules, font, renderStyle, viewPort, formattedLines);
+	FormatterStateMachine stateMachine(*mRules, font, renderStyle, viewPort, formattedLines);
 
 	text.forEachLine([&](const String& line) {
 		for (auto& current : line) {

@@ -34,9 +34,14 @@ using FormattedLines = std::vector<FormattedLine>;
 /**
  * The rules formatting
  */
-class TextFormatterRules {
+class FormatterRules {
 public:
-	virtual ~TextFormatterRules() = default;
+	virtual ~FormatterRules() = default;
+
+	/**
+	 * Returns the mode
+	 */
+	virtual FormatMode mode() const = 0;
 
 	/**
 	 * Indicates if the given string is a keyword
@@ -71,8 +76,7 @@ public:
  */
 class FormatterStateMachine {
 private:
-	FormatMode mMode;
-	const TextFormatterRules& mTextFormatterRules;
+	const FormatterRules& mRules;
 
 	const Font& mFont;
 	const RenderStyle& mRenderStyle;
@@ -111,8 +115,7 @@ private:
 	void handleCodeMode(Char current, float advanceX);
 	void handleTextMode(Char current, float advanceX);
 public:
-	FormatterStateMachine(FormatMode mode,
-						  const TextFormatterRules& textFormatterRules,
+	FormatterStateMachine(const FormatterRules& textFormatterRules,
 						  const Font& font,
 						  const RenderStyle& renderStyle,
 						  const RenderViewPort& viewPort,
@@ -130,19 +133,30 @@ public:
  */
 class TextFormatter {
 private:
-	FormatMode mMode;
-	std::unique_ptr<TextFormatterRules> mRules;
+	std::unique_ptr<FormatterRules> mRules;
 public:
 	/**
 	 * Creates a new text formatter
-	 * @param mode The format mode
+	 * @param rules The rules
 	 */
-	explicit TextFormatter(FormatMode mode = FormatMode::Code);
+	explicit TextFormatter( std::unique_ptr<FormatterRules> rules);
 
 	/**
 	 * Returns the formatting rules
 	 */
-	const TextFormatterRules& rules() const;
+	const FormatterRules& rules() const;
+
+	/**
+	 * Creates a new formatter state machine
+	 * @param font The font
+	 * @param renderStyle The render style
+	 * @param viewPort The view port
+	 * @param formattedLines The formatted lines
+	 */
+	FormatterStateMachine createStateMachine(const Font& font,
+											 const RenderStyle& renderStyle,
+											 const RenderViewPort& viewPort,
+											 FormattedLines& formattedLines);
 
 	/**
 	 * Formats the given line
