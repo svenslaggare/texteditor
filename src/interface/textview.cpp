@@ -277,7 +277,7 @@ void TextView::moveViewY(float diff) {
 		mInputState.viewPosition.y = 0;
 	}
 
-	auto maxViewHeight = std::ceil((numLines() * mFont.lineHeight() - viewPort.height) / mFont.lineHeight()) * mFont.lineHeight() + 200;
+	auto maxViewHeight = std::ceil((numLines() * mFont.lineHeight() - viewPort.height) / mFont.lineHeight()) * mFont.lineHeight();
 	if (mInputState.viewPosition.y < -maxViewHeight) {
 		mInputState.viewPosition.y = -maxViewHeight;
 	}

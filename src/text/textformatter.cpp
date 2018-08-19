@@ -277,7 +277,7 @@ void FormatterStateMachine::handleString(Char current, float advanceX) {
 }
 
 void FormatterStateMachine::handleNumber(Char current, float advanceX) {
-	if (std::isdigit(current) || current == '.') {
+	if (std::isdigit(current) || current == '.' || current == 'f') {
 		addChar(current, advanceX);
 	} else if (current == '\n') {
 		createNewLine();
