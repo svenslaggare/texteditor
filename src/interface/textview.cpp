@@ -7,8 +7,8 @@
 #include "../text/text.h"
 #include "inputmanager.h"
 #include "../windowstate.h"
-#include "../rendering/glhelpers.h"
-#include "../rendering/shadercompiler.h"
+#include "../rendering/common/glhelpers.h"
+#include "../rendering/common/shadercompiler.h"
 #include "../text/incrementalformattedtext.h"
 
 #include <chrono>

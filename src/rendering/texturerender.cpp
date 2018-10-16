@@ -1,6 +1,6 @@
 #include <iostream>
 #include "texturerender.h"
-#include "glhelpers.h"
+#include "common/glhelpers.h"
 
 TextureRender::TextureRender(GLuint shaderProgram)
 	: mShaderProgram(shaderProgram) {

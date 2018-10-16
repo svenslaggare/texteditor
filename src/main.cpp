@@ -13,13 +13,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 
-#include "rendering/shadercompiler.h"
+#include "rendering/common/shadercompiler.h"
 #include "helpers.h"
-#include "rendering/glhelpers.h"
+#include "rendering/common/glhelpers.h"
 #include "rendering/font.h"
 #include "rendering/renderstyle.h"
 #include "rendering/textrender.h"
-#include "rendering/framebuffer.h"
+#include "rendering/common/framebuffer.h"
 #include "interface/textview.h"
 #include "rendering/renderviewport.h"
 #include "text/text.h"
@@ -27,7 +27,7 @@
 #include "interface/inputmanager.h"
 #include "rendering/texturerender.h"
 #include "text/textformatter.h"
-#include "rendering/shaderprogram.h"
+#include "rendering/common/shaderprogram.h"
 #include "text/helpers.h"
 #include "text/formatters/cpp.h"
 #include "text/formatters/python.h"
@@ -117,10 +117,10 @@ int main(int argc, char* argv[]) {
 
 //	Text text(Helpers::readFileAsText<String>("data/lorem.txt"));
 //	Text text(Helpers::readFileAsText<String>("data/lorem2.txt"));
-//	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
+	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
 //	Text text(Helpers::readFileAsText<String>("data/test.cpp"));
 //	Text text(Helpers::readFileAsText<String>("data/circle.py"));
-	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
+//	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
 //	Text text({});
 
 	auto startTime = Helpers::timeNow();

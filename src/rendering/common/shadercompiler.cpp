@@ -1,5 +1,5 @@
 #include "shadercompiler.h"
-#include "../helpers.h"
+#include "../../helpers.h"
 
 #include <stdexcept>
 #include <vector>

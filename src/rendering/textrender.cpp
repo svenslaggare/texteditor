@@ -1,6 +1,6 @@
 #include "textrender.h"
 #include "font.h"
-#include "glhelpers.h"
+#include "common/glhelpers.h"
 #include "../text/textformatter.h"
 #include "renderstyle.h"
 #include "renderviewport.h"

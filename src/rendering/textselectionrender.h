@@ -1,5 +1,5 @@
 #pragma once
-#include "shaderprogram.h"
+#include "common/shaderprogram.h"
 
 #include <GL/glew.h>
 #include <glm/vec2.hpp>

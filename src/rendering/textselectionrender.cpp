@@ -1,5 +1,5 @@
 #include "textselectionrender.h"
-#include "shadercompiler.h"
+#include "common/shadercompiler.h"
 #include "font.h"
 #include "renderstyle.h"
 
