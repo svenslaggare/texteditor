@@ -2,6 +2,7 @@
 #include "text.h"
 #include "formattedtext.h"
 #include "helpers.h"
+#include "formatterrules.h"
 
 #include <string>
 #include <vector>
@@ -21,54 +22,17 @@ enum class FormatMode : std::uint8_t {
 	Code
 };
 
+using FormattedLines = std::vector<FormattedLine>;
+
+/**
+ * The state of the text formatter
+ */
 enum class State {
 	Text,
 	String,
 	Number,
 	Comment,
 	BlockComment,
-};
-
-using FormattedLines = std::vector<FormattedLine>;
-
-/**
- * The rules formatting
- */
-class FormatterRules {
-public:
-	virtual ~FormatterRules() = default;
-
-	/**
-	 * Returns the mode
-	 */
-	virtual FormatMode mode() const = 0;
-
-	/**
-	 * Indicates if the given string is a keyword
-	 * @param string The string
-	 */
-	virtual bool isKeyword(const String& string) const = 0;
-
-	/**
-	 * The start of a line comment
-	 */
-	virtual const String& lineCommentStart() const = 0;
-
-	/**
-	 * The start of a block comment
-	 */
-	virtual const String& blockCommentStart() const = 0;
-
-	/**
-	 * The end of a block comment
-	 */
-	virtual const String& blockCommentEnd() const = 0;
-
-	/**
-	 * Indicates if the given char is a string delimiter
-	 * @param current The character 
-	 */
-	virtual bool isStringDelimiter(Char current) const = 0;
 };
 
 /**
@@ -172,20 +136,6 @@ public:
 					const RenderViewPort& viewPort,
 					const String& line,
 					FormattedLine& formattedLine);
-
-	/**
-	 * Formats the given lines
-	 * @param font The font
-	 * @param viewPort The view port to render to
-	 * @param renderStyle The render style
-	 * @param lines The liens to format
-	 * @param formattedLines The formatted lines
-	 */
-	void formatLines(const Font& font,
-					 const RenderStyle& renderStyle,
-					 const RenderViewPort& viewPort,
-					 const std::vector<const String*>& lines,
-					 FormattedLines& formattedLines);
 
 	/**
 	 * Formats the given text using the given font

@@ -54,7 +54,7 @@ set(TEXT_SOURCE_FILES
     src/text/textformatter.cpp
     src/text/textformatter.h
     src/text/textloader.cpp
-    src/text/textloader.h)
+    src/text/textloader.h src/text/formatterrules.h)
 
 set(INTERFACE_SOURCE_FILES
     src/interface/inputmanager.cpp

@@ -71,7 +71,7 @@ private:
 	PerformFormattingType mPerformFormattingType = PerformFormattingType::Incremental;
 	CharacterInputType mCharacterInputType = CharacterInputType::Native;
 
-	const Font& mFont;
+	Font& mFont;
 	TextFormatter mTextFormatter;
 	const RenderStyle& mRenderStyle;
 	TextMetrics mTextMetrics;
@@ -306,7 +306,7 @@ public:
 	 * @param text The text
 	 */
 	TextView(GLFWwindow* window,
-			 const Font& font,
+			 Font& font,
 			 std::unique_ptr<FormatterRules> rules,
 			 const RenderViewPort& viewPort,
 			 const RenderStyle& renderStyle,

@@ -4,7 +4,6 @@
 
 namespace {
 	const auto numChars = 256;
-//	const auto numChars = 128;
 
 	std::vector<Char> createAllCharacters() {
 		std::vector<Char> characters;
@@ -51,6 +50,7 @@ FontMap::FontMap(const std::string& name, std::uint32_t size, const std::vector<
 	};
 
 	auto buffer = std::make_unique<std::uint8_t[]>(mSize * mSize * characters.size());
+	std::size_t characterIndex = 0;
 	for (auto& character : characters) {
 		auto glpyhCharacter = character;
 
@@ -67,7 +67,7 @@ FontMap::FontMap(const std::string& name, std::uint32_t size, const std::vector<
 
 		auto width = face->glyph->bitmap.width;
 		auto height = face->glyph->bitmap.rows;
-		auto charMapOffset = character * mSize;
+		auto charMapOffset = characterIndex * mSize;
 
 		for (std::size_t y = 0; y < height; y++) {
 			for (std::size_t x = 0; x < width; x++) {
@@ -89,6 +89,7 @@ FontMap::FontMap(const std::string& name, std::uint32_t size, const std::vector<
 		};
 
 		mCharacters.insert({ character, fontCharacter });
+		characterIndex++;
 	}
 
 //	std::cout << "loaded font map" << std::endl;
@@ -132,7 +133,8 @@ const std::unordered_map<Char, FontCharacter>& FontMap::characters() const {
 
 Font::Font(const std::string& name, std::uint32_t size)
 	: mName(name), mSize(size) {
-	createFontMap(createAllCharacters());
+	mCreatedCharacters = createAllCharacters();
+	createFontMap(mCreatedCharacters);
 }
 
 GLuint Font::textureMap() const {
@@ -164,26 +166,23 @@ void Font::createFontMap(const std::vector<Char>& characters) {
 			mMonoSpaceAdvanceX = false;
 		}
 	}
-}
 
-void Font::getTextureCoordinates(Char character, float& top, float& left, float& bottom, float& right) const {
-	auto& fontCharacter = operator[](character);
-	top = fontCharacter.textureTop;
-	left = fontCharacter.textureLeft;
-	bottom = fontCharacter.textureBottom;
-	right = fontCharacter.textureRight;
+	std::cout << "Created font map" << std::endl;
 }
 
 const FontCharacter& Font::operator[](Char character) const {
-//	auto charIterator = mFontMap->characters().find(character);
-//	if (charIterator != mFontMap->characters().end()) {
-//		return charIterator->second;
-//	} else {
-//		createFontMap();
-//		return mFontMap->characters().at(character);
-//	}
-
 	return mFontMap->characters().at(character);
+}
+
+const FontCharacter& Font::tryGet(Char character) {
+	auto charIterator = mFontMap->characters().find(character);
+	if (charIterator != mFontMap->characters().end()) {
+		return charIterator->second;
+	} else {
+		mCreatedCharacters.push_back(character);
+		createFontMap(mCreatedCharacters);
+		return mFontMap->characters().at(character);
+	}
 }
 
 float Font::getAdvanceX(Char character) const {

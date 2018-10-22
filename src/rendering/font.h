@@ -66,6 +66,7 @@ private:
 	std::uint32_t mSize;
 
 	std::unique_ptr<FontMap> mFontMap;
+	std::vector<Char> mCreatedCharacters;
 
 	float mLineHeight = 0.0f;
 	bool mIsMonoSpace = true;
@@ -95,20 +96,16 @@ public:
 	float lineHeight() const;
 
 	/**
-	 * Returns the texture coordinates for the given character
-	 * @param character The character
-	 * @param top The top texture coordinate
-	 * @param left The left texture coordinate
-	 * @param bottom The bottom texture coordinate
-	 * @param right The right texture coordinate
-	 */
-	void getTextureCoordinates(Char character, float& top, float& left, float& bottom, float& right) const;
-
-	/**
 	 * Returns the given character
 	 * @param character The character
 	 */
 	const FontCharacter& operator[](Char character) const;
+
+	/**
+	 * Tries to get the given character (recreating the font if necessary)
+	 * @param character The character
+	 */
+	const FontCharacter& tryGet(Char character);
 
 	/**
 	 * Returns the advance X for the given character

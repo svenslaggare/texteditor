@@ -41,7 +41,7 @@ private:
 	 */
 	void setCharacterVertices(GLfloat* charactersVertices,
 							  std::size_t offset,
-							  const Font& font,
+							  Font& font,
 							  Char character,
 							  float currentX,
 							  float currentY,
@@ -85,7 +85,7 @@ public:
 	 * @param position The position to render at
 	 * @param lineNumberSpacing The spacing due to line numbering
 	 */
-	void render(const Font& font,
+	void render(Font& font,
 				const RenderStyle& renderStyle,
 				const RenderViewPort& viewPort,
 				const BaseFormattedText& text,
@@ -100,7 +100,7 @@ public:
 	 * @param text The formatted text to render lines for
 	 * @param position The position to render at
 	 */
-	void renderLineNumbers(const Font& font,
+	void renderLineNumbers(Font& font,
 						   const RenderStyle& renderStyle,
 						   const RenderViewPort& viewPort,
 						   const BaseFormattedText& text,
@@ -116,7 +116,7 @@ public:
 	 * @param spacing The spacing
 	 * @param inputState The input state
 	 */
-	void renderCaret(const Font& font,
+	void renderCaret(Font& font,
 					 const RenderStyle& renderStyle,
 					 const TextMetrics& textMetrics,
 					 const RenderViewPort& viewPort,

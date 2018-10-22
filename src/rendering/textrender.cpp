@@ -67,12 +67,13 @@ TextRender::~TextRender() {
 
 void TextRender::setCharacterVertices(GLfloat* charactersVertices,
 									  std::size_t offset,
-									  const Font& font,
+									  Font& font,
 									  Char character,
 									  float currentX,
 									  float currentY,
 									  glm::vec3 color) {
-	auto& fontCharacter = font[character];
+//	auto& fontCharacter = font[character];
+	auto& fontCharacter = font.tryGet(character);
 
 	GLfloat drawPosX = currentX + fontCharacter.bearing.x;
 	GLfloat drawPosY = -currentY - (fontCharacter.size.y - fontCharacter.bearing.y);
@@ -80,11 +81,10 @@ void TextRender::setCharacterVertices(GLfloat* charactersVertices,
 	GLfloat drawWidth = fontCharacter.size.x;
 	GLfloat drawHeight = fontCharacter.size.y;
 
-	float top;
-	float left;
-	float bottom;
-	float right;
-	font.getTextureCoordinates(character, top, left, bottom, right);
+	float top = fontCharacter.textureTop;
+	float left = fontCharacter.textureLeft;
+	float bottom = fontCharacter.textureBottom;
+	float right = fontCharacter.textureRight;
 
 	// Batch draw calls
 	GLfloat vertices[] = {
@@ -172,7 +172,7 @@ void TextRender::renderView(const Font& font,
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void TextRender::render(const Font& font,
+void TextRender::render(Font& font,
 						const RenderStyle& renderStyle,
 						const RenderViewPort& viewPort,
 						const BaseFormattedText& text,
@@ -233,14 +233,13 @@ void TextRender::render(const Font& font,
 	});
 }
 
-void TextRender::renderLineNumbers(const Font& font,
+void TextRender::renderLineNumbers(Font& font,
 								   const RenderStyle& renderStyle,
 								   const RenderViewPort& viewPort,
 								   const BaseFormattedText& text,
 								   glm::vec2 position) {
 	auto maxLineNumber = numericToString<String>(text.numLines() + 1);
-	auto lineNumberSpacing = maxLineNumber.size() * renderStyle.getAdvanceX(font, convertFromChar('0'));
-	
+
 	renderView(font, text.numLines(), viewPort, position, [&](GLfloat* vertices,
 															  std::size_t& offset,
 															  std::function<void()> drawCharacter,
@@ -273,7 +272,7 @@ void TextRender::renderLineNumbers(const Font& font,
 	});
 }
 
-void TextRender::renderCaret(const Font& font,
+void TextRender::renderCaret(Font& font,
 							 const RenderStyle& renderStyle,
 							 const TextMetrics& textMetrics,
 							 const RenderViewPort& viewPort,

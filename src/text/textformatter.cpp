@@ -423,26 +423,6 @@ void TextFormatter::formatLine(const Font& font,
 	formattedLine = std::move(formattedLines.front());
 }
 
-void TextFormatter::formatLines(const Font& font,
-								const RenderStyle& renderStyle,
-								const RenderViewPort& viewPort,
-								const std::vector<const String*>& lines,
-								FormattedLines& formattedLines) {
-	FormatterStateMachine stateMachine(*mRules, font, renderStyle, viewPort, formattedLines);
-
-	for (auto& line : lines) {
-		for (auto current : *line) {
-			stateMachine.process(current);
-		}
-
-		stateMachine.process('\n');
-	}
-
-	if (!stateMachine.currentFormattedLine().tokens.empty()) {
-		stateMachine.createNewLine();
-	}
-}
-
 void TextFormatter::format(const Font& font,
 						   const RenderStyle& renderStyle,
 						   const RenderViewPort& viewPort,

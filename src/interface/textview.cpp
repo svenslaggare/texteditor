@@ -29,7 +29,7 @@ namespace {
 }
 
 TextView::TextView(GLFWwindow* window,
-				   const Font& font,
+				   Font& font,
 				   std::unique_ptr<FormatterRules> rules,
 				   const RenderViewPort& viewPort,
 				   const RenderStyle& renderStyle,
@@ -396,7 +396,7 @@ void TextView::paste() {
 		Text pasteText(stringPasteText);
 
 		auto diffCaretX = stringPasteText.size();
-		auto diffCaretY = 0;
+		std::size_t diffCaretY = 0;
 
 		if (pasteText.numLines() > 1) {
 			mText.insertText(lineAndOffset.first, (std::size_t)lineAndOffset.second, pasteText);
@@ -419,9 +419,6 @@ void TextView::paste() {
 		}
 
 		moveCaretX(diffCaretX);
-//		for (std::size_t i = 0; i < diffCaretX; i++) {
-//			moveCaretX(1);
-//		}
 	}
 }
 
