@@ -1,5 +1,6 @@
 #pragma once
 #include <unordered_map>
+#include <memory>
 
 #include <glm/vec2.hpp>
 
@@ -15,10 +16,10 @@
  * Represents a character for a font
  */
 struct FontCharacter {
-	GLuint textureId;
 	glm::ivec2 size;
 	glm::ivec2 bearing;
 	float advanceX;
+	float lineHeight;
 
 	float textureTop;
 	float textureLeft;
@@ -27,18 +28,54 @@ struct FontCharacter {
 };
 
 /**
- * Represents a font
+ * Represents a font map
  */
-class Font {
+class FontMap {
 private:
 	std::uint32_t mSize;
 	std::size_t mCharsPerColumn;
 	std::unordered_map<Char, FontCharacter> mCharacters;
 	GLuint mTextureMap;
-	float mLineHeight = 0.0f;
+public:
+	/**
+	 * Creates a new font map
+	 * @param name The name of the font
+	 * @param size The size of the font
+	 * @param characters The characters to load from the font
+	 */
+	FontMap(const std::string& name, std::uint32_t size, const std::vector<Char>& characters);
+	~FontMap();
 
+	/**
+	 * Returns the texture map for the font
+	 */
+	GLuint textureMap() const;
+
+	/**
+	 * Returns the characters
+	 */
+	const std::unordered_map<Char, FontCharacter>& characters() const;
+};
+
+/**
+ * Represents a font
+ */
+class Font {
+private:
+	std::string mName;
+	std::uint32_t mSize;
+
+	std::unique_ptr<FontMap> mFontMap;
+
+	float mLineHeight = 0.0f;
 	bool mIsMonoSpace = true;
 	float mMonoSpaceAdvanceX = 0.0f;
+
+	/**
+	 * Creates the font map from the given character
+	 * @param characters The characters
+	 */
+	void createFontMap(const std::vector<Char>& characters);
 public:
 	/**
 	 * Creates a new font
@@ -46,7 +83,6 @@ public:
 	 * @param size The size of the font
 	 */
 	Font(const std::string& name, std::uint32_t size);
-	~Font();
 
 	/**
 	 * Returns the texture map for the font
