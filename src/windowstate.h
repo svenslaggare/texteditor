@@ -1,8 +1,9 @@
 #pragma once
 #include <vector>
-#include <glm/detail/type_mat4x4.hpp>
+#include <glm/mat4x4.hpp>
 
 using CodePoint = unsigned int;
+struct GLFWwindow;
 
 /**
  * Represents the state of the window
@@ -26,6 +27,12 @@ private:
 	bool mRightMouseButtonPressed = false;
 	bool mRightMouseButtonPressedChanged = false;
 public:
+	/**
+	 * Initializes the window state using the given GLFW window
+	 * @param window The window
+	 */
+	void initialize(GLFWwindow* window);
+
 	/**
 	 * Updates the state. Should be called in the start of the frame.
 	 */

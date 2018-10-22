@@ -13,24 +13,19 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 
-#include "rendering/common/shadercompiler.h"
-#include "helpers.h"
-#include "rendering/common/glhelpers.h"
-#include "rendering/font.h"
-#include "rendering/renderstyle.h"
-#include "rendering/textrender.h"
-#include "rendering/common/framebuffer.h"
-#include "interface/textview.h"
 #include "rendering/renderviewport.h"
-#include "text/text.h"
 #include "windowstate.h"
-#include "interface/inputmanager.h"
-#include "rendering/texturerender.h"
-#include "text/textformatter.h"
 #include "rendering/common/shaderprogram.h"
-#include "text/helpers.h"
+#include "text/text.h"
+#include "helpers.h"
+#include "rendering/textrender.h"
+#include "rendering/texturerender.h"
+#include "interface/textview.h"
+#include "rendering/common/framebuffer.h"
 #include "text/formatters/cpp.h"
-#include "text/formatters/python.h"
+#include "rendering/renderstyle.h"
+#include "rendering/font.h"
+#include "text/textloader.h"
 
 RenderViewPort getViewPort(const WindowState& windowState) {
 	return RenderViewPort { glm::vec2(0, 0), (float)windowState.width(), (float)windowState.height() };
@@ -40,10 +35,6 @@ void setProjection(ShaderProgram& shaderProgram, const WindowState& windowState)
 	auto projection = windowState.projection();
 	glUseProgram(shaderProgram.id());
 	shaderProgram.setParameters({ ShaderParameter::float4x4MatrixParameter("projection", projection) });
-}
-
-WindowState& getWindowState(GLFWwindow* window) {
-	return *(WindowState*)glfwGetWindowUserPointer(window);
 }
 
 int main(int argc, char* argv[]) {
@@ -65,33 +56,7 @@ int main(int argc, char* argv[]) {
 	glewExperimental = GL_TRUE;
 	glewInit();
 
-	glfwSetWindowSizeCallback(window, [](GLFWwindow* window, int width, int height) {
-		auto& windowState = getWindowState(window);
-		windowState.changeWindowSize(width, height);
-		glViewport(0, 0, width, height);
-	});
-
-	glfwSetScrollCallback(window, [](GLFWwindow* window, double offsetX, double offsetY) {
-		auto& windowState = getWindowState(window);
-		windowState.setScrollY(offsetY);
-	});
-
-	glfwSetCharCallback(window, [](GLFWwindow* window, CodePoint codePoint) {
-		auto& windowState = getWindowState(window);
-		windowState.addCharacter(codePoint);
-	});
-
-	glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods) {
-		auto& windowState = getWindowState(window);
-
-		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
-			windowState.leftMouseButtonPressed();
-		}
-
-		if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
-			windowState.rightMouseButtonPressed();
-		}
-	});
+	windowState.initialize(window);
 
 	// Compile and link shaders
 	ShaderProgram textProgram(
@@ -115,13 +80,10 @@ int main(int argc, char* argv[]) {
 //  std::string text = "hello	world\nmy friend";
 //  std::string inlineText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse eu enim vitae erat viverra dignissim. Cras congue hendrerit eleifend. Curabitur augue mauris, rutrum laoreet mollis in, laoreet in lacus. Phasellus laoreet lectus quis magna convallis elementum. Donec tempus, nibh vitae ultricies molestie, ex enim porttitor dolor, vel dignissim mauris massa vitae leo.\n\nUt varius semper eros, et gravida nulla maximus sed. Phasellus viverra libero at dignissim mollis. Fusce consectetur porta volutpat. Pellentesque aliquam pharetra convallis. Nunc at elit quam. Proin urna lorem, bibendum vitae consectetur nec, rhoncus at magna. Interdum et malesuada fames ac ante ipsum primis in faucibus. Phasellus odio sapien, scelerisque quis facilisis quis, suscipit eget ligula. Morbi vitae elementum leo. Nullam mollis est quis consectetur finibus. Suspendisse vehicula purus vel libero auctor ultrices. Ut scelerisque quam ante, vitae tincidunt velit laoreet et. Quisque tellus urna, pellentesque nec tincidunt in, semper et nisl. Proin id euismod lorem. Nam nec lorem ornare, blandit arcu nec, pulvinar justo. Curabitur nec rutrum risus. Aenean maximus turpis sit amet risus blandit vehicula. Vestibulum tincidunt odio lectus, non viverra nibh mattis non. Mauris vitae ex posuere diam tincidunt accumsan.\n\nQuisque pretium tortor vitae diam suscipit pellentesque at ac erat. In hac habitasse platea dictumst. Proin sodales dapibus pretium. Duis id eros nulla. Ut hendrerit vehicula lobortis. Etiam sagittis porta dui, vel porttitor tellus scelerisque vel. Quisque cursus rhoncus velit, quis volutpat velit volutpat sit amet. Sed quis molestie libero, eu sollicitudin felis.\n\nNunc tempor eu leo non fermentum. Donec bibendum et lectus vel malesuada. Vivamus malesuada eros nibh, id faucibus eros elementum at. Integer ac sem lorem. Curabitur luctus feugiat justo. Nulla at tortor sit amet orci cursus ornare non id massa. Vivamus vel lacus feugiat, vehicula urna dignissim, blandit lectus. Morbi non urna dui. Morbi ac libero a ligula varius lobortis. Proin at purus eget velit mattis viverra vel sed quam. Duis sollicitudin massa magna, viverra fringilla arcu ultricies eget. Suspendisse potenti. Morbi turpis felis, pellentesque id pretium vel, euismod non eros. Nulla mauris ipsum, interdum at leo aliquam, porttitor condimentum nunc. Cras semper feugiat hendrerit.";
 
-//	Text text(Helpers::readFileAsText<String>("data/lorem.txt"));
-//	Text text(Helpers::readFileAsText<String>("data/lorem2.txt"));
-	Text text(Helpers::readFileAsText<String>("data/gc.cpp"));
-//	Text text(Helpers::readFileAsText<String>("data/test.cpp"));
-//	Text text(Helpers::readFileAsText<String>("data/circle.py"));
-//	Text text(Helpers::readFileAsText<String>("src/main.cpp"));
-//	Text text({});
+	TextLoader textLoader;
+//	auto loadedText = textLoader.load("data/gc.cpp");
+	auto loadedText = textLoader.load("src/main.cpp");
+//	auto loadedText = textLoader.load("data/circle.py");
 
 	auto startTime = Helpers::timeNow();
 	int numFrames = 0;
@@ -139,10 +101,10 @@ int main(int argc, char* argv[]) {
 	TextView codeTextView(
 		window,
 		font,
-		std::make_unique<CppFormatterRules>(),
+		std::move(loadedText.rules),
 		renderViewPort,
 		renderStyle,
-		text);
+		loadedText.text);
 
 	TextureRender frameBufferRender(passthroughProgram.id());
 

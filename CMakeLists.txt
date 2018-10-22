@@ -52,7 +52,9 @@ set(TEXT_SOURCE_FILES
     src/text/text.cpp
     src/text/text.h
     src/text/textformatter.cpp
-    src/text/textformatter.h)
+    src/text/textformatter.h
+    src/text/textloader.cpp
+    src/text/textloader.h)
 
 set(INTERFACE_SOURCE_FILES
     src/interface/inputmanager.cpp

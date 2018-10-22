@@ -1,5 +1,45 @@
-#include <glm/gtc/matrix_transform.hpp>
 #include "windowstate.h"
+#include <glm/gtc/matrix_transform.hpp>
+
+#define GLEW_STATIC
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+
+namespace {
+	WindowState& getWindowState(GLFWwindow* window) {
+		return *(WindowState*)glfwGetWindowUserPointer(window);
+	}
+}
+
+void WindowState::initialize(GLFWwindow* window) {
+	glfwSetWindowSizeCallback(window, [](GLFWwindow* window, int width, int height) {
+		auto& windowState = getWindowState(window);
+		windowState.changeWindowSize(width, height);
+		glViewport(0, 0, width, height);
+	});
+
+	glfwSetScrollCallback(window, [](GLFWwindow* window, double offsetX, double offsetY) {
+		auto& windowState = getWindowState(window);
+		windowState.setScrollY(offsetY);
+	});
+
+	glfwSetCharCallback(window, [](GLFWwindow* window, CodePoint codePoint) {
+		auto& windowState = getWindowState(window);
+		windowState.addCharacter(codePoint);
+	});
+
+	glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods) {
+		auto& windowState = getWindowState(window);
+
+		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+			windowState.leftMouseButtonPressed();
+		}
+
+		if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+			windowState.rightMouseButtonPressed();
+		}
+	});
+}
 
 void WindowState::update() {
 	if (mScrollValueChanged) {
