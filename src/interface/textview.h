@@ -16,17 +16,14 @@ class Font;
 struct RenderStyle;
 class TextRender;
 class Text;
-struct InputState;
-
-enum class FormatMode : std::uint8_t;
 
 /**
  * The input state
  */
 struct InputState {
 	glm::vec2 viewPosition = glm::vec2();
-	std::int64_t caretPositionX = 0;
-	std::int64_t caretPositionY = 0;
+	std::int64_t caretLineIndex = 0;
+	std::int64_t caretCharIndex = 0;
 
 	TextSelection selection;
 	bool showSelection = false;
@@ -125,12 +122,6 @@ private:
 	std::size_t numLines();
 
 	/**
-	 * Returns the current line number and offset
-	 * @param offsetX Additional offset
-	 */
-	std::pair<std::size_t, std::int64_t> getLineAndOffset(int offsetX = 0) const;
-
-	/**
 	 * Moves the caret in the x position by the given amount
 	 * @param diff The amount to move
 	 */
@@ -194,11 +185,10 @@ private:
 	void deleteSelection();
 
 	/**
-	 * Deletes the given character
-	 * @param lineIndex The line index
+	 * Deletes the given character on the current line
 	 * @param charIndex The char index
 	 */
-	void deleteCharacter(std::size_t lineIndex, std::size_t charIndex);
+	void deleteCharacter(std::int64_t charIndex);
 
 	/**
 	 * The action for the backspace button

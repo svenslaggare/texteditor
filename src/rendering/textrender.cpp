@@ -286,8 +286,8 @@ void TextRender::renderCaret(Font& font,
 
 	auto lineOffset = textMetrics.calculatePositionX(
 		text,
-		(std::size_t)inputState.caretPositionY,
-		(std::size_t)inputState.caretPositionX);
+		(std::size_t)inputState.caretLineIndex,
+		(std::size_t)inputState.caretCharIndex);
 
 	setCharacterVertices(
 		charactersVertices,
@@ -295,7 +295,7 @@ void TextRender::renderCaret(Font& font,
 		font,
 		'|',
 		inputState.viewPosition.x + spacing.x + lineOffset - fontCharacter.size.x,
-		inputState.viewPosition.y + spacing.y + (inputState.caretPositionY + 1) * font.lineHeight(),
+		inputState.viewPosition.y + spacing.y + (inputState.caretLineIndex + 1) * font.lineHeight(),
 		renderStyle.textColor);
 
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * FLOATS_PER_CHARACTER, charactersVertices);

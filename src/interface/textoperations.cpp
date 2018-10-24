@@ -26,8 +26,8 @@ BaseFormattedText* TextOperations::formattedText() const {
 	return mFormattedText.get();
 }
 
-IncrementalFormattedText::InputState TextOperations::getIncrementalFormattingInputState(LineAndOffset lineAndOffset) {
-	return { lineAndOffset.first, (std::size_t)lineAndOffset.second };
+IncrementalFormattedText::InputState TextOperations::getIncrementalFormattingInputState() {
+	return { (std::size_t)mInputState.caretLineIndex, (std::size_t)mInputState.caretCharIndex };
 }
 
 IncrementalFormattedText* TextOperations::incrementalFormattedText() {
@@ -86,8 +86,8 @@ PartialFormattedText TextOperations::performPartialFormatting(const RenderViewPo
 		formatLinePartialMode(viewPort, formattedText, lineIndex);
 	};
 
-	if ((std::size_t)mInputState.caretPositionY < mText.numLines()) {
-		formatLine((std::size_t)mInputState.caretPositionY);
+	if ((std::size_t)mInputState.caretLineIndex < mText.numLines()) {
+		formatLine((std::size_t)mInputState.caretLineIndex);
 	}
 
 	auto cursorLineIndex = (std::int64_t)std::floor(-position.y / mFont.lineHeight());
@@ -139,7 +139,7 @@ void TextOperations::updateFormattedText(const RenderViewPort& viewPort) {
 
 //				formattedBenchmark(mFont, mFormatMode, mRenderStyle, viewPort, mText);
 
-				mInputState.caretPositionY = std::min(mInputState.caretPositionY, (std::int64_t)numLines() - 1);
+				mInputState.caretLineIndex = std::min(mInputState.caretLineIndex, (std::int64_t)numLines() - 1);
 				break;
 			}
 			case PerformFormattingType::Incremental: {
@@ -159,7 +159,7 @@ void TextOperations::updateFormattedText(const RenderViewPort& viewPort) {
 
 //				formattedBenchmark(mFont, mTextFormatter, mRenderStyle, viewPort, mText);
 
-				mInputState.caretPositionY = std::min(mInputState.caretPositionY, (std::int64_t) numLines() - 1);
+				mInputState.caretLineIndex = std::min(mInputState.caretLineIndex, (std::int64_t) numLines() - 1);
 				break;
 			}
 			case PerformFormattingType::Partial: {
@@ -180,44 +180,43 @@ void TextOperations::updateFormattedText(const RenderViewPort& viewPort) {
 	}
 }
 
-void TextOperations::insertCharacter(const RenderViewPort& viewPort, LineAndOffset lineAndOffset, Char character) {
-	mText.insertAt(lineAndOffset.first, (std::size_t)lineAndOffset.second, character);
+void TextOperations::insertCharacter(const RenderViewPort& viewPort, Char character) {
+	mText.insertAt((std::size_t)mInputState.caretLineIndex, (std::size_t)mInputState.caretCharIndex, character);
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
-		incrementalFormattedText()->insertCharacter(getIncrementalFormattingInputState(lineAndOffset));
+		incrementalFormattedText()->insertCharacter(getIncrementalFormattingInputState());
 	} else {
 		updateFormattedText(viewPort);
 	}
 }
 
-void TextOperations::insertLine(const RenderViewPort& viewPort, LineAndOffset lineAndOffset) {
-	mText.splitLine(lineAndOffset.first, (std::size_t)lineAndOffset.second);
+void TextOperations::insertLine(const RenderViewPort& viewPort) {
+	mText.splitLine((std::size_t)mInputState.caretLineIndex, (std::size_t)mInputState.caretCharIndex);
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
-		incrementalFormattedText()->insertLine(getIncrementalFormattingInputState(lineAndOffset));
+		incrementalFormattedText()->insertLine(getIncrementalFormattingInputState());
 	} else {
 		updateFormattedText(viewPort);
 	}
 }
 
-std::pair<std::size_t, std::size_t>
-TextOperations::paste(const RenderViewPort& viewPort, LineAndOffset lineAndOffset, const String& text) {
+std::pair<std::size_t, std::size_t> TextOperations::paste(const RenderViewPort& viewPort, const String& text) {
 	Text pasteText(text);
 
 	auto diffCaretX = text.size();
 	std::size_t diffCaretY = 0;
 
 	if (pasteText.numLines() > 1) {
-		mText.insertText(lineAndOffset.first, (std::size_t)lineAndOffset.second, pasteText);
+		mText.insertText((std::size_t)mInputState.caretLineIndex, (std::size_t)mInputState.caretCharIndex, pasteText);
 		diffCaretX = pasteText.getLine(pasteText.numLines() - 1).size();
 		diffCaretY = pasteText.numLines() - 1;
 	} else {
-		mText.insertAt(lineAndOffset.first, (std::size_t)lineAndOffset.second, text);
+		mText.insertAt((std::size_t)mInputState.caretLineIndex, (std::size_t)mInputState.caretCharIndex, text);
 	}
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
 		incrementalFormattedText()->paste(
-			getIncrementalFormattingInputState(lineAndOffset),
+			getIncrementalFormattingInputState(),
 			pasteText.numLines());
 	} else {
 		updateFormattedText(viewPort);
@@ -226,26 +225,25 @@ TextOperations::paste(const RenderViewPort& viewPort, LineAndOffset lineAndOffse
 	return std::make_pair(diffCaretX, diffCaretY);
 }
 
-void
-TextOperations::deleteLine(const RenderViewPort& viewPort, LineAndOffset lineAndOffset, Text::DeleteLineMode mode) {
-	auto diff = mText.deleteLine(lineAndOffset.first, mode);
+void TextOperations::deleteLine(const RenderViewPort& viewPort, Text::DeleteLineMode mode) {
+	auto diff = mText.deleteLine((std::size_t)mInputState.caretLineIndex, mode);
 	if (mode == Text::DeleteLineMode::Start) {
-		mInputState.caretPositionX = diff.caretX;
+		mInputState.caretCharIndex = diff.caretX;
 	}
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
-		incrementalFormattedText()->deleteLine(getIncrementalFormattingInputState(lineAndOffset), mode);
+		incrementalFormattedText()->deleteLine(getIncrementalFormattingInputState(), mode);
 	} else {
 		updateFormattedText(viewPort);
 	}
 }
 
-void TextOperations::deleteSelection(const RenderViewPort& viewPort, LineAndOffset lineAndOffset, const TextSelection& textSelection) {
+void TextOperations::deleteSelection(const RenderViewPort& viewPort, const TextSelection& textSelection) {
 	auto deleteData = mText.deleteSelection(mInputState.selection);
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
 		incrementalFormattedText()->deleteSelection(
-			getIncrementalFormattingInputState(lineAndOffset),
+			getIncrementalFormattingInputState(),
 			textSelection,
 			deleteData);
 	} else {
@@ -253,12 +251,11 @@ void TextOperations::deleteSelection(const RenderViewPort& viewPort, LineAndOffs
 	}
 }
 
-void TextOperations::deleteCharacter(const RenderViewPort& viewPort, LineAndOffset lineAndOffset, std::size_t lineIndex,
-									 std::size_t charIndex) {
-	mText.deleteAt(lineIndex, charIndex);
+void TextOperations::deleteCharacter(const RenderViewPort& viewPort, std::size_t charIndex) {
+	mText.deleteAt((std::size_t)mInputState.caretLineIndex, charIndex);
 
 	if (mPerformFormattingType == PerformFormattingType::Incremental) {
-		incrementalFormattedText()->deleteCharacter(getIncrementalFormattingInputState(lineAndOffset));
+		incrementalFormattedText()->deleteCharacter(getIncrementalFormattingInputState());
 	} else {
 		updateFormattedText(viewPort);
 	}

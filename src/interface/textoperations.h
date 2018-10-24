@@ -37,9 +37,8 @@ private:
 
 	/**
 	 * Returns the formatting state for incremental formatting
-	 * @param lineAndOffset The line and offset
 	 */
-	IncrementalFormattedText::InputState getIncrementalFormattingInputState(LineAndOffset lineAndOffset);
+	IncrementalFormattedText::InputState getIncrementalFormattingInputState();
 
 	/**
 	 * Returns the incremental formatted text
@@ -123,56 +122,43 @@ public:
 
 	/**
 	 * Inserts the given character
-	 * @param lineAndOffset The line and offset
 	 * @param viewPort The view port
 	 * @param character The character to insert
 	 */
-	void insertCharacter(const RenderViewPort& viewPort, LineAndOffset lineAndOffset, Char character);
+	void insertCharacter(const RenderViewPort& viewPort, Char character);
 
 	/**
 	 * Inserts a line at the given position
-	 * @param lineAndOffset The line and offset
 	 * @param viewPort The view port
 	 */
-	void insertLine(const RenderViewPort& viewPort, LineAndOffset lineAndOffset);
+	void insertLine(const RenderViewPort& viewPort);
 
 	/**
 	 * Pastes the given text
-	 * @param lineAndOffset The line and offset
 	 * @param viewPort The view port
 	 * @param text The text to paste
 	 * @return Diff caret x, diff caret y
 	 */
-	std::pair<std::size_t, std::size_t> paste(const RenderViewPort& viewPort,
-											  LineAndOffset lineAndOffset,
-											  const String& text);
+	std::pair<std::size_t, std::size_t> paste(const RenderViewPort& viewPort, const String& text);
 
 	/**
 	 * Deletes the given line
-	 * @param lineAndOffset The line and offset
 	 * @param viewPort The view port
 	 * @param mode The delete mode
 	 */
-	void deleteLine(const RenderViewPort& viewPort, LineAndOffset lineAndOffset, Text::DeleteLineMode mode);
+	void deleteLine(const RenderViewPort& viewPort, Text::DeleteLineMode mode);
 
 	/**
 	 * Deletes the given selection
-	 * @param lineAndOffset The line and offset
 	 * @param viewPort The view port
 	 * @param textSelection The selection to delete
 	 */
-	void
-	deleteSelection(const RenderViewPort& viewPort, LineAndOffset lineAndOffset, const TextSelection& textSelection);
+	void deleteSelection(const RenderViewPort& viewPort, const TextSelection& textSelection);
 
 	/**
 	 * Deletes the given character
-	 * @param lineAndOffset The line and offset
 	 * @param viewPort The view port
-	 * @param lineIndex The line index of the character
 	 * @param charIndex The index of the character at the line
 	 */
-	void deleteCharacter(const RenderViewPort& viewPort,
-						 LineAndOffset lineAndOffset,
-						 std::size_t lineIndex,
-						 std::size_t charIndex);
+	void deleteCharacter(const RenderViewPort& viewPort, std::size_t charIndex);
 };
