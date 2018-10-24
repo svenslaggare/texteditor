@@ -11,16 +11,7 @@
 class Font;
 struct RenderViewPort;
 struct RenderStyle;
-
 class Text;
-
-/**
- * The format mode
- */
-enum class FormatMode : std::uint8_t {
-	Text,
-	Code
-};
 
 using FormattedLines = std::vector<FormattedLine>;
 

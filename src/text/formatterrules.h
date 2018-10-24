@@ -1,7 +1,13 @@
 #pragma once
 #include "text.h"
 
-enum class FormatMode : std::uint8_t;
+/**
+ * The format mode
+ */
+enum class FormatMode : std::uint8_t {
+	Text,
+	Code
+};
 
 /**
  * The rules formatting

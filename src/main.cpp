@@ -38,6 +38,11 @@ void setProjection(ShaderProgram& shaderProgram, const WindowState& windowState)
 }
 
 int main(int argc, char* argv[]) {
+	if (argc < 2) {
+		std::cerr << "Usage: ./texteditor <filename>";
+		std::exit(1);
+	}
+
 	glfwInit();
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -82,8 +87,10 @@ int main(int argc, char* argv[]) {
 
 	TextLoader textLoader;
 //	auto loadedText = textLoader.load("data/gc.cpp");
-	auto loadedText = textLoader.load("src/main.cpp");
+//	auto loadedText = textLoader.load("src/main.cpp");
 //	auto loadedText = textLoader.load("data/circle.py");
+
+	auto loadedText = textLoader.load(argv[1]);
 
 	auto startTime = Helpers::timeNow();
 	int numFrames = 0;

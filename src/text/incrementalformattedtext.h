@@ -5,7 +5,7 @@
 class Text;
 class Font;
 struct RenderStyle;
-class RenderViewPort;
+struct RenderViewPort;
 
 /**
  * Represents an incremental formatted text
@@ -24,7 +24,6 @@ private:
 	const RenderStyle& mRenderStyle;
 	const RenderViewPort& mViewPort;
 
-	FormatMode mFormatMode;
 	TextFormatter& mTextFormatter;
 
 	Text& mText;

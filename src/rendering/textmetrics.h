@@ -41,7 +41,6 @@ public:
 											   std::size_t lineIndex,
 											   float screenPositionX) const;
 
-
 	/**
 	 * Returns the width of the given line
 	 * @param formattedLine The formatted line

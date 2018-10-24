@@ -6,6 +6,7 @@
 #include "../rendering/textmetrics.h"
 #include "../rendering/textselectionrender.h"
 #include "../text/incrementalformattedtext.h"
+#include "textoperations.h"
 
 #include <string>
 #include <memory>
@@ -28,6 +29,13 @@ struct InputState {
 	std::int64_t caretPositionY = 0;
 
 	TextSelection selection;
+	bool showSelection = false;
+
+	/**
+	 * Returns the draw position of the input stat
+	 * @param renderStyle The render style
+	 */
+	glm::vec2 getDrawPosition(const RenderStyle& renderStyle) const;
 };
 
 using KeyboardCommandFunction = std::function<void ()>;
@@ -47,7 +55,7 @@ struct KeyboardCommand {
 /**
  * Defines how the formatting is performed
  */
-enum class PerformFormattingType {
+enum class PerformFormattingType : std::uint32_t {
 	Full,
 	Partial,
 	Incremental
@@ -68,27 +76,21 @@ class TextView {
 private:
 	GLFWwindow* mWindow;
 
-	PerformFormattingType mPerformFormattingType = PerformFormattingType::Incremental;
 	CharacterInputType mCharacterInputType = CharacterInputType::Native;
 
 	Font& mFont;
-	TextFormatter mTextFormatter;
 	const RenderStyle& mRenderStyle;
 	TextMetrics mTextMetrics;
 
 	const RenderViewPort& mViewPort;
+	TextOperations mTextOperations;
 
 	InputManager mInputManager;
 	InputState mInputState;
 	std::vector<KeyboardCommand> mKeyboardCommands;
 	const float mScrollSpeed = 4.0f;
 
-	std::size_t mTextVersion = 0;
 	Text& mText;
-	std::unique_ptr<BaseFormattedText> mFormattedText;
-
-	RenderViewPort mLastViewPort;
-	bool mViewMoved = false;
 
 	bool mDrawCaret = false;
 	TimePoint mLastCaretUpdate;
@@ -96,7 +98,6 @@ private:
 	TextSelectionRender mTextSelectionRender;
 	bool mSelectionStarted = false;
 	TextSelection mPotentialSelection;
-	bool mShowSelection = false;
 
 	/**
 	 * Returns the current line the caret is at
@@ -158,16 +159,6 @@ private:
 	 * @param windowState The window state
 	 */
 	void updateInput(const WindowState& windowState);
-
-	/**
-	 * Returns the input state for incremental formatting
-	 */
-	IncrementalFormattedText::InputState getIncrementalFormattingInputState();
-
-	/**
-	 * Returns the incremented formatted text
-	 */
-	IncrementalFormattedText* incrementalFormattedText();
 
 	/**
 	 * Inserts the given character
@@ -261,40 +252,9 @@ private:
 	void updateMouseMovement(const WindowState& windowState);
 
 	/**
-	 * Returns the spacing due to line numbers
-	 */
-	float getLineNumberSpacing() const;
-
-	/**
 	 * Returns the view port for the text part
 	 */
 	RenderViewPort getTextViewPort() const;
-
-	/**
-	 * Returns the draw position
-	 */
-	glm::vec2 getDrawPosition() const;
-
-	/**
-	 * Updates the formatted text
-	 * @param viewPort The view port
-	 */
-	void updateFormattedText(const RenderViewPort& viewPort);
-
-	/**
-	 * Formats the given line for the given partial formatting
-	 * @param viewPort The view port
-	 * @param formattedText The formatted text
-	 * @param lineIndex The line index
-	 */
-	void formatLinePartialMode(const RenderViewPort& viewPort, PartialFormattedText& formattedText, std::size_t lineIndex);
-
-	/**
-	 * Performs formatting on the view port
-	 * @param viewPort The view port
-	 * @param position The current position
-	 */
-	PartialFormattedText performPartialFormatting(const RenderViewPort& viewPort, glm::vec2 position);
 public:
 	/**
 	 * Creates a new text view

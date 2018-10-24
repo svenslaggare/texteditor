@@ -60,7 +60,7 @@ set(INTERFACE_SOURCE_FILES
     src/interface/inputmanager.cpp
     src/interface/inputmanager.h
     src/interface/textview.cpp
-    src/interface/textview.h)
+    src/interface/textview.h src/interface/textoperations.cpp src/interface/textoperations.h)
 
 set(EXTERNAL_SOURCE_FILES
     src/external/bloom_filter.hpp
