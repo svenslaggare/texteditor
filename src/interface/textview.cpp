@@ -54,27 +54,36 @@ TextView::TextView(GLFWwindow* window,
 	  	mInputState),
 	  mInputManager(window),
 	  mText(text) {
+	using UnderlyingType = std::underlying_type<KeyModifier>::type;
+
 	auto createInsertCharacterCommand = [&](int key, Char normalMode, Char shiftMode, Char altMode) {
-		KeyboardCommand command;
-		command.key = key;
-
-		command.normalMode = [&, normalMode]() {
-			insertAction(normalMode);
-		};
-
-		if (shiftMode != '\0') {
-			command.shiftMode = [&, shiftMode]() {
-				insertAction(shiftMode);
-			};
-		}
+		mKeyboardCommands.push_back({
+			key,
+			KeyModifier::None,
+			[&, normalMode]() {
+				insertAction(normalMode);
+			}
+		});
 
 		if (shiftMode != '\0') {
-			command.altMode = [&, altMode]() {
-				insertAction(altMode);
-			};
+			mKeyboardCommands.push_back({
+				key,
+				KeyModifier::Shift,
+				[&, shiftMode]() {
+					insertAction(shiftMode);
+				}
+			});
 		}
-		
-		mKeyboardCommands.push_back(std::move(command));
+
+		if (altMode != '\0') {
+			mKeyboardCommands.push_back({
+				key,
+				KeyModifier::Alt,
+				[&, altMode]() {
+					insertAction(altMode);
+				}
+			});
+		}
 	};
 
 	if (mCharacterInputType == CharacterInputType::Custom) {
@@ -102,10 +111,10 @@ TextView::TextView(GLFWwindow* window,
 
 	createInsertCharacterCommand(GLFW_KEY_TAB, '\t', '\0', '\0');
 
-	mKeyboardCommands.emplace_back(KeyboardCommand { GLFW_KEY_BACKSPACE, [&]() { backspaceAction(); }, {}, {}, {} });
-	mKeyboardCommands.emplace_back(KeyboardCommand { GLFW_KEY_DELETE, [&]() { deleteAction(); }, {}, {}, {} });
-	mKeyboardCommands.emplace_back(KeyboardCommand { GLFW_KEY_ENTER, [&]() { insertLine(); }, {}, {}, {} });
-	mKeyboardCommands.emplace_back(KeyboardCommand { GLFW_KEY_V, {}, [&]() { paste(); }, {}, {} });
+	mKeyboardCommands.push_back({ GLFW_KEY_BACKSPACE, KeyModifier::None, [&]() { backspaceAction(); } });
+	mKeyboardCommands.push_back({ GLFW_KEY_DELETE, KeyModifier::None, [&]() { deleteAction(); } });
+	mKeyboardCommands.push_back({ GLFW_KEY_ENTER, KeyModifier::None, [&]() { insertLine(); } });
+	mKeyboardCommands.push_back({ GLFW_KEY_V, KeyModifier::Control, [&]() { paste(); } });
 }
 
 const FormattedLine& TextView::currentLine() const {
@@ -445,26 +454,25 @@ void TextView::replaceSelection(Char character) {
 }
 
 void TextView::updateEditing(const WindowState& windowState) {
-	bool isControlDown = mInputManager.isControlDown();
-	bool isShiftDown = mInputManager.isShiftDown();
-	bool isAltDown = mInputManager.isAltDown();
+	using UnderlyingType = std::underlying_type<KeyModifier>::type;
+	auto modifiers = (UnderlyingType)KeyModifier::None;
+
+	if (mInputManager.isControlDown()) {
+		modifiers |= (UnderlyingType)KeyModifier::Control;
+	}
+
+	if (mInputManager.isShiftDown()) {
+		modifiers |= (UnderlyingType)KeyModifier::Shift;
+	}
+
+	if (mInputManager.isAltDown()) {
+		modifiers |= (UnderlyingType)KeyModifier::Alt;
+	}
 
 	for (auto& command : mKeyboardCommands) {
 		if (mInputManager.isKeyPressed(command.key)) {
-			if (isControlDown) {
-				if (command.controlMode) {
-					command.controlMode();
-				}
-			} else if (isShiftDown) {
-				if (command.shiftMode) {
-					command.shiftMode();
-				}
-			} else if (isAltDown) {
-				if (command.altMode) {
-					command.altMode();
-				}
-			} else {
-				command.normalMode();
+			if ((UnderlyingType)command.keyModifiers == modifiers) {
+				command.command();
 			}
 		}
 	}

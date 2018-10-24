@@ -38,15 +38,22 @@ struct InputState {
 using KeyboardCommandFunction = std::function<void ()>;
 
 /**
+ * The key modifiers
+ */
+enum class KeyModifier : std::uint64_t {
+	None = 0,
+	Control = 1 << 0,
+	Shift = 1 << 1,
+	Alt = 1 << 2,
+};
+
+/**
  * Represents a keyboard command
  */
 struct KeyboardCommand {
 	int key;
-
-	KeyboardCommandFunction normalMode =  {}; 		//When no modifier key is pressed
-	KeyboardCommandFunction controlMode = {};  		//When control is being pressed
-	KeyboardCommandFunction shiftMode = {};  		//When shift is being pressed
-	KeyboardCommandFunction altMode = {};			//When alt is being pressed
+	KeyModifier keyModifiers;
+	KeyboardCommandFunction command;
 };
 
 /**
