@@ -278,6 +278,7 @@ void TextView::moveCaretY(std::int64_t diff) {
 	clampViewPositionY(caretScreenPositionY);
 	mInputState.caretCharIndex = std::min((std::size_t)mInputState.caretCharIndex, currentLineLength());
 
+	mTextOperations.requireLineFormatted(viewPort, currentLineNumber());
 	if (currentLineWidth() > -viewPort.width) {
 		mInputState.viewPosition.x = 0;
 	}

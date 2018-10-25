@@ -42,7 +42,7 @@ CppFormatterRules::CppFormatterRules()
 		  "#define",
 		  "#define",
 		  "#ifdef",
-		  "#infdef",
+		  "#ifndef",
 		  "#endif",
 		  "#else"
 	 } } {
