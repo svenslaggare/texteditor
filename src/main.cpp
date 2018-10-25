@@ -39,7 +39,7 @@ void setProjection(ShaderProgram& shaderProgram, const WindowState& windowState)
 
 int main(int argc, char* argv[]) {
 	if (argc < 2) {
-		std::cerr << "Usage: ./texteditor <filename>";
+		std::cerr << "Usage: ./texteditor <filename>" << std::endl;
 		std::exit(1);
 	}
 

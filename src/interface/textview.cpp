@@ -115,6 +115,12 @@ TextView::TextView(GLFWwindow* window,
 	mKeyboardCommands.push_back({ GLFW_KEY_DELETE, KeyModifier::None, [&]() { deleteAction(); } });
 	mKeyboardCommands.push_back({ GLFW_KEY_ENTER, KeyModifier::None, [&]() { insertLine(); } });
 	mKeyboardCommands.push_back({ GLFW_KEY_V, KeyModifier::Control, [&]() { paste(); } });
+
+	mCharTriggers['"'] = [&]() { insertAction('"'); };
+	mCharTriggers['\''] = [&]() { insertAction('\''); };
+	mCharTriggers['('] = [&]() { insertAction(')'); };
+	mCharTriggers['['] = [&]() { insertAction(']'); };
+	mCharTriggers['{'] = [&]() { insertAction('}', false); };
 }
 
 const FormattedLine& TextView::currentLine() const {
@@ -360,16 +366,29 @@ void TextView::updateViewMovement(const WindowState& windowState) {
 	}
 }
 
-void TextView::insertCharacter(Char character) {
+void TextView::insertCharacter(Char character, bool moveCaret) {
 	mTextOperations.insertCharacter(getTextViewPort(), character);
-	moveCaretX(1);
+
+	if (moveCaret) {
+		moveCaretX(1);
+	}
 }
 
-void TextView::insertAction(Char character) {
+void TextView::insertAction(Char character, bool moveCaret) {
 	if (!mInputState.selection.isSingle() && mInputState.showSelection) {
-		replaceSelection(character);
+		replaceSelection(character, moveCaret);
 	} else {
-		insertCharacter(character);
+		insertCharacter(character, moveCaret);
+	}
+
+	if (!mTriggered) {
+		auto triggerIterator = mCharTriggers.find(character);
+		if (triggerIterator != mCharTriggers.end()) {
+			// Set to true to avoid recursive triggers
+			mTriggered = true;
+			triggerIterator->second();
+			mTriggered = false;
+		}
 	}
 }
 
@@ -449,9 +468,9 @@ void TextView::deleteAction() {
 	}
 }
 
-void TextView::replaceSelection(Char character) {
+void TextView::replaceSelection(Char character, bool moveCaret) {
 	deleteSelection();
-	insertCharacter(character);
+	insertCharacter(character, moveCaret);
 }
 
 void TextView::updateEditing(const WindowState& windowState) {

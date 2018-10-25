@@ -73,6 +73,8 @@ enum class CharacterInputType {
 	Custom // Uses a custom implementation
 };
 
+using TriggerFunction = std::function<void ()>;
+
 /**
  * Represents a text view
  */
@@ -91,7 +93,11 @@ private:
 
 	InputManager mInputManager;
 	InputState mInputState;
+
 	std::vector<KeyboardCommand> mKeyboardCommands;
+	std::unordered_map<Char, TriggerFunction> mCharTriggers;
+	bool mTriggered = false;
+
 	const float mScrollSpeed = 4.0f;
 
 	Text& mText;
@@ -161,14 +167,16 @@ private:
 	/**
 	 * Inserts the given character
 	 * @param character The character
+	 * @param moveCaret Indicates if the caret is moved
 	 */
-	void insertCharacter(Char character);
+	void insertCharacter(Char character, bool moveCaret = true);
 
 	/**
 	 * The action for insertion
 	 * @param character The character to insert
+	 * @param moveCaret Indicates if the caret is moved
 	 */
-	void insertAction(Char character);
+	void insertAction(Char character, bool moveCaret = true);
 
 	/**
 	 * Inserts a new line
@@ -210,8 +218,9 @@ private:
 	/**
 	 * Replaces the current selection with the given character
 	 * @param character The character
+	 * @param moveCaret Indicates if the caret is moved
 	 */
-	void replaceSelection(Char character);
+	void replaceSelection(Char character, bool moveCaret = true);
 
 	/**
 	 * Updates the editing
