@@ -93,9 +93,9 @@ private:
 public:
 	/**
 	 * Creates a new text formatter
-	 * @param rules The rules
+	 * @param rules The formatting rules
 	 */
-	explicit TextFormatter( std::unique_ptr<FormatterRules> rules);
+	explicit TextFormatter(std::unique_ptr<FormatterRules> rules);
 
 	/**
 	 * Returns the formatting rules

@@ -15,10 +15,10 @@ using String = std::u16string;
  * Represents a text selection
  */
 struct TextSelection {
-	std::size_t startX = 0;
-	std::size_t startY = 0;
-	std::size_t endX = 0;
-	std::size_t endY = 0;
+	std::size_t startChar = 0;
+	std::size_t startLine = 0;
+	std::size_t endChar = 0;
+	std::size_t endLine = 0;
 
 	/**
 	 * Set the selection to the given single character

@@ -17,6 +17,7 @@ struct RenderViewPort;
 class BaseFormattedText;
 struct InputState;
 class TextMetrics;
+class ShaderProgram;
 
 enum class FormatMode : std::uint8_t;
 
@@ -27,7 +28,7 @@ class TextRender {
 private:
 	GLuint mVAO;
 	GLuint mVBO;
-	GLuint mShaderProgram;
+	const ShaderProgram& mShaderProgram;
 
 	/**
 	 * Sets the vertices for the given character
@@ -73,7 +74,7 @@ public:
 	 * Creates a new text render
 	 * @param shaderProgram The shader program to render with
 	 */
-	explicit TextRender(GLuint shaderProgram);
+	explicit TextRender(const ShaderProgram& shaderProgram);
 	~TextRender();
 
 	/**

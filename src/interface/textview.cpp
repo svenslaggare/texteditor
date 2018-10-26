@@ -428,8 +428,8 @@ void TextView::deleteSelection() {
 	mTextOperations.viewMoved();
 	mTextOperations.deleteSelection(getTextViewPort(), textSelection);
 
-	mInputState.caretCharIndex = (std::size_t)mInputState.selection.startX;
-	mInputState.caretLineIndex = (std::size_t)mInputState.selection.startY;
+	mInputState.caretCharIndex = (std::size_t)mInputState.selection.startChar;
+	mInputState.caretLineIndex = (std::size_t)mInputState.selection.startLine;
 	mInputState.selection.setSingle((std::size_t)mInputState.caretCharIndex, (std::size_t)mInputState.caretLineIndex);
 
 	mInputState.showSelection = false;
@@ -536,8 +536,8 @@ void TextView::updateTextSelection(const WindowState& windowState) {
 		auto mouseTextPosition = getMouseTextPosition();
 
 		if (mSelectionStarted) {
-			mPotentialSelection.endX = (std::size_t)mouseTextPosition.first;
-			mPotentialSelection.endY = (std::size_t)mouseTextPosition.second;
+			mPotentialSelection.endChar = (std::size_t)mouseTextPosition.first;
+			mPotentialSelection.endLine = (std::size_t)mouseTextPosition.second;
 
 			double mouseX;
 			double mouseY;
@@ -554,15 +554,15 @@ void TextView::updateTextSelection(const WindowState& windowState) {
 			}
 
 			mInputState.selection = mPotentialSelection;
-			if (mInputState.selection.endY < mInputState.selection.startY) {
-				std::swap(mInputState.selection.startX, mInputState.selection.endX);
-				std::swap(mInputState.selection.startY, mInputState.selection.endY);
+			if (mInputState.selection.endLine < mInputState.selection.startLine) {
+				std::swap(mInputState.selection.startChar, mInputState.selection.endChar);
+				std::swap(mInputState.selection.startLine, mInputState.selection.endLine);
 			}
 
 			mTextOperations.requireSelectionFormatted(getTextViewPort(), mInputState.selection);
 		} else {
-			mPotentialSelection.startX = (std::size_t)mouseTextPosition.first;
-			mPotentialSelection.startY = (std::size_t)mouseTextPosition.second;
+			mPotentialSelection.startChar = (std::size_t)mouseTextPosition.first;
+			mPotentialSelection.startLine = (std::size_t)mouseTextPosition.second;
 		}
 	}
 

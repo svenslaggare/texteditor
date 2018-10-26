@@ -205,17 +205,17 @@ void IncrementalFormattedText::deleteLine(const InputState& inputState, Text::De
 
 void IncrementalFormattedText::deleteSelection(const InputState& inputState, const TextSelection& textSelection, const Text::DeleteSelectionData& deleteData) {
 	Timing timing("deleteSelection: ");
-	if (textSelection.startY == textSelection.endY) {
-		reformatLine(textSelection.startY);
+	if (textSelection.startLine == textSelection.endLine) {
+		reformatLine(textSelection.startLine);
 	} else {
 		mFormattedLines.erase(
 			mFormattedLines.begin() + deleteData.startDeleteLineIndex,
 			mFormattedLines.begin() + deleteData.endDeleteLineIndex + 1);
 
-		reformatLine(textSelection.startY);
-		reformatLine(textSelection.startY + 1);
+		reformatLine(textSelection.startLine);
+		reformatLine(textSelection.startLine + 1);
 
-		for (std::size_t i = textSelection.startY; i < mFormattedLines.size(); i++) {
+		for (std::size_t i = textSelection.startLine; i < mFormattedLines.size(); i++) {
 			mFormattedLines[i].number = i;
 		}
 	}

@@ -53,7 +53,7 @@ void TextSelectionRender::render(const WindowState& windowState,
 
 //	auto startTime = Helpers::timeNow();
 	auto cursorLineIndex = (std::size_t)std::floor(std::max(-offset.y / font.lineHeight(), 0.0f));
-	for (auto selectionLineIndex = std::max(cursorLineIndex, inputState.selection.startY); selectionLineIndex <= inputState.selection.endY; selectionLineIndex++) {
+	for (auto selectionLineIndex = std::max(cursorLineIndex, inputState.selection.startLine); selectionLineIndex <= inputState.selection.endLine; selectionLineIndex++) {
 		std::size_t selectionLineCharStartIndex = 0;
 		auto lineOffset = 0.0f;
 
@@ -61,17 +61,17 @@ void TextSelectionRender::render(const WindowState& windowState,
 		float selectionLineHeight = font.lineHeight();
 
 		// Note: formatted line only guaranteed to be available for first and last line.
-		if (selectionLineIndex == inputState.selection.startY) {
-			selectionLineCharStartIndex = inputState.selection.startX;
+		if (selectionLineIndex == inputState.selection.startLine) {
+			selectionLineCharStartIndex = inputState.selection.startChar;
 			lineOffset = textMetrics.calculatePositionX(
 				formattedText,
 				selectionLineIndex,
 				selectionLineCharStartIndex);
 		}
 
-		if (selectionLineIndex == (inputState.selection.endY)) {
+		if (selectionLineIndex == (inputState.selection.endLine)) {
 			auto& line = formattedText.getLine(selectionLineIndex);
-			auto selectionLineCharEndIndex = inputState.selection.endX;
+			auto selectionLineCharEndIndex = inputState.selection.endChar;
 			selectionLineWidth = textMetrics.getLineWidth(
 				line,
 				selectionLineCharStartIndex,

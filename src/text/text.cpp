@@ -4,14 +4,14 @@
 #include "../helpers.h"
 
 void TextSelection::setSingle(std::size_t x, std::size_t y) {
-	startX = x;
-	startY = y;
-	endX = x;
-	endY = y;
+	startChar = x;
+	startLine = y;
+	endChar = x;
+	endLine = y;
 }
 
 bool TextSelection::isSingle() const {
-	return startX == endX && startY == endY;
+	return startChar == endChar && startLine == endLine;
 }
 
 Text::Text(String text) {
@@ -168,17 +168,17 @@ Text::DeleteSelectionData Text::deleteSelection(const TextSelection& textSelecti
 	mVersion++;
 
 	DeleteSelectionData deleteSelectionData;
-	if (textSelection.startY == textSelection.endY) {
-		auto& line = mLines.at(textSelection.startY);
-		mLines.at(textSelection.startY) = line.substr(0, textSelection.startX) + line.substr(std::min(textSelection.endX + 1, line.size()));
-		deleteSelectionData.startDeleteLineIndex = textSelection.startY;
-		deleteSelectionData.endDeleteLineIndex = textSelection.endY;
+	if (textSelection.startLine == textSelection.endLine) {
+		auto& line = mLines.at(textSelection.startLine);
+		mLines.at(textSelection.startLine) = line.substr(0, textSelection.startChar) + line.substr(std::min(textSelection.endChar + 1, line.size()));
+		deleteSelectionData.startDeleteLineIndex = textSelection.startLine;
+		deleteSelectionData.endDeleteLineIndex = textSelection.endLine;
 	} else {
-		std::size_t deleteLineStartIndex = textSelection.startY + 1;
-		std::size_t deleteLineEndIndex = textSelection.endY;
+		std::size_t deleteLineStartIndex = textSelection.startLine + 1;
+		std::size_t deleteLineEndIndex = textSelection.endLine;
 
-		auto& lastLine = mLines.at(textSelection.endY);
-		auto lastLineRemoveIndex = std::min(textSelection.endX + 1, lastLine.size());
+		auto& lastLine = mLines.at(textSelection.endLine);
+		auto lastLineRemoveIndex = std::min(textSelection.endChar + 1, lastLine.size());
 		bool deleteLastLine = false;
 		if (lastLineRemoveIndex == lastLine.size()) {
 			deleteLastLine = true;
@@ -186,9 +186,9 @@ Text::DeleteSelectionData Text::deleteSelection(const TextSelection& textSelecti
 			deleteLineEndIndex--;
 		}
 
-		mLines.at(textSelection.startY) = mLines.at(textSelection.startY).substr(0, textSelection.startX);
+		mLines.at(textSelection.startLine) = mLines.at(textSelection.startLine).substr(0, textSelection.startChar);
 		if (!deleteLastLine) {
-			mLines.at(textSelection.endY) = lastLine.substr(lastLineRemoveIndex);
+			mLines.at(textSelection.endLine) = lastLine.substr(lastLineRemoveIndex);
 		}
 
 		deleteSelectionData.startDeleteLineIndex = deleteLineStartIndex;

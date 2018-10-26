@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
 	auto fontName = "fonts/NotoMono-Regular.ttf";
 	Font font(fontName, 16);
 
-	TextRender textRender(textProgram.id());
+	TextRender textRender(textProgram);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

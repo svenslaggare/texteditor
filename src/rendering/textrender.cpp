@@ -35,7 +35,7 @@ namespace {
 	}
 }
 
-TextRender::TextRender(GLuint shaderProgram)
+TextRender::TextRender(const ShaderProgram& shaderProgram)
 	: mShaderProgram(shaderProgram) {
 	glGenVertexArrays(1, &mVAO);
 	glGenBuffers(1, &mVBO);
@@ -44,15 +44,15 @@ TextRender::TextRender(GLuint shaderProgram)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * FLOATS_PER_CHARACTER * MAX_CHARACTERS, nullptr, GL_DYNAMIC_DRAW);
 
 	auto vertexSize = (2 + 2 + 3) * sizeof(GLfloat);
-	auto posAttribute = glGetAttribLocation(shaderProgram, "vertexPosition");
+	auto posAttribute = glGetAttribLocation(shaderProgram.id(), "vertexPosition");
 	glEnableVertexAttribArray(posAttribute);
 	glVertexAttribPointer(posAttribute, 2, GL_FLOAT, GL_FALSE, vertexSize, nullptr);
 
-	auto texAttribute = glGetAttribLocation(shaderProgram, "vertexTexcoord");
+	auto texAttribute = glGetAttribLocation(shaderProgram.id(), "vertexTexcoord");
 	glEnableVertexAttribArray(texAttribute);
 	glVertexAttribPointer(texAttribute, 2, GL_FLOAT, GL_FALSE, vertexSize, (void*)(2 * sizeof(GLfloat)));
 
-	auto colorAttribute = glGetAttribLocation(shaderProgram, "vertexColor");
+	auto colorAttribute = glGetAttribLocation(shaderProgram.id(), "vertexColor");
 	glEnableVertexAttribArray(colorAttribute);
 	glVertexAttribPointer(colorAttribute, 3, GL_FLOAT, GL_FALSE, vertexSize, (void*)((2 + 2) * sizeof(GLfloat)));
 
@@ -72,7 +72,6 @@ void TextRender::setCharacterVertices(GLfloat* charactersVertices,
 									  float currentX,
 									  float currentY,
 									  glm::vec3 color) {
-//	auto& fontCharacter = font[character];
 	auto& fontCharacter = font.tryGet(character);
 
 	GLfloat drawPosX = currentX + fontCharacter.bearing.x;
@@ -104,7 +103,7 @@ void TextRender::setCharacterVertices(GLfloat* charactersVertices,
 
 void TextRender::setupRendering(const Font& font) {
 	glBindVertexArray(mVAO);
-	glUseProgram(mShaderProgram);
+	glUseProgram(mShaderProgram.id());
 	glActiveTexture(GL_TEXTURE0);
 
 	glBindTexture(GL_TEXTURE_2D, font.textureMap());

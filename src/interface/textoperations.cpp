@@ -68,12 +68,12 @@ void TextOperations::requireSelectionFormatted(const RenderViewPort& viewPort, c
 //			}
 //		}
 
-		if (!formattedText->hasLine((std::size_t)mInputState.selection.startY)) {
-			formatLinePartialMode(viewPort, *formattedText, (std::size_t)mInputState.selection.startY);
+		if (!formattedText->hasLine((std::size_t)mInputState.selection.startLine)) {
+			formatLinePartialMode(viewPort, *formattedText, (std::size_t)mInputState.selection.startLine);
 		}
 
-		if (!formattedText->hasLine((std::size_t)mInputState.selection.endY)) {
-			formatLinePartialMode(viewPort, *formattedText, (std::size_t)mInputState.selection.endY);
+		if (!formattedText->hasLine((std::size_t)mInputState.selection.endLine)) {
+			formatLinePartialMode(viewPort, *formattedText, (std::size_t)mInputState.selection.endLine);
 		}
 	}
 }
@@ -105,9 +105,9 @@ PartialFormattedText TextOperations::performPartialFormatting(const RenderViewPo
 		}
 	}
 
-	if (mInputState.selection.startY != mInputState.selection.endY && mInputState.showSelection) {
-		formatLine(mInputState.selection.startY);
-		formatLine(std::min(mInputState.selection.endY, numLines() - 1));
+	if (mInputState.selection.startLine != mInputState.selection.endLine && mInputState.showSelection) {
+		formatLine(mInputState.selection.startLine);
+		formatLine(std::min(mInputState.selection.endLine, numLines() - 1));
 	}
 
 	return formattedText;
