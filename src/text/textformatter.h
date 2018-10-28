@@ -80,7 +80,6 @@ public:
 	void createNewLine(bool resetState = true, bool continueWithLine = false, bool allowKeyword = true);
 	void processCodeMode(Char current);
 	void processTextMode(Char current);
-	void process(Char current);
 
 	void processLine(const String& line);
 };

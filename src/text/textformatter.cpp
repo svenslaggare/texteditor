@@ -127,6 +127,7 @@ void FormatterStateMachine::createNewLine(bool resetState, bool continueWithLine
 	mCurrentFormattedLine = {};
 	mCurrentFormattedLine.offsetFromTextLine = offsetFromTextLine;
 	mCurrentFormattedLine.isContinuation = continueWithLine;
+	mCurrentFormattedLine.tokens.reserve(1);
 }
 
 void FormatterStateMachine::newToken(TokenType type, bool makeKeyword) {
@@ -383,17 +384,6 @@ void FormatterStateMachine::processTextMode(Char current) {
 	}
 
 	mPrevCharBuffer.add(current);
-}
-
-void FormatterStateMachine::process(Char current) {
-	switch (mRules.mode()) {
-		case FormatMode::Text:
-			processTextMode(current);
-			break;
-		case FormatMode::Code:
-			processCodeMode(current);
-			break;
-	}
 }
 
 void FormatterStateMachine::processLine(const String& line) {
