@@ -67,9 +67,6 @@ private:
 	void handleNumber(Char current, float advanceX);
 	void handleComment(Char current, float advanceX);
 	void handleBlockComment(Char current, float advanceX);
-
-	void handleCodeMode(Char current, float advanceX);
-	void handleTextMode(Char current, float advanceX);
 public:
 	FormatterStateMachine(const FormatterRules& textFormatterRules,
 						  const Font& font,
@@ -81,7 +78,11 @@ public:
 	const FormattedLine& currentFormattedLine() const;
 
 	void createNewLine(bool resetState = true, bool continueWithLine = false, bool allowKeyword = true);
+	void processCodeMode(Char current);
+	void processTextMode(Char current);
 	void process(Char current);
+
+	void processLine(const String& line);
 };
 
 /**

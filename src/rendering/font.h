@@ -111,5 +111,11 @@ public:
 	 * Returns the advance X for the given character
 	 * @param character The character
 	 */
-	float getAdvanceX(Char character) const;
+	inline float getAdvanceX(Char character) const {
+		if (mIsMonoSpace) {
+			return mMonoSpaceAdvanceX;
+		}
+
+		return (*this)[character].advanceX;
+	}
 };

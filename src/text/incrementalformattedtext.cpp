@@ -33,17 +33,9 @@ namespace {
 		return stateMachine.state() == State::Text || stateMachine.state() == State::Number;
 	}
 
-	void processLine(FormatterStateMachine& stateMachine, const String& line) {
-		for (auto current : line) {
-			stateMachine.process(current);
-		}
-
-		stateMachine.process('\n');
-	}
-
 	void formatUntilStateRestored(FormatterStateMachine& stateMachine, const Text& text, std::size_t startLineIndex, std::size_t& numFormattedLines) {
 		for (std::size_t i = startLineIndex; i < text.numLines(); i++) {
-			processLine(stateMachine, text.getLine(i));
+			stateMachine.processLine(text.getLine(i));
 			numFormattedLines++;
 
 			if (isNormalState(stateMachine)) {
@@ -70,7 +62,7 @@ void IncrementalFormattedText::reformatLine(std::size_t lineIndex) {
 		FormattedLines formattedLines;
 		auto stateMachine = createStateMachine(formattedLines);
 
-		processLine(stateMachine, mText.getLine(lineIndex));
+		stateMachine.processLine(mText.getLine(lineIndex));
 
 		std::size_t numFormattedLines = 1;
 		if (formattedLines.front().mayRequireSearch && !isNormalState(stateMachine)) {
@@ -81,7 +73,7 @@ void IncrementalFormattedText::reformatLine(std::size_t lineIndex) {
 			stateMachine.createNewLine();
 		}
 
-//		std::cout << numFormattedLines << std::endl;
+		std::cout << "reformatLine: " << numFormattedLines << std::endl;
 		for (std::size_t i = 0; i < numFormattedLines; i++) {
 			auto formattedLine = formattedLines[i];
 			formattedLine.number = lineIndex + i;
@@ -109,7 +101,7 @@ void IncrementalFormattedText::reformatLines(std::size_t startLineIndex, std::si
 	std::size_t numFormattedLines = 0;
 	bool continueFormatting = false;
 	for (std::size_t i = startLineIndex; i <= endLineIndex; i++) {
-		processLine(stateMachine, mText.getLine(i));
+		stateMachine.processLine(mText.getLine(i));
 		numFormattedLines++;
 
 		if (i == endLineIndex) {
@@ -127,7 +119,7 @@ void IncrementalFormattedText::reformatLines(std::size_t startLineIndex, std::si
 		stateMachine.createNewLine();
 	}
 
-//	std::cout << numFormattedLines << std::endl;
+	std::cout << "reformatLines: " << numFormattedLines << std::endl;
 	for (std::size_t i = 0; i < numFormattedLines; i++) {
 		auto formattedLine = formattedLines[i];
 		formattedLine.number = startLineIndex + i;

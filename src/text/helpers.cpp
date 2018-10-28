@@ -8,11 +8,3 @@ KeywordList::KeywordList(const std::unordered_set<std::string>& keywords) {
 		mMaxLength = std::max(mMaxLength, keyword.size());
 	}
 }
-
-bool KeywordList::isKeyword(const String& str) const {
-	if (str.size() <= mMaxLength) {
-		return mKeywords.count(str) > 0;
-	}
-
-	return false;
-}

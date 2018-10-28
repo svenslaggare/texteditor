@@ -84,5 +84,11 @@ public:
 	 * @param str The string
 	 * @return
 	 */
-	bool isKeyword(const String& str) const;
+	inline bool isKeyword(const String& str) const {
+		if (str.size() <= mMaxLength) {
+			return mKeywords.count(str) > 0;
+		}
+
+		return false;
+	}
 };

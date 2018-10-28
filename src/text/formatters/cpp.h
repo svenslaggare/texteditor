@@ -14,12 +14,27 @@ public:
 	CppFormatterRules();
 	virtual ~CppFormatterRules() override = default;
 
-	virtual FormatMode mode() const override;
+	inline virtual FormatMode mode() const override {
+		return FormatMode::Code;
+	}
 
-	virtual bool isKeyword(const String& string) const override;
+	inline virtual bool isKeyword(const String& string) const override {
+		return mKeywords.isKeyword(string);
+	}
 
-	virtual const String& lineCommentStart() const override;
-	virtual const String& blockCommentStart() const override;
-	virtual const String& blockCommentEnd() const override;
-	virtual bool isStringDelimiter(Char current) const override;
+	inline virtual const String& lineCommentStart() const override {
+		return mLineCommentStart;
+	}
+
+	inline virtual const String& blockCommentStart() const override {
+		return mBlockCommentStart;
+	}
+
+	inline virtual const String& blockCommentEnd() const override {
+		return mBlockCommentEnd;
+	}
+
+	inline virtual bool isStringDelimiter(Char current) const override {
+		return current == '"' || current == '\'';
+	}
 };

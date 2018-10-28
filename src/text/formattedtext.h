@@ -1,6 +1,7 @@
 #pragma once
 #include "text.h"
 
+#include <list>
 #include <unordered_map>
 
 /**

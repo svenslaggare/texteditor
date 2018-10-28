@@ -185,10 +185,10 @@ const FontCharacter& Font::tryGet(Char character) {
 	}
 }
 
-float Font::getAdvanceX(Char character) const {
-	if (mIsMonoSpace) {
-		return mMonoSpaceAdvanceX;
-	}
-
-	return (*this)[character].advanceX;
-}
+//float Font::getAdvanceX(Char character) const {
+//	if (mIsMonoSpace) {
+//		return mMonoSpaceAdvanceX;
+//	}
+//
+//	return (*this)[character].advanceX;
+//}

@@ -57,7 +57,7 @@ void FormatterStateMachine::removeChars(std::size_t count) {
 			}
 
 			if (currentTokenIterator == mCurrentFormattedLine.tokens.end()) {
-				currentTokenIterator = mCurrentFormattedLine.tokens.end() - 1;
+				currentTokenIterator = --mCurrentFormattedLine.tokens.end();
 			} else {
 				currentTokenIterator--;
 			}
@@ -335,7 +335,15 @@ void FormatterStateMachine::handleBlockComment(Char current, float advanceX) {
 	}
 }
 
-void FormatterStateMachine::handleCodeMode(Char current, float advanceX) {
+void FormatterStateMachine::processCodeMode(Char current) {
+	auto advanceX = mRenderStyle.getAdvanceX(mFont, current);
+
+	if (mRenderStyle.wordWrap) {
+		if (mCurrentWidth + advanceX > mViewPort.width) {
+			createNewLine(false, true);
+		}
+	}
+
 	switch (mState) {
 		case State::Text:
 			handleText(current, advanceX);
@@ -353,19 +361,11 @@ void FormatterStateMachine::handleCodeMode(Char current, float advanceX) {
 			handleBlockComment(current, advanceX);
 			break;
 	}
+
+	mPrevCharBuffer.add(current);
 }
 
-void FormatterStateMachine::handleTextMode(Char current, float advanceX) {
-	if (current == '\n') {
-		createNewLine();
-	} else if (current == '\t') {
-		handleTab();
-	} else {
-		addChar(current, advanceX);
-	}
-}
-
-void FormatterStateMachine::process(Char current) {
+void FormatterStateMachine::processTextMode(Char current) {
 	auto advanceX = mRenderStyle.getAdvanceX(mFont, current);
 
 	if (mRenderStyle.wordWrap) {
@@ -374,16 +374,45 @@ void FormatterStateMachine::process(Char current) {
 		}
 	}
 
-	switch (mRules.mode()) {
-		case FormatMode::Text:
-			handleTextMode(current, advanceX);
-			break;
-		case FormatMode::Code:
-			handleCodeMode(current, advanceX);
-			break;
+	if (current == '\n') {
+		createNewLine();
+	} else if (current == '\t') {
+		handleTab();
+	} else {
+		addChar(current, advanceX);
 	}
 
 	mPrevCharBuffer.add(current);
+}
+
+void FormatterStateMachine::process(Char current) {
+	switch (mRules.mode()) {
+		case FormatMode::Text:
+			processTextMode(current);
+			break;
+		case FormatMode::Code:
+			processCodeMode(current);
+			break;
+	}
+}
+
+void FormatterStateMachine::processLine(const String& line) {
+	switch (mRules.mode()) {
+		case FormatMode::Text:
+			for (auto current : line) {
+				processTextMode(current);
+			}
+
+			processTextMode('\n');
+			break;
+		case FormatMode::Code:
+			for (auto current : line) {
+				processCodeMode(current);
+			}
+
+			processCodeMode('\n');
+			break;
+	}
 }
 
 TextFormatter::TextFormatter(std::unique_ptr<FormatterRules> rules)
@@ -410,11 +439,7 @@ void TextFormatter::formatLine(const Font& font,
 	FormattedLines formattedLines;
 	FormatterStateMachine stateMachine(*mRules, font, renderStyle, viewPort, formattedLines);
 
-	for (auto current : line) {
-		stateMachine.process(current);
-	}
-
-	stateMachine.process('\n');
+	stateMachine.processLine(line);
 
 	if (!stateMachine.currentFormattedLine().tokens.empty()) {
 		stateMachine.createNewLine();
@@ -428,15 +453,29 @@ void TextFormatter::format(const Font& font,
 						   const RenderViewPort& viewPort,
 						   const Text& text,
 						   FormattedLines& formattedLines) {
+	formattedLines.reserve(text.numLines());
 	FormatterStateMachine stateMachine(*mRules, font, renderStyle, viewPort, formattedLines);
 
-	text.forEachLine([&](const String& line) {
-		for (auto& current : line) {
-			stateMachine.process(current);
-		}
+	switch (mRules->mode()) {
+		case FormatMode::Text:
+			text.forEachLine([&](const String& line) {
+				for (auto& current : line) {
+					stateMachine.processTextMode(current);
+				}
 
-		stateMachine.process('\n');
-	});
+				stateMachine.processTextMode('\n');
+			});
+			break;
+		case FormatMode::Code:
+			text.forEachLine([&](const String& line) {
+				for (auto& current : line) {
+					stateMachine.processCodeMode(current);
+				}
+
+				stateMachine.processCodeMode('\n');
+			});
+			break;
+	}
 
 	if (!stateMachine.currentFormattedLine().tokens.empty()) {
 		stateMachine.createNewLine();

@@ -113,6 +113,10 @@ int main(int argc, char* argv[]) {
 		renderStyle,
 		loadedText.text);
 
+//	codeTextView.update(windowState);
+//	codeTextView.render(windowState, textRender);
+//	return 0;
+
 	TextureRender frameBufferRender(passthroughProgram.id());
 
 	while (!glfwWindowShouldClose(window)) {

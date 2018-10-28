@@ -632,26 +632,6 @@ RenderViewPort TextView::getTextViewPort() const {
 	return viewPort;
 }
 
-namespace {
-	void formattedBenchmark(const Font& font, TextFormatter& textFormatter, const RenderStyle& renderStyle, const RenderViewPort& viewPort, const Text& text) {
-		for (int i = 0; i < 3; i++) {
-			FormattedLines formattedLines;
-			textFormatter.format(font, renderStyle, viewPort, text, formattedLines);
-		}
-
-		int n = 10;
-		auto t0 = Helpers::timeNow();
-		for (int i = 0; i < n; i++) {
-			FormattedLines formattedLines;
-			textFormatter.format(font, renderStyle, viewPort, text, formattedLines);
-		}
-
-		std::cout
-			<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) / n << " ms"
-			<< std::endl;
-	}
-}
-
 void TextView::render(const WindowState& windowState, TextRender& textRender) {
 	auto viewPort = getTextViewPort();
 	auto lineNumberSpacing = TextOperations::getLineNumberSpacing(mFont, mText);

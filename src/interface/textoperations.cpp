@@ -3,6 +3,27 @@
 #include "../rendering/renderstyle.h"
 #include "../rendering/font.h"
 
+
+namespace {
+	void formattedBenchmark(const Font& font, TextFormatter& textFormatter, const RenderStyle& renderStyle, const RenderViewPort& viewPort, const Text& text) {
+		for (int i = 0; i < 3; i++) {
+			FormattedLines formattedLines;
+			textFormatter.format(font, renderStyle, viewPort, text, formattedLines);
+		}
+
+		int n = 15;
+		auto t0 = Helpers::timeNow();
+		for (int i = 0; i < n; i++) {
+			FormattedLines formattedLines;
+			textFormatter.format(font, renderStyle, viewPort, text, formattedLines);
+		}
+
+		std::cout
+			<< "Average: " << (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) / n << " ms"
+			<< std::endl;
+	}
+}
+
 float TextOperations::getLineNumberSpacing(const Font& font, const Text& text) {
 	return (std::to_string(text.numLines()).size() + 1) * font['A'].advanceX;
 }
@@ -157,7 +178,7 @@ void TextOperations::updateFormattedText(const RenderViewPort& viewPort) {
 					<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) << " ms"
 					<< std::endl;
 
-//				formattedBenchmark(mFont, mTextFormatter, mRenderStyle, viewPort, mText);
+				formattedBenchmark(mFont, mTextFormatter, mRenderStyle, viewPort, mText);
 
 				mInputState.caretLineIndex = std::min(mInputState.caretLineIndex, (std::int64_t) numLines() - 1);
 				break;
