@@ -178,7 +178,7 @@ void TextOperations::updateFormattedText(const RenderViewPort& viewPort) {
 					<< (Helpers::durationMicroseconds(Helpers::timeNow(), t0) / 1E3) << " ms"
 					<< std::endl;
 
-				formattedBenchmark(mFont, mTextFormatter, mRenderStyle, viewPort, mText);
+//				formattedBenchmark(mFont, mTextFormatter, mRenderStyle, viewPort, mText);
 
 				mInputState.caretLineIndex = std::min(mInputState.caretLineIndex, (std::int64_t) numLines() - 1);
 				break;
